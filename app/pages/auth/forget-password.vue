@@ -90,29 +90,9 @@ const handleSendResetCode = async () => {
 
     <!-- Background Pattern -->
     <div class="absolute bottom-0 right-0 p-8 opacity-5">
-      <div class="concentric-logo size-32">
-        <div class="circle circle-outer size-32 border-[12px] border-slate-900"></div>
-        <div class="circle circle-middle size-20 border-[8px] border-slate-900"></div>
-        <div class="circle circle-inner size-8 border-[4px] border-slate-900"></div>
-      </div>
+      <LogoIcon />
     </div>
-
   </div>
 </template>
 
-<style scoped>
-.concentric-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-}
-.circle {
-  position: absolute;
-  border-radius: 50%;
-}
-.circle-outer {
-  background: radial-gradient(circle, #4CAF50 33%, #FFD700 34% 66%, #FF4B2B 67%);
-  border: none !important;
-}
-</style>
+<style scoped lang="scss"></style>

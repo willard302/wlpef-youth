@@ -222,14 +222,6 @@ onBeforeUnmount(async () => {
 </template>
 
 <style scoped>
-.concentric-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  width: 40px;
-  height: 40px;
-}
 .circle {
   position: absolute;
   border-radius: 50%;
