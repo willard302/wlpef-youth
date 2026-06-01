@@ -6,7 +6,7 @@ interface Props {
 }
 
 withDefaults(defineProps<Props>(), {
-  eyebrow: 'Club Management',
+  eyebrow: '領袖會社青團',
   heightClass: 'h-64'
 })
 </script>

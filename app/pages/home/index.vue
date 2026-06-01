@@ -116,7 +116,7 @@ onMounted(async () => {
 <template>
   <div class="dashboard-page pb-24">
     <AppHeroHeader
-      eyebrow="Club Management"
+      eyebrow="領袖會社青團"
       :title="`哈囉，${userProfile?.name ?? '使用者'}`"
     >
       <!-- <template #actions>

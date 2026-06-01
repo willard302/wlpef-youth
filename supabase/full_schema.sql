@@ -1,5 +1,5 @@
 -- ============================================================
--- Club Management - Full Schema Definition
+-- WLPEF Youth - Full Schema Definition
 -- ============================================================
 
 -- 1. Enable Required Extensions

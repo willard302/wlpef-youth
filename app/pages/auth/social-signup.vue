@@ -236,7 +236,7 @@ onMounted(() => {
       <!-- Footer Branding -->
       <p class="mt-8 text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em] flex items-center gap-2">
         <span class="w-8 h-[1px] bg-slate-200"></span>
-        領袖會社青團 • TKU Zen Club
+        領袖會社青團
         <span class="w-8 h-[1px] bg-slate-200"></span>
       </p>
     </div>

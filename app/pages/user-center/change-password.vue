@@ -306,7 +306,7 @@ const handleInput = () => {
 
       <!-- Footer Text -->
       <p class="text-center text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] pt-8">
-        TKU Zen Club • 淡江大學禪學社
+        領袖會社青團
       </p>
     </main>
   </div>

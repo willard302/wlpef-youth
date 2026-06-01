@@ -1,4 +1,4 @@
-# Club Management Project Documentation
+# WLPEF Youth Project Documentation
 
 ## 1. 專案概觀 (Project Overview)
 本專案為一個完整的社團管理應用程式，採用 **Nuxt 4**、**TailwindCSS**、**Vant UI** 以及 **Supabase** 構建。專案設計初衷是為了解決社團活動排程與成員管理的需求。
