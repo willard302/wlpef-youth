@@ -200,7 +200,7 @@ const handleAppleLogin = async () => {
       <div class="flex flex-col items-center gap-4 mt-4 w-full">
         <div class="flex items-center gap-4 w-full max-w-sm">
           <div class="h-[1px] flex-1 bg-white/20"></div>
-          <span class="text-white/40 text-xs uppercase tracking-widest">或使用以下方式繼續</span>
+          <span class="text-white/80 text-xs uppercase tracking-widest">或使用以下方式繼續</span>
           <div class="h-[1px] flex-1 bg-white/20"></div>
         </div>
         <div class="flex gap-4">
