@@ -119,14 +119,14 @@ onMounted(async () => {
       eyebrow="領袖會社青團"
       :title="`哈囉，${userProfile?.name ?? '使用者'}`"
     >
-      <!-- <template #actions>
+      <template #actions>
         <button
           @click="menuVisible = true"
           class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all"
         >
           <span class="material-symbols-outlined text-2xl">menu</span>
         </button>
-      </template> -->
+      </template>
 
       <p class="text-sky-100 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">UPCOMING EVENT</p>
       <div v-if="isEventLoading" class="animate-pulse space-y-2">
