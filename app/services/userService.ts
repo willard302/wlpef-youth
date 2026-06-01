@@ -282,20 +282,22 @@ export const userService = {
    */
   async completeSocialSignup(data: {
     id: string
-    name: string
+    email: string
+    name?: string
     department: string
     gender?: string
     bio?: string
   }): Promise<void> {
     try {
       const supabase = useSupabaseClient<Database>()
+      const profileName = data.name?.trim() || data.email.split('@')[0] || 'User'
       
       // 1. 在 profiles 表中創建或更新資料
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
           id: data.id,
-          name: data.name,
+          name: profileName,
           department: data.department,
           gender: data.gender,
           bio: data.bio,

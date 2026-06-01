@@ -50,6 +50,14 @@ onMounted(async () => {
     if (userError) throw userError
 
     if (user) {
+      // 嘗試自動合併同 Email 的重複帳號（例如先 Google 後密碼註冊）
+      const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
+        body: {}
+      })
+      if (mergeError) {
+        console.warn('Auto merge skipped:', mergeError.message)
+      }
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('*')
@@ -71,13 +79,17 @@ onMounted(async () => {
             })
         }
         
-        successMessage.value = '登入成功！即將跳轉完善資料...'
+        successMessage.value = mergeData?.merged
+          ? '帳號已整合完成！即將跳轉完善資料...'
+          : '登入成功！即將跳轉完善資料...'
         loading.value = false
         setTimeout(() => {
           router.push('/auth/social-signup')
         }, 1500)
       } else {
-        successMessage.value = '驗證成功！即將跳轉首頁...'
+        successMessage.value = mergeData?.merged
+          ? '帳號已整合完成！即將跳轉首頁...'
+          : '驗證成功！即將跳轉首頁...'
         loading.value = false
         setTimeout(() => {
           router.push('/home')

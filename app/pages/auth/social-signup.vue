@@ -13,6 +13,7 @@ const initializing = ref(true)
 const errorMessage = ref('')
 
 const formData = ref({
+  email: '',
   fullName: '',
   department: '',
   gender: '',
@@ -38,6 +39,8 @@ const fetchUserData = async () => {
       return
     }
 
+    formData.value.email = user.email || ''
+
     // Try to get existing profile
     const { data: profile } = await supabase
       .from('profiles')
@@ -52,7 +55,7 @@ const fetchUserData = async () => {
       formData.value.bio = profile.bio || ''
       
       // 如果資料已經完整，直接跳轉首頁
-      if (profile.name && profile.department) {
+      if (user.email && profile.department) {
         router.push('/home')
         return
       }
@@ -70,8 +73,8 @@ const fetchUserData = async () => {
 }
 
 const handleCompleteRegistration = async () => {
-  if (!formData.value.fullName.trim()) {
-    errorMessage.value = '請輸入您的全名'
+  if (!formData.value.email.trim()) {
+    errorMessage.value = '缺少 Email，請重新以 Google 或 Apple 登入'
     return
   }
 
@@ -91,6 +94,7 @@ const handleCompleteRegistration = async () => {
     
     await userService.completeSocialSignup({
       id: user.id,
+      email: formData.value.email.trim(),
       name: formData.value.fullName.trim(),
       department: formData.value.department.trim(),
       gender: formData.value.gender,
@@ -143,9 +147,23 @@ onMounted(() => {
 
         <!-- Form Section -->
         <div v-else class="flex flex-col gap-5">
+          <!-- Email -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email</label>
+            <div class="bg-slate-100 rounded-2xl border border-slate-100 p-1 flex items-center">
+              <span class="material-symbols-outlined text-slate-400 ml-3">mail</span>
+              <input
+                v-model="formData.email"
+                type="email"
+                readonly
+                class="w-full bg-transparent border-none text-slate-700 focus:ring-0 text-base py-3 px-3 outline-none cursor-not-allowed"
+              />
+            </div>
+          </div>
+
           <!-- Full Name -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">全名</label>
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">全名 (選填)</label>
             <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-center transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
               <span class="material-symbols-outlined text-slate-400 ml-3">badge</span>
               <input

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { RegisterFormData } from '@/types'
 
 definePageMeta({
@@ -18,6 +18,7 @@ const supabase = useSupabaseClient()
 const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const showDuplicateEmailModal = ref(false)
 
 const handleRegister = async () => {
   if (!formData.value.fullName.trim() || !formData.value.email.trim() || !formData.value.password) {
@@ -58,11 +59,42 @@ const handleRegister = async () => {
     }, 2000)
     
   } catch (error: any) {
-    errorMessage.value = error.message || '註冊時發生錯誤。'
+    const message = error?.message || ''
+
+    if (message.toLowerCase().includes('already registered')) {
+      errorMessage.value = ''
+      showDuplicateEmailModal.value = true
+      return
+    }
+
+    errorMessage.value = message || '註冊時發生錯誤。'
   } finally {
     loading.value = false
   }
 }
+
+const handleContinueRegister = () => {
+  showDuplicateEmailModal.value = false
+}
+
+const handleGoLogin = () => {
+  showDuplicateEmailModal.value = false
+  navigateTo('/auth/login')
+}
+
+const handleModalEsc = (event: KeyboardEvent) => {
+  if (event.key === 'Escape' && showDuplicateEmailModal.value) {
+    showDuplicateEmailModal.value = false
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleModalEsc)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', handleModalEsc)
+})
 </script>
 <template>
   <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden max-w-full">
@@ -186,6 +218,36 @@ const handleRegister = async () => {
 
     <!-- Footer Spacer for Mobile View -->
     <div class="h-6 bg-transparent"></div>
+
+    <!-- Duplicate Email Modal -->
+    <div
+      v-if="showDuplicateEmailModal"
+      @click.self="handleContinueRegister"
+      class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-6"
+    >
+      <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
+        <h3 class="text-lg font-bold text-slate-900">Email 已被註冊</h3>
+        <p class="mt-2 text-sm leading-relaxed text-slate-600">
+          這個 Email 已有帳號，請改用既有方式登入。
+        </p>
+        <div class="mt-6 flex gap-3">
+          <button
+            type="button"
+            @click="handleContinueRegister"
+            class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
+          >
+            繼續註冊
+          </button>
+          <button
+            type="button"
+            @click="handleGoLogin"
+            class="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary/90"
+          >
+            前往登錄
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 

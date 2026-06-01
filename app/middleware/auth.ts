@@ -17,11 +17,11 @@ export default defineNuxtRouteMiddleware(async (to) => {
   if (!excludedPaths.includes(to.path)) {
     const { data: profile } = await supabase
       .from('profiles')
-      .select('name, department')
+      .select('department')
       .eq('id', user.id)
       .maybeSingle()
 
-    if (!profile || !profile.name || !profile.department) {
+    if (!user.email || !profile || !profile.department) {
       return navigateTo('/auth/social-signup')
     }
   }
