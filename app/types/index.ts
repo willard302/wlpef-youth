@@ -30,8 +30,9 @@ export interface LoginFormData {
 }
 
 export interface RegisterFormData {
-  fullName: string
   email: string
+  fullName: string
+  department: string
   password: string
   confirmPassword: string
 }

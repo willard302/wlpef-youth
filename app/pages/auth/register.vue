@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
 import type { RegisterFormData } from '@/types'
 
 definePageMeta({
@@ -7,13 +6,23 @@ definePageMeta({
 })
 
 const formData = ref<RegisterFormData>({
-  fullName: '',
   email: '',
+  fullName: '',
+  department: '',
   password: '',
   confirmPassword: ''
 })
 
-const showPassword = ref(false)
+type FieldKey = keyof RegisterFormData
+
+const fields: { key: FieldKey; icon: string; placeholder: string; type?: 'email' | 'password'; autocomplete: string }[] = [
+  { key: 'email',            icon: 'mail',   placeholder: '輸入您的 Email',         type: 'email',    autocomplete: 'email' },
+  { key: 'fullName',         icon: 'person', placeholder: '輸入您的姓名',           autocomplete: 'name' },
+  { key: 'department',       icon: 'business', placeholder: '輸入您的校友會',           autocomplete: 'organization' },
+  { key: 'password',         icon: 'lock',   placeholder: '建立密碼（至少 6 個字元）', type: 'password', autocomplete: 'new-password' },
+  { key: 'confirmPassword',  icon: 'lock',   placeholder: '再次輸入密碼',            type: 'password', autocomplete: 'new-password' },
+]
+
 const supabase = useSupabaseClient()
 const loading = ref(false)
 const errorMessage = ref('')
@@ -26,6 +35,11 @@ const handleRegister = async () => {
     return
   }
 
+  if (!formData.value.department.trim()) {
+    errorMessage.value = '請填寫校友會欄位。'
+    return
+  }
+
   if (formData.value.password !== formData.value.confirmPassword) {
     errorMessage.value = '密碼不相符。'
     return
@@ -35,8 +49,7 @@ const handleRegister = async () => {
     loading.value = true
     errorMessage.value = ''
     successMessage.value = ''
-    
-    // 透過 Supabase Auth 註冊使用者
+
     const { error } = await supabase.auth.signUp({
       email: formData.value.email,
       password: formData.value.password,
@@ -48,16 +61,12 @@ const handleRegister = async () => {
         }
       }
     })
-    
-    if (error) throw error
-    
-    successMessage.value = '註冊成功！請確認您的電子郵件以啟用帳號。'
 
-    // 導向登入頁
-    setTimeout(() => {
-      navigateTo('/auth/login')
-    }, 2000)
-    
+    if (error) throw error
+
+    successMessage.value = '註冊成功！請確認您的電子郵件以啟用帳號。'
+    setTimeout(() => navigateTo('/auth/login'), 2000)
+
   } catch (error: any) {
     const message = error?.message || ''
 
@@ -67,7 +76,7 @@ const handleRegister = async () => {
       return
     }
 
-    errorMessage.value = message || '註冊時發生錯誤。'
+    errorMessage.value = message || '註冊時發生錯誤，請稍後再試。'
   } finally {
     loading.value = false
   }
@@ -82,19 +91,12 @@ const handleGoLogin = () => {
   navigateTo('/auth/login')
 }
 
-const handleModalEsc = (event: KeyboardEvent) => {
-  if (event.key === 'Escape' && showDuplicateEmailModal.value) {
-    showDuplicateEmailModal.value = false
-  }
+const closeModalOnEsc = (event: KeyboardEvent) => {
+  if (event.key === 'Escape') showDuplicateEmailModal.value = false
 }
 
-onMounted(() => {
-  window.addEventListener('keydown', handleModalEsc)
-})
-
-onBeforeUnmount(() => {
-  window.removeEventListener('keydown', handleModalEsc)
-})
+onMounted(() => window.addEventListener('keydown', closeModalOnEsc))
+onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
 </script>
 <template>
   <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden max-w-full">
@@ -124,100 +126,41 @@ onBeforeUnmount(() => {
       </div>
 
       <!-- Registration Form -->
-      <div class="flex flex-col gap-4 px-6 py-4">
-        <!-- Full Name -->
-        <label class="flex flex-col gap-2">
-          <div class="relative group">
-            <i class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">person</i>
-            <input
-              v-model="formData.fullName"
-              type="text"
-              placeholder="輸入你的姓名"
-              class="form-input block w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-            />
-          </div>
-        </label>
+      <form @submit.prevent="handleRegister" class="flex flex-col gap-4 px-6 py-4">
+        <FormInput
+          v-for="field in fields"
+          :key="field.key"
+          v-model="formData[field.key]"
+          :icon="field.icon"
+          :type="field.type"
+          :placeholder="field.placeholder"
+          :autocomplete="field.autocomplete"
+        />
 
-        <!-- Email -->
-        <label class="flex flex-col gap-2">
-          <div class="relative group">
-            <i class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">mail</i>
-            <input
-              v-model="formData.email"
-              type="email"
-              placeholder="輸入你的 Email"
-              class="form-input block w-full pl-12 pr-4 py-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-            />
-          </div>
-        </label>
-
-        <!-- Password -->
-        <label class="flex flex-col gap-2">
-          <div class="relative group">
-            <i class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">lock</i>
-            <input
-              v-model="formData.password"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="建立密碼"
-              class="form-input block w-full pl-12 pr-12 py-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-            />
-            <button
-              @click="showPassword = !showPassword"
-              type="button"
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-            >
-              <i class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>
-            </button>
-          </div>
-        </label>
-
-        <!-- Confirm Password -->
-        <label class="flex flex-col gap-2">
-          <div class="relative group">
-            <i class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">lock</i>
-            <input
-              v-model="formData.confirmPassword"
-              :type="showPassword ? 'text' : 'password'"
-              placeholder="再次輸入密碼"
-              class="form-input block w-full pl-12 pr-12 py-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none"
-            />
-            <button
-              @click="showPassword = !showPassword"
-              type="button"
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 cursor-pointer hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-            >
-              <i class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>
-            </button>
-          </div>
-        </label>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="flex flex-col gap-4 px-6 py-6 mb-10">
         <!-- Notifications -->
-        <div v-if="errorMessage" class="text-red-500 text-sm py-2 px-4 rounded-lg bg-red-500/10 mb-2">
+        <div v-if="errorMessage" role="alert" class="text-red-500 text-sm py-2 px-4 rounded-lg bg-red-500/10">
           {{ errorMessage }}
         </div>
-        <div v-if="successMessage" class="text-green-500 text-sm py-2 px-4 rounded-lg bg-green-500/10 mb-2">
+        <div v-if="successMessage" role="status" class="text-green-500 text-sm py-2 px-4 rounded-lg bg-green-500/10">
           {{ successMessage }}
         </div>
 
-        <button
-          @click="handleRegister"
-          :disabled="loading"
-          class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {{ loading ? '註冊中...' : '註冊' }}
-        </button>
-        <div class="flex items-center justify-center gap-2 mt-2">
-          <p class="text-slate-500 dark:text-slate-400 text-sm">已有帳號？</p>
-          <NuxtLink to="/auth/login" class="text-primary font-semibold text-sm hover:underline">返回登入</NuxtLink>
+        <!-- Submit Button -->
+        <div class="flex flex-col gap-4 py-2 mb-10">
+          <button
+            type="submit"
+            :disabled="loading"
+            class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ loading ? '註冊中...' : '註冊' }}
+          </button>
+          <div class="flex items-center justify-center gap-2">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">已有帳號？</p>
+            <NuxtLink to="/auth/login" class="text-primary font-semibold text-sm hover:underline">返回登入</NuxtLink>
+          </div>
         </div>
-      </div>
+      </form>
     </div>
-
-    <!-- Footer Spacer for Mobile View -->
-    <div class="h-6 bg-transparent"></div>
 
     <!-- Duplicate Email Modal -->
     <div
@@ -251,18 +194,3 @@ onBeforeUnmount(() => {
   </div>
 </template>
 
-<style scoped>
-/* Material Symbols */
-i {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-
-/* Form Input Styling */
-input {
-  box-sizing: border-box;
-}
-
-input:focus {
-  outline: none;
-}
-</style>
