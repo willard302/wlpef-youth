@@ -11,7 +11,13 @@ const formData = ref<LoginFormData>({
   password: ''
 })
 
-const showPassword = ref(false)
+type FieldKey = keyof LoginFormData
+
+const fields: { key: FieldKey; icon: string; placeholder: string; type?: 'email' | 'password'; autocomplete: string }[] = [
+  { key: 'email',    icon: 'mail', placeholder: '輸入你的 Email', type: 'email',    autocomplete: 'email' },
+  { key: 'password', icon: 'lock', placeholder: '輸入你的密碼',   type: 'password', autocomplete: 'current-password' },
+]
+
 const supabase = useSupabaseClient()
 const loading = ref(false)
 const errorMessage = ref('')
@@ -145,34 +151,15 @@ const handleAppleLogin = async () => {
 
         <!-- Form -->
         <div class="w-full max-w-sm flex flex-col gap-4">
-          <!-- Email Input -->
-          <div class="glass-effect rounded-xl p-1">
-            <input
-              v-model="formData.email"
-              type="email"
-              placeholder="輸入你的 Email"
-              class="w-full bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 text-base py-3 px-4 outline-none"
-            />
-          </div>
-
-          <!-- Password Input -->
-          <div class="glass-effect rounded-xl p-1 relative">
-            <div class="flex items-center">
-              <input
-                v-model="formData.password"
-                :type="showPassword ? 'text' : 'password'"
-                placeholder="輸入你的密碼"
-                class="w-full bg-transparent border-none text-white placeholder:text-white/50 focus:ring-0 text-base py-3 px-4 outline-none"
-              />
-              <button
-                @click="showPassword = !showPassword"
-                type="button"
-                class="pr-4 text-white/70 hover:text-white transition-colors"
-              >
-                <i class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>
-              </button>
-            </div>
-          </div>
+          <FormInput
+            v-for="field in fields"
+            :key="field.key"
+            v-model="formData[field.key]"
+            :icon="field.icon"
+            :type="field.type"
+            :placeholder="field.placeholder"
+            :autocomplete="field.autocomplete"
+          />
 
           <!-- Error Message -->
           <div v-if="errorMessage" class="text-red-400 text-sm text-center bg-red-400/10 py-2 rounded-lg">
@@ -211,7 +198,6 @@ const handleAppleLogin = async () => {
             class="size-12 rounded-full glass-effect flex items-center justify-center text-white hover:bg-white/30 transition-colors"
             title="使用 Google 登入"
           >
-            <!-- Google Icon (using Material Symbols or inline SVG) -->
             <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
               <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
               <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
@@ -230,14 +216,13 @@ const handleAppleLogin = async () => {
               <path d="M16.365 12.384c.024 2.648 2.338 3.53 2.364 3.542-.02.062-.37 1.27-1.217 2.516-.73 1.077-1.487 2.149-2.68 2.171-1.171.022-1.548-.696-2.887-.696-1.34 0-1.758.674-2.866.718-1.15.043-2.025-1.154-2.761-2.227-1.502-2.194-2.649-6.206-1.108-8.88.766-1.328 2.136-2.168 3.624-2.19 1.131-.022 2.199.763 2.887.763.689 0 1.98-.944 3.338-.805.568.024 2.163.229 3.186 1.725-.083.051-1.901 1.107-1.88 3.363Zm-2.007-6.695c.613-.742 1.026-1.775.913-2.805-.884.036-1.952.588-2.586 1.329-.57.659-1.069 1.713-.934 2.722.986.076 1.994-.502 2.607-1.246Z" />
             </svg>
           </button>
-          </div>
         </div>
+      </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Material Symbols */
 i {
   font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
