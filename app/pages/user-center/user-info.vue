@@ -16,6 +16,33 @@ const { formData, isLoading, isSaving, error, success, updateUserInfo } = useUse
 // 使用 Toast
 const { success: showSuccessToast, error: showErrorToast } = useToast()
 
+// 表單欄位定義
+const formFields = [
+  { key: 'name', label: '姓名', icon: 'person', placeholder: '請輸入姓名', type: 'text' },
+  { key: 'department', label: '校友會 / 單位', icon: 'corporate_fare', placeholder: '例：台北校友會', type: 'text' },
+  { key: 'phoneNumber', label: '電話號碼', icon: 'call', placeholder: '請輸入電話號碼', type: 'tel' },
+  { 
+    key: 'gender', 
+    label: '性別', 
+    icon: 'wc', 
+    placeholder: '請選擇性別', 
+    type: 'select', 
+    options: [
+      { label: '男', value: 'male' },
+      { label: '女', value: 'female' },
+      { label: '其他', value: 'other' }
+    ] 
+  },
+  { 
+    key: 'bio', 
+    label: '個人簡介', 
+    icon: 'description', 
+    placeholder: '分享你的背景或習禪心得...', 
+    type: 'textarea',
+    rows: 4
+  },
+]
+
 // 處理大頭照點擊
 const avatarInput = ref<HTMLInputElement | null>(null)
 const handleAvatarClick = () => {
@@ -132,68 +159,19 @@ onBeforeUnmount(async () => {
           個人資料已更新
         </div>
 
-        <!-- 姓名 -->
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-slate-700 ml-1">姓名</label>
-          <input 
-            v-model="formData.name"
-            class="w-full h-12 px-4 rounded-2xl border-none bg-white/80 focus:ring-2 focus:ring-sky-500/50 shadow-sm placeholder:text-slate-400 text-slate-800" 
-            placeholder="請輸入姓名" 
-            type="text"
-            :disabled="isLoading"
-          />
-        </div>
-
-        <!-- 校友會 / 單位 -->
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-slate-700 ml-1">校友會 / 單位</label>
-          <input 
-            v-model="formData.department"
-            class="w-full h-12 px-4 rounded-2xl border-none bg-white/80 focus:ring-2 focus:ring-sky-500/50 shadow-sm placeholder:text-slate-400 text-slate-800" 
-            placeholder="例：台北校友會" 
-            type="text"
-            :disabled="isLoading"
-          />
-        </div>
-
-        <!-- 電話號碼 -->
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-slate-700 ml-1">電話號碼</label>
-          <input 
-            v-model="formData.phoneNumber"
-            class="w-full h-12 px-4 rounded-2xl border-none bg-white/80 focus:ring-2 focus:ring-sky-500/50 shadow-sm placeholder:text-slate-400 text-slate-800" 
-            placeholder="請輸入電話號碼" 
-            type="tel"
-            :disabled="isLoading"
-          />
-        </div>
-
-        <!-- 性別 -->
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-slate-700 ml-1">性別</label>
-          <select 
-            v-model="formData.gender"
-            class="w-full h-12 px-4 rounded-2xl border-none bg-white/80 focus:ring-2 focus:ring-sky-500/50 shadow-sm text-slate-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-            :disabled="isLoading"
-          >
-            <option value="">請選擇性別</option>
-            <option value="male">男</option>
-            <option value="female">女</option>
-            <option value="other">其他</option>
-          </select>
-        </div>
-
-        <!-- 個人簡介 -->
-        <div class="space-y-2">
-          <label class="block text-sm font-semibold text-slate-700 ml-1">個人簡介</label>
-          <textarea 
-            v-model="formData.bio"
-            class="w-full p-4 rounded-2xl border-none bg-white/80 focus:ring-2 focus:ring-sky-500/50 shadow-sm placeholder:text-slate-400 resize-none text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed" 
-            placeholder="分享你的背景或習禪心得..." 
-            rows="3"
-            :disabled="isLoading"
-          ></textarea>
-        </div>
+        <!-- 使用 v-for 渲染所有欄位 (包括 Select 與 Textarea) -->
+        <FormInput
+          v-for="field in formFields"
+          :key="field.key"
+          v-model="formData[field.key]"
+          :label="field.label"
+          :icon="field.icon"
+          :placeholder="field.placeholder"
+          :type="field.type"
+          :options="field.options"
+          :rows="field.rows"
+          :disabled="isLoading"
+        />
       </div>
 
       <!-- Save Button -->
@@ -222,8 +200,7 @@ onBeforeUnmount(async () => {
 </template>
 
 <style scoped>
-.circle {
-  position: absolute;
-  border-radius: 50%;
+.font-variation-settings-fill-0 {
+  font-variation-settings: "FILL" 0;
 }
 </style>
