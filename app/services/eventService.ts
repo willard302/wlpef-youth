@@ -144,4 +144,77 @@ export const eventService = {
 
     if (error) throw error
   },
+
+  /**
+   * 檢查使用者是否已報名特定活動
+   */
+  async checkRegistrationStatus(eventId: string): Promise<boolean> {
+    const supabase = useSupabaseClient<Database>()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('matched_user_id', user.id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error checking registration status:', error)
+      return false
+    }
+
+    return !!data
+  },
+
+  /**
+   * 報名活動 (直接在資料庫建立紀錄)
+   */
+  async registerForEvent(eventId: string): Promise<void> {
+    const supabase = useSupabaseClient<Database>()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) throw new Error('請先登入後再報名')
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('name')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    // 1. 在 event_registrations 建立紀錄 (主要用於後台同步與獎勵)
+    const { error: regError } = await supabase
+      .from('event_registrations')
+      .insert({
+        event_id: eventId,
+        matched_user_id: user.id,
+        email: user.email!,
+        name: profile?.name || user.user_metadata?.name || 'User',
+        form_submitted_at: new Date().toISOString()
+      })
+
+    if (regError) {
+      if (regError.code === '23505') throw new Error('您已經報名過此活動囉')
+      console.error('Registration insert error:', regError)
+      throw new Error('報名資料建立失敗')
+    }
+
+    // 2. 同時更新 events 表的 participants 欄位 (用於快速統計人數)
+    // 獲取目前的 participants
+    const { data: eventData } = await supabase
+      .from('events')
+      .select('participants')
+      .eq('id', eventId)
+      .single()
+
+    const currentParticipants = eventData?.participants || []
+    if (!currentParticipants.includes(user.id)) {
+      await supabase
+        .from('events')
+        .update({
+          participants: [...currentParticipants, user.id]
+        })
+        .eq('id', eventId)
+    }
+  }
 }

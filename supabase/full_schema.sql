@@ -113,6 +113,41 @@ CREATE POLICY "authenticated users can manage events"
 
 CREATE INDEX IF NOT EXISTS idx_events_start_at ON public.events (start_at);
 
+-- 4. Event Registrations
+CREATE TABLE IF NOT EXISTS public.event_registrations (
+  id           UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id     UUID         REFERENCES public.events(id) ON DELETE CASCADE,
+  matched_user_id UUID      REFERENCES public.profiles(id) ON DELETE CASCADE,
+  email        TEXT         NOT NULL,
+  name         TEXT,
+  google_sheet_row_id TEXT,
+  form_submitted_at TIMESTAMPTZ DEFAULT NOW(),
+  synced_at    TIMESTAMPTZ,
+  registration_points_granted_at TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ  DEFAULT NOW()
+);
+
+ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
+
+-- Registrations RLS
+CREATE POLICY "Users can view own registrations"
+  ON public.event_registrations FOR SELECT
+  USING (auth.uid() = matched_user_id);
+
+CREATE POLICY "Users can register for events"
+  ON public.event_registrations FOR INSERT
+  WITH CHECK (auth.uid() = matched_user_id);
+
+-- Admin can view all registrations
+CREATE POLICY "Admins can view all registrations"
+  ON public.event_registrations FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.profiles
+      WHERE id = auth.uid() AND role = 'admin'
+    )
+  );
+
 -- 5. Realtime Enablement
 DO $$
 BEGIN

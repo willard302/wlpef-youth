@@ -2,6 +2,7 @@
 import { onMounted, computed, ref } from 'vue'
 import { format as fnsFormat } from 'date-fns'
 import { eventService } from '@/services/eventService'
+import type { Event } from '@/types'
 
 definePageMeta({
   layout: 'default',
@@ -36,7 +37,22 @@ const {
 } = useCalendar()
 
 const isEventLoading = ref(false)
-const upcomingEvent = ref<{ title: string; meta: string; id?: string } | null>(null)
+const upcomingEventData = ref<Event | null>(null)
+const upcomingEventDisplay = computed(() => {
+  if (!upcomingEventData.value) return { title: '敬請期待下次活動', meta: '新增活動後會顯示在這裡' }
+  return {
+    id: upcomingEventData.value.id,
+    title: upcomingEventData.value.title,
+    meta: `${fnsFormat(upcomingEventData.value.startAt, 'MM/dd HH:mm')}，${upcomingEventData.value.location || '待定地點'}`,
+  }
+})
+
+// Event Detail Modal State
+const eventDetailVisible = ref(false)
+const selectedEvent = ref<Event | null>(null)
+const isRegistered = ref(false)
+const checkingRegistration = ref(false)
+const registering = ref(false)
 
 const announcements = ref([
   {
@@ -72,24 +88,9 @@ const loadUpcomingEvent = async () => {
       ? events
       : events.filter(event => event.status === 'published')
 
-    const nextEvent = visibleEvents[0]
-
-    upcomingEvent.value = nextEvent
-      ? {
-          id: nextEvent.id,
-          title: nextEvent.title,
-          meta: `${fnsFormat(nextEvent.startAt, 'MM/dd HH:mm')}，${nextEvent.location || '待定地點'}`,
-        }
-      : {
-          title: '敬請期待下次活動',
-          meta: '新增活動後會顯示在這裡',
-        }
+    upcomingEventData.value = visibleEvents[0] || null
   } catch (error) {
     console.error('Failed to load upcoming event', error)
-    upcomingEvent.value = {
-      title: '活動載入失敗',
-      meta: '請稍後再試',
-    }
   } finally {
     isEventLoading.value = false
   }
@@ -112,6 +113,39 @@ const handleDeleteEvent = async (eventId: string) => {
     await Promise.all([loadEvents(), loadUpcomingEvent()])
   } catch (err: any) {
     addToast(err.message || '刪除活動失敗', 'error')
+  }
+}
+
+const openEventDetail = async (event: Event) => {
+  if (!event) return
+  selectedEvent.value = event
+  eventDetailVisible.value = true
+  isRegistered.value = false
+  checkingRegistration.value = true
+  
+  try {
+    isRegistered.value = await eventService.checkRegistrationStatus(event.id)
+  } catch (err) {
+    console.error('Check registration error:', err)
+  } finally {
+    checkingRegistration.value = false
+  }
+}
+
+const handleRegister = async () => {
+  if (!selectedEvent.value || isRegistered.value) return
+
+  try {
+    registering.value = true
+    await eventService.registerForEvent(selectedEvent.value.id)
+    isRegistered.value = true
+    addToast('報名成功！', 'success')
+    // Refresh events to update attendee count
+    await loadEvents()
+  } catch (err: any) {
+    addToast(err.message || '報名失敗，請稍後再試', 'error')
+  } finally {
+    registering.value = false
   }
 }
 
@@ -149,11 +183,11 @@ onMounted(async () => {
       <button
         v-else
         class="space-y-1 text-left"
-        :disabled="!upcomingEvent?.id"
-        @click="upcomingEvent?.id && navigateToEditEvent(upcomingEvent.id)"
+        :disabled="!upcomingEventData"
+        @click="upcomingEventData && openEventDetail(upcomingEventData)"
       >
-        <h1 class="text-2xl font-extrabold leading-tight text-white drop-shadow-sm">{{ upcomingEvent?.title }}</h1>
-        <p class="text-sky-50 text-sm font-medium opacity-90">{{ upcomingEvent?.meta }}</p>
+        <h1 class="text-2xl font-extrabold leading-tight text-white drop-shadow-sm">{{ upcomingEventDisplay.title }}</h1>
+        <p class="text-sky-50 text-sm font-medium opacity-90">{{ upcomingEventDisplay.meta }}</p>
       </button>
     </AppHeroHeader>
 
@@ -235,7 +269,8 @@ onMounted(async () => {
           <div
             v-for="event in eventsForSelectedDate"
             :key="event.id"
-            class="group bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+            @click="openEventDetail(event)"
+            class="group bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden cursor-pointer active:scale-[0.98]"
           >
             <div class="absolute top-0 left-0 w-1.5 h-full" :style="{ backgroundColor: event.color || '#0EA5E9' }"></div>
             <div class="flex items-start gap-4">
@@ -264,7 +299,7 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div v-if="canEditEvent(event.createdBy)" class="flex flex-col gap-2">
+              <div v-if="canEditEvent(event.createdBy)" class="flex flex-col gap-2 relative z-30" @click.stop>
                 <button @click="navigateToEditEvent(event.id)" class="size-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-sky-50 hover:text-sky-500 transition-all">
                   <span class="material-symbols-outlined text-sm">edit</span>
                 </button>
@@ -309,6 +344,7 @@ onMounted(async () => {
       </section>
     </main>
 
+    <!-- Side Menu -->
     <van-action-sheet v-model:show="menuVisible" title="選單" class="rounded-t-[2.5rem] overflow-hidden">
       <div class="px-6 pb-12 pt-4 space-y-3">
         <button
@@ -331,6 +367,75 @@ onMounted(async () => {
           </div>
           <span>會員中心</span>
         </button>
+      </div>
+    </van-action-sheet>
+
+    <!-- Event Detail Modal -->
+    <van-action-sheet v-model:show="eventDetailVisible" title="活動詳情" class="rounded-t-[2.5rem] overflow-hidden">
+      <div v-if="selectedEvent" class="px-6 pb-12 pt-4 space-y-6">
+        <div class="flex items-start gap-4">
+          <div class="size-14 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg" :style="{ backgroundColor: selectedEvent.color || '#0EA5E9' }">
+            <span class="text-[10px] font-bold uppercase opacity-80">{{ format(selectedEvent.startAt, 'MMM') }}</span>
+            <span class="text-xl font-black">{{ format(selectedEvent.startAt, 'd') }}</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h3 class="text-xl font-bold text-slate-900 leading-tight">{{ selectedEvent.title }}</h3>
+            <div class="flex items-center gap-2 mt-1">
+              <span
+                class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide"
+                :class="STATUS_CLASS_MAP[selectedEvent.status]"
+              >
+                {{ STATUS_LABEL_MAP[selectedEvent.status] }}
+              </span>
+              <span class="text-xs text-slate-400 font-medium">{{ selectedEvent.time }} {{ selectedEvent.period }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-4 bg-slate-50 rounded-3xl p-5">
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-sky-500">location_on</span>
+            <div class="flex-1">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">地點</p>
+              <p class="text-sm text-slate-700 font-medium">{{ selectedEvent.location || '未指定地點' }}</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <span class="material-symbols-outlined text-indigo-400">schedule</span>
+            <div class="flex-1">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">時間</p>
+              <p class="text-sm text-slate-700 font-medium">
+                {{ format(selectedEvent.startAt, 'yyyy/MM/dd HH:mm') }} - 
+                {{ format(selectedEvent.endAt, 'HH:mm') }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="selectedEvent.description" class="space-y-2 px-1">
+          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">活動簡介</p>
+          <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{{ selectedEvent.description }}</p>
+        </div>
+
+        <div class="pt-4">
+          <button
+            @click="handleRegister"
+            :disabled="isRegistered || registering || checkingRegistration || selectedEvent.status === 'closed'"
+            class="w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
+            :class="[
+              isRegistered 
+                ? 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200' 
+                : (selectedEvent.status === 'closed' ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
+            ]"
+          >
+            <span v-if="registering" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            <span v-else class="material-symbols-outlined">{{ isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'how_to_reg') }}</span>
+            <span>
+              {{ isRegistered ? '已完成報名' : (registering ? '處理中...' : (selectedEvent.status === 'closed' ? '報名已截止' : '立即報名')) }}
+            </span>
+          </button>
+          <p v-if="checkingRegistration" class="text-[10px] text-center text-slate-400 mt-2">正在確認報名狀態...</p>
+        </div>
       </div>
     </van-action-sheet>
   </div>
