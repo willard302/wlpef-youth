@@ -44,7 +44,7 @@ const handleRegister = async () => {
     errorMessage.value = ''
     successMessage.value = ''
 
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email: formData.value.email,
       password: formData.value.password,
       options: {
@@ -57,6 +57,13 @@ const handleRegister = async () => {
     })
 
     if (error) throw error
+
+    // Detect if user already exists (Supabase returns a user with empty identities if already registered)
+    if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
+      showDuplicateEmailModal.value = true
+      loading.value = false
+      return
+    }
 
     successMessage.value = '註冊成功！請確認您的電子郵件以啟用帳號。'
     setTimeout(() => navigateTo('/auth/login'), 2000)
