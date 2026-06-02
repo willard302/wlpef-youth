@@ -1,4 +1,4 @@
-import type { UserProfile, Activity, Role } from '@/types'
+import type { UserProfile, Activity, Role, PointTransaction } from '@/types'
 import type { Database } from '@/types/database.types'
 
 async function fetchProfilePoints(userId: string, profilePoints: number | null | undefined): Promise<number> {
@@ -311,6 +311,43 @@ export const userService = {
       // 社群登入後的基本資料補填僅修改 profiles 表，不再同步更新 auth metadata
     } catch (error: any) {
       console.error('Error completing social signup:', error)
+      throw error
+    }
+  },
+
+  /**
+   * 取得點數交易紀錄
+   */
+  async fetchPointTransactions(): Promise<PointTransaction[]> {
+    try {
+      const supabase = useSupabaseClient<Database>()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) throw new Error('User not authenticated')
+
+      const { data, error } = await supabase
+        .from('point_transactions')
+        .select(`
+          *,
+          events(title)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        eventId: row.event_id,
+        points: row.points,
+        type: row.type,
+        description: row.description,
+        createdAt: row.created_at,
+        eventTitle: row.events?.title
+      }))
+    } catch (error: any) {
+      console.error('Error fetching point transactions:', error)
       throw error
     }
   }

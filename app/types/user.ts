@@ -36,3 +36,14 @@ export interface FormFieldDefinition {
   options?: { label: string; value: string }[]
   rows?: number
 }
+
+export interface PointTransaction {
+  id: string
+  userId: string
+  eventId: string | null
+  points: number
+  type: string
+  description: string | null
+  createdAt: string
+  eventTitle?: string
+}
