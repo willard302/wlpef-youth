@@ -116,7 +116,7 @@ onBeforeUnmount(() => {
 
       <!-- Form State -->
       <form v-else @submit.prevent="handleSendResetCode" class="flex flex-col gap-4 px-6 py-4">
-        <FormInput
+        <FormField
           v-model="email"
           icon="mail"
           type="email"

@@ -121,7 +121,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
 
       <!-- Registration Form -->
       <form @submit.prevent="handleRegister" class="flex flex-col gap-4 px-6 py-4">
-        <FormInput
+        <FormField
           v-for="field in fields"
           :key="field.key"
           v-model="formData[field.key]"

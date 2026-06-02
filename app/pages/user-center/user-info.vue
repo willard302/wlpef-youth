@@ -160,7 +160,7 @@ onBeforeUnmount(async () => {
         </div>
 
         <!-- 使用 v-for 渲染所有欄位 (包括 Select 與 Textarea) -->
-        <FormInput
+        <FormField
           v-for="field in formFields"
           :key="field.key"
           v-model="formData[field.key]"

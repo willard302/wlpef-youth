@@ -156,7 +156,7 @@ const handleAppleLogin = async () => {
 
         <!-- Form -->
         <div class="w-full max-w-sm flex flex-col gap-4">
-          <FormInput
+          <FormField
             v-for="field in fields"
             :key="field.key"
             v-model="formData[field.key]"
