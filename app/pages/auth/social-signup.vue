@@ -155,7 +155,6 @@ onMounted(() => {
               <input
                 v-model="formData.email"
                 type="email"
-                readonly
                 class="w-full bg-transparent border-none text-slate-700 focus:ring-0 text-base py-3 px-3 outline-none cursor-not-allowed"
               />
             </div>
