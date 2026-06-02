@@ -119,6 +119,13 @@ const handleDeleteEvent = async (eventId: string) => {
 
 const openEventDetail = async (event: Event) => {
   if (!event) return
+  
+  // 如果是管理員，直接跳轉到編輯頁面
+  if (userProfile.value?.role === 'admin') {
+    navigateToEditEvent(event.id)
+    return
+  }
+
   selectedEvent.value = event
   eventDetailVisible.value = true
   isRegistered.value = false
@@ -301,16 +308,13 @@ onMounted(async () => {
                 </div>
               </div>
 
-              <div v-if="canEditEvent(event.createdBy)" class="flex flex-col gap-2 relative z-30" @click.stop>
-                <button @click="navigateToEditEvent(event.id)" class="size-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-sky-50 hover:text-sky-500 transition-all">
-                  <span class="material-symbols-outlined text-sm">edit</span>
-                </button>
+              <div v-if="canEditEvent(event.createdBy)" class="flex flex-col relative z-30 self-center" @click.stop>
                 <button
                   v-if="canDeleteEvent(event.createdBy)"
                   @click="handleDeleteEvent(event.id)"
-                  class="size-8 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all"
+                  class="size-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all"
                 >
-                  <span class="material-symbols-outlined text-sm">delete</span>
+                  <span class="material-symbols-outlined text-md">delete</span>
                 </button>
               </div>
             </div>
