@@ -148,7 +148,91 @@ CREATE POLICY "Admins can view all registrations"
     )
   );
 
--- 5. Realtime Enablement
+-- 5. Point Transactions
+CREATE TABLE IF NOT EXISTS public.point_transactions (
+  id           UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id      UUID         REFERENCES public.profiles(id) ON DELETE CASCADE,
+  event_id     UUID         REFERENCES public.events(id) ON DELETE SET NULL,
+  registration_id UUID      REFERENCES public.event_registrations(id) ON DELETE SET NULL,
+  checkin_id   UUID,        -- Placeholder for future checkin table
+  points       INTEGER      NOT NULL,
+  type         TEXT         NOT NULL, -- registration, checkin, bonus, manual
+  description  TEXT,
+  created_at   TIMESTAMPTZ  DEFAULT NOW()
+);
+
+ALTER TABLE public.point_transactions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own transactions"
+  ON public.point_transactions FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- 6. Point Granting Logic
+CREATE OR REPLACE FUNCTION public.process_event_registration_points(reg_id UUID DEFAULT NULL)
+RETURNS void AS $$
+DECLARE
+  r RECORD;
+BEGIN
+  FOR r IN 
+    SELECT 
+      er.id as registration_id,
+      er.matched_user_id as user_id,
+      er.event_id,
+      e.title as event_title,
+      e.registration_bonus as points
+    FROM public.event_registrations er
+    JOIN public.events e ON er.event_id = e.id
+    WHERE (reg_id IS NULL OR er.id = reg_id)
+      AND er.registration_points_granted_at IS NULL
+      AND er.matched_user_id IS NOT NULL
+      AND e.registration_bonus > 0
+  LOOP
+    -- 1. Insert into point_transactions
+    INSERT INTO public.point_transactions (
+      user_id,
+      event_id,
+      registration_id,
+      points,
+      type,
+      description
+    ) VALUES (
+      r.user_id,
+      r.event_id,
+      r.registration_id,
+      r.points,
+      'registration',
+      '報名活動獎勵: ' || r.event_title
+    );
+
+    -- 2. Update profiles total points
+    UPDATE public.profiles
+    SET points = COALESCE(points, 0) + r.points
+    WHERE id = r.user_id;
+
+    -- 3. Mark as granted
+    UPDATE public.event_registrations
+    SET registration_points_granted_at = NOW()
+    WHERE id = r.registration_id;
+  END LOOP;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger for instant point granting
+CREATE OR REPLACE FUNCTION public.on_event_registration_inserted()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Call the processing function for this specific registration
+  PERFORM public.process_event_registration_points(NEW.id);
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_on_event_registration_points ON public.event_registrations;
+CREATE TRIGGER tr_on_event_registration_points
+  AFTER INSERT ON public.event_registrations
+  FOR EACH ROW EXECUTE FUNCTION public.on_event_registration_inserted();
+
+-- 7. Realtime Enablement
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN

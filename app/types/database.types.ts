@@ -314,7 +314,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      process_event_registration_points: {
+        Args: { reg_id?: string }
+        Returns: undefined
+      }
     }
     Enums: {
       attendance_status: "attendance" | "lateness" | "leave" | "absence"

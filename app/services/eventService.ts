@@ -216,5 +216,21 @@ export const eventService = {
         })
         .eq('id', eventId)
     }
+  },
+
+  /**
+   * 手動觸發點數結算 (RPC)
+   * 適用於需要即時看到點數異動的場景
+   */
+  async settleRegistrationPoints(registrationId?: string): Promise<void> {
+    const supabase = useSupabaseClient<Database>()
+    const { error } = await supabase.rpc('process_event_registration_points', {
+      reg_id: registrationId
+    })
+
+    if (error) {
+      console.error('Error settling points:', error)
+      throw new Error('點數結算失敗')
+    }
   }
 }
