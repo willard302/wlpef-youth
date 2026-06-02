@@ -161,5 +161,6 @@ export function useCalendar() {
     canAddEvent,
     canEditEvent,
     canDeleteEvent,
+    canViewAllEventStatus
   }
 }

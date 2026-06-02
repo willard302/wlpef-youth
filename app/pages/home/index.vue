@@ -34,6 +34,7 @@ const {
   canAddEvent,
   canEditEvent,
   canDeleteEvent,
+  canViewAllEventStatus,
 } = useCalendar()
 
 const isEventLoading = ref(false)
@@ -281,6 +282,7 @@ onMounted(async () => {
               <div class="flex-1 min-w-0">
                 <h5 class="font-bold text-slate-900 text-base truncate mb-1">{{ event.title }}</h5>
                 <span
+                  v-if="canViewAllEventStatus"
                   class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide mb-2"
                   :class="STATUS_CLASS_MAP[event.status]"
                 >
@@ -382,6 +384,7 @@ onMounted(async () => {
             <h3 class="text-xl font-bold text-slate-900 leading-tight">{{ selectedEvent.title }}</h3>
             <div class="flex items-center gap-2 mt-1">
               <span
+                v-if="canViewAllEventStatus"
                 class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide"
                 :class="STATUS_CLASS_MAP[selectedEvent.status]"
               >
