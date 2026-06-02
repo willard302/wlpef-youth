@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
+import type { FormFieldDefinition } from '@/types'
 
 const router = useRouter()
 
@@ -16,21 +16,8 @@ const { formData, isLoading, isSaving, error, success, updateUserInfo } = useUse
 // 使用 Toast
 const { success: showSuccessToast, error: showErrorToast } = useToast()
 
-// 定義表單欄位 Key 的類型以解決 TS 索引錯誤
-type FormDataKey = keyof typeof formData.value
-
-interface FormField {
-  key: FormDataKey
-  label: string
-  icon: string
-  placeholder: string
-  type: string
-  options?: { label: string; value: string }[]
-  rows?: number
-}
-
-// 表單欄位定義
-const formFields: FormField[] = [
+// 表單欄位定義 (使用從 types 導入的統一型別)
+const formFields: FormFieldDefinition[] = [
   { key: 'name', label: '姓名', icon: 'person', placeholder: '請輸入姓名', type: 'text' },
   { key: 'department', label: '校友會 / 單位', icon: 'corporate_fare', placeholder: '例：台北校友會', type: 'text' },
   { key: 'phoneNumber', label: '電話號碼', icon: 'call', placeholder: '請輸入電話號碼', type: 'tel' },

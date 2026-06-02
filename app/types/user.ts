@@ -16,3 +16,23 @@ export interface UserProfile {
   gender?: string
   bio?: string
 }
+
+export interface UserInfoFormData {
+  name: string
+  department: string
+  phoneNumber: string
+  gender: string
+  bio: string
+}
+
+export type UserInfoFormDataKey = keyof UserInfoFormData
+
+export interface FormFieldDefinition {
+  key: UserInfoFormDataKey
+  label: string
+  icon: string
+  placeholder: string
+  type: string
+  options?: { label: string; value: string }[]
+  rows?: number
+}

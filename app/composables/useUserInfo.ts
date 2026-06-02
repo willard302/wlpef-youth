@@ -1,5 +1,5 @@
-import { ref, onMounted } from 'vue'
 import { userService } from '@/services/userService'
+import type { UserInfoFormData } from '@/types'
 
 /**
  * 管理用戶信息編輯頁面的狀態與邏輯
@@ -8,7 +8,7 @@ export function useUserInfo() {
   const supabase = useSupabaseClient()
 
   // 表單狀態
-  const formData = ref({
+  const formData = ref<UserInfoFormData>({
     name: '',
     department: '',
     phoneNumber: '',
