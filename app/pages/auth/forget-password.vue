@@ -1,16 +1,40 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-
 definePageMeta({
   layout: 'auth'
 })
 
+const supabase = useSupabaseClient()
+
 const email = ref('')
 const loading = ref(false)
+const errorMessage = ref('')
+const successMessage = ref('')
 
 const handleSendResetCode = async () => {
-  if (!email.value) return
-  // logic to send reset code
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  if (!email.value.trim()) {
+    errorMessage.value = '請輸入 Email'
+    return
+  }
+
+  try {
+    loading.value = true
+    
+    const {error} = await supabase.auth.resetPasswordForEmail(email.value.trim(), {
+      redirectTo: `${window.location.origin}/auth/confirm`
+    })
+
+    if (error) throw error
+
+    successMessage.value = '重設密碼信已發送到您的 Email，請檢查收件匣。'
+  } catch (error: any) {
+    console.error('Error sending reset code:', error)
+    errorMessage.value = '發送重設密碼信失敗，請稍後再試。'
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
@@ -58,7 +82,7 @@ const handleSendResetCode = async () => {
             :disabled="!email || loading"
             class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {{ loading ? '傳送中...' : '發送驗證碼' }}
+            {{ loading ? '傳送中...' : '發送重設信件' }}
           </button>
           <div class="flex items-center justify-center gap-2">
             <p class="text-slate-500 dark:text-slate-400 text-sm">記得密碼了？</p>

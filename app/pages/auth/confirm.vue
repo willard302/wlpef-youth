@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-
 definePageMeta({
   layout: 'auth'
 })
@@ -13,14 +10,69 @@ const supabase = useSupabaseClient()
 const loading = ref(true)
 const errorMessage = ref('')
 const successMessage = ref('')
+const isRecovery = ref(false)
+const newPassword = ref('')
+const confirmPassword = ref('')
+const isSubmitting = ref(false)
+
+const resolveAuthMode = () => {
+  const hashParams = new URLSearchParams(route.hash.substring(1))
+  const queryType = route.query.type as string | undefined
+  const hashType = hashParams.get('type') || undefined
+
+  return queryType || hashType || ''
+}
+
+const handleResetPassword = async () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  if (!newPassword.value || newPassword.value.length < 6) {
+    errorMessage.value = '新密碼至少需要 6 個字元'
+    return
+  }
+
+  if (newPassword.value !== confirmPassword.value) {
+    errorMessage.value = '兩次輸入的密碼不一致'
+    return
+  }
+
+  try {
+    isSubmitting.value = true
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword.value
+    })
+
+    if (error) throw error
+
+    successMessage.value = '密碼已更新，請重新登入。'
+
+    setTimeout(() => {
+      router.push('/auth/login')
+    }, 1500)
+  } catch (err: any) {
+    console.error('Reset password error:', err)
+    errorMessage.value = err.message || '更新密碼失敗'
+  } finally {
+    isSubmitting.value = false
+  }
+}
 
 onMounted(async () => {
   // Wait a bit to ensure the auth state is ready
   await new Promise((resolve) => setTimeout(resolve, 300))
-
   const hash = route.hash
   const error = route.query.error as string
   const errorDescription = route.query.error_description as string
+  const authMode = resolveAuthMode()
+
+  isRecovery.value = authMode === 'recovery'
+
+  if (isRecovery.value) {
+    loading.value = false
+    return
+  }
 
   // Handle OAuth or PKCE errors from the URL
   if (error) {
@@ -156,7 +208,9 @@ onMounted(async () => {
         </div>
 
         <div class="space-y-3">
-          <h1 class="text-white text-2xl font-bold tracking-tight">電子郵件確認</h1>
+          <h1 class="text-white text-2xl font-bold tracking-tight">
+            {{ isRecovery ? '重設密碼' : '電子郵件確認' }}
+          </h1>
           
           <div v-if="loading" class="space-y-4">
             <p class="text-white/70">正在驗證您的電子郵件...</p>
@@ -164,6 +218,40 @@ onMounted(async () => {
               <div class="bg-white h-full animate-progress-bar"></div>
             </div>
           </div>
+
+          <form v-else-if="isRecovery && !errorMessage && !successMessage" @submit.prevent="handleResetPassword" class="space-y-4 text-left">
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-white/80" for="new-password">新密碼</label>
+              <input
+                id="new-password"
+                v-model="newPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="輸入新密碼"
+                class="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 outline-none transition focus:border-white/35 focus:bg-white/15"
+              />
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-white/80" for="confirm-password">確認新密碼</label>
+              <input
+                id="confirm-password"
+                v-model="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="再次輸入新密碼"
+                class="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 outline-none transition focus:border-white/35 focus:bg-white/15"
+              />
+            </div>
+
+            <button
+              type="submit"
+              :disabled="isSubmitting"
+              class="w-full rounded-2xl bg-white px-5 py-3 font-bold text-primary transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {{ isSubmitting ? '更新中...' : '更新密碼' }}
+            </button>
+          </form>
 
           <p v-else-if="errorMessage" class="text-red-200 font-medium">
             {{ errorMessage }}
