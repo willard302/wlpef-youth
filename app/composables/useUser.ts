@@ -99,8 +99,14 @@ export function useUser() {
     }
   }
 
-  const handleLogout = () => {
-    router.push('/auth/login')
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut()
+      router.push('/auth/login')
+    } catch (err) {
+      console.error('Logout error:', err)
+      router.push('/auth/login')
+    }
   }
 
   /**

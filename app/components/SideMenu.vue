@@ -10,6 +10,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const { handleLogout } = useUser()
 
 const menuVisible = computed({
   get: () => props.show,
@@ -36,6 +37,16 @@ const menuItems = computed(() => [
     hoverClass: 'hover:bg-slate-100',
     show: true,
     action: () => router.push('/user-center'),
+  },
+  {
+    id: 'logout',
+    label: '登出帳號',
+    icon: 'logout',
+    bgClass: 'bg-red-50',
+    textClass: 'text-red-600',
+    hoverClass: 'hover:bg-red-100',
+    show: true,
+    action: handleLogout,
   },
 ])
 
