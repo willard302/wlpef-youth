@@ -288,8 +288,18 @@ const getTimeColumns = (timeStr: string) => {
         </div>
       </section>
 
-      <section v-if="isEditMode" class="pt-4">
+      <section class="pt-4 space-y-3">
         <button
+          @click="saveEvent"
+          :disabled="isSaving || isDeleting || isInitializing"
+          class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#2b9dee] text-white font-bold text-sm shadow-lg shadow-blue-200 active:scale-[0.98] transition-all disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-lg">done</span>
+          {{ isSaving ? '處理中...' : (isEditMode ? '更新活動' : '建立活動') }}
+        </button>
+
+        <button
+          v-if="isEditMode"
           @click="deleteEvent"
           :disabled="isDeleting || isSaving"
           class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-50 text-red-500 font-bold text-sm active:bg-red-100 transition-colors disabled:opacity-50"
