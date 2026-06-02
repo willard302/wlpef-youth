@@ -297,6 +297,7 @@ export const userService = {
         .from('profiles')
         .upsert({
           id: data.id,
+          email: data.email,
           name: profileName,
           department: data.department,
           gender: data.gender,

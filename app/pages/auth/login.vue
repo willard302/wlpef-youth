@@ -69,6 +69,7 @@ const handleLogin = async () => {
         .from('profiles')
         .insert({
           id: user.id,
+          email: user.email,
           name: metadata.name || metadata.display_name || user.email?.split('@')[0] || 'User',
           avatar_url: metadata.avatar_url || null,
           role: 'member',
