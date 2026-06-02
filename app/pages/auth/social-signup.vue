@@ -116,19 +116,11 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="relative flex min-h-screen w-full flex-col overflow-hidden bg-white font-display">
-    <!-- Background Decoration -->
-    <div class="absolute inset-0 z-0">
-      <div
-        class="h-full w-full bg-cover bg-center opacity-10"
-        style="background-image: url('https://images.unsplash.com/photo-1499244015948-ac75439983c3?q=80&w=2070&auto=format&fit=crop')"
-      ></div>
-      <div class="absolute inset-0 bg-gradient-to-b from-sky-500/20 to-white backdrop-blur-[1px]"></div>
-    </div>
+  <div class="relative flex min-h-screen w-full flex-col overflow-hidden bg-background-light font-display">
 
     <!-- Content -->
     <div class="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">
-      <div class="w-full max-w-sm flex flex-col gap-8 bg-white/80 backdrop-blur-xl p-8 rounded-[2.5rem] shadow-2xl shadow-sky-200/50 border border-white">
+      <div class="w-full max-w-sm glass-effect rounded-[2.5rem] flex flex-col gap-8 bg-white/80 backdrop-blur-xl p-8  shadow-2xl shadow-sky-200/50 border border-white/20">
         
         <!-- Header -->
         <div class="text-center space-y-3">
