@@ -22,6 +22,11 @@ const supabase = useSupabaseClient()
 const loading = ref(false)
 const errorMessage = ref('')
 
+const isPasswordRecoveryCookie = useCookie('is_password_recovery')
+onMounted(() => {
+  isPasswordRecoveryCookie.value = null
+})
+
 type OAuthProvider = 'google' | 'apple'
 
 const handleLogin = async () => {

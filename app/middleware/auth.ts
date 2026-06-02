@@ -2,6 +2,15 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient()
   const { data: { user } } = await supabase.auth.getUser()
 
+  // Check if user is in password recovery mode
+  const isPasswordRecovery = useCookie('is_password_recovery')
+  if (isPasswordRecovery.value === 'true') {
+    if (to.path !== '/auth/reset-password') {
+      return navigateTo('/auth/reset-password')
+    }
+    return
+  }
+
   if (!user) {
     if (!to.path.startsWith('/auth')) {
       return navigateTo('/auth/login')
@@ -13,7 +22,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo('/home')
   }
 
-  const excludedPaths = ['/auth/login', '/auth/register', '/auth/confirm', '/auth/social-signup']
+  const excludedPaths = ['/auth/login', '/auth/register', '/auth/confirm', '/auth/reset-password', '/auth/social-signup']
   if (!excludedPaths.includes(to.path)) {
     const { data: profile } = await supabase
       .from('profiles')

@@ -9,11 +9,23 @@ const email = ref('')
 const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
+const countdown = ref(0)
+let timer: any = null
+
+const startCountdown = () => {
+  countdown.value = 60
+  if (timer) clearInterval(timer)
+  timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
 
 const handleSendResetCode = async () => {
   errorMessage.value = ''
-  successMessage.value = ''
-
+  
   if (!email.value.trim()) {
     errorMessage.value = '請輸入 Email'
     return
@@ -23,12 +35,13 @@ const handleSendResetCode = async () => {
     loading.value = true
     
     const {error} = await supabase.auth.resetPasswordForEmail(email.value.trim(), {
-      redirectTo: `${window.location.origin}/auth/confirm`
+      redirectTo: `${window.location.origin}/auth/reset-password`
     })
 
     if (error) throw error
 
-    successMessage.value = '重設密碼信已發送到您的 Email，請檢查收件匣。'
+    successMessage.value = `重設密碼信已發送到${email.value}，請檢查收件匣。`
+    startCountdown()
   } catch (error: any) {
     console.error('Error sending reset code:', error)
     errorMessage.value = '發送重設密碼信失敗，請稍後再試。'
@@ -36,6 +49,10 @@ const handleSendResetCode = async () => {
     loading.value = false
   }
 }
+
+onBeforeUnmount(() => {
+  if (timer) clearInterval(timer)
+})
 </script>
 
 <template>
@@ -60,13 +77,45 @@ const handleSendResetCode = async () => {
     <!-- Main Content -->
     <div class="flex-1">
       <!-- Header Text -->
-      <div class="px-6 pt-6 pb-2">
+      <div v-if="!successMessage" class="px-6 pt-6 pb-2">
         <h2 class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight">忘記密碼</h2>
-        <p class="text-slate-500 dark:text-slate-400 text-base font-normal mt-1">請輸入您的電子郵件以重設密碼。</p>
+        <p class="text-slate-500 dark:text-slate-400 text-base font-normal mt-1">
+          {{ '請輸入您的電子郵件以重設密碼。' }}
+        </p>
       </div>
 
-      <!-- Form -->
-      <form @submit.prevent="handleSendResetCode" class="flex flex-col gap-4 px-6 py-4">
+      <!-- Success State -->
+      <div v-if="successMessage" class="px-6 py-8 flex flex-col items-center gap-6 animate-fade-in">
+        <div class="size-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+          <span class="material-symbols-outlined text-4xl">mark_email_read</span>
+        </div>
+        <div class="text-center space-y-2">
+          <p class="text-slate-900 dark:text-slate-100 font-bold text-lg">{{ successMessage }}</p>
+          <div class="flex flex-col gap-1">
+            <p class="text-slate-500 dark:text-slate-400 text-sm">若沒看到信件，請檢查垃圾郵件匣。</p>
+          </div>
+        </div>
+
+        <div class="w-full flex flex-col gap-3">
+          <button
+            @click="handleSendResetCode"
+            :disabled="countdown > 0 || loading"
+            class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ countdown > 0 ? `重新發送 (${countdown}s)` : (loading ? '傳送中...' : '重新發送信件') }}
+          </button>
+
+          <NuxtLink 
+            to="/auth/login" 
+            class="text-primary font-bold py-2 text-center hover:underline"
+          >
+            返回登入
+          </NuxtLink>
+        </div>
+      </div>
+
+      <!-- Form State -->
+      <form v-else @submit.prevent="handleSendResetCode" class="flex flex-col gap-4 px-6 py-4">
         <FormInput
           v-model="email"
           icon="mail"
@@ -74,6 +123,11 @@ const handleSendResetCode = async () => {
           placeholder="輸入您的 Email"
           autocomplete="email"
         />
+
+        <!-- Error Message -->
+        <div v-if="errorMessage" class="text-red-500 text-sm font-medium px-1">
+          {{ errorMessage }}
+        </div>
 
         <!-- Buttons -->
         <div class="flex flex-col gap-4 py-2 mb-10">
@@ -94,4 +148,13 @@ const handleSendResetCode = async () => {
   </div>
 </template>
 
-<style scoped lang="scss"></style>
+<style scoped lang="scss">
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+</style>

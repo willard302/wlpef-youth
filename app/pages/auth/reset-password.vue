@@ -10,121 +10,99 @@ const supabase = useSupabaseClient()
 const loading = ref(true)
 const errorMessage = ref('')
 const successMessage = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+const isSubmitting = ref(false)
 
-const isPasswordRecoveryCookie = useCookie('is_password_recovery')
+const isPasswordRecoveryCookie = useCookie('is_password_recovery', {
+  maxAge: 60 * 60, // 1 hour
+  path: '/'
+})
 
-const resolveAuthMode = () => {
-  const hashParams = new URLSearchParams(route.hash.substring(1))
-  const queryType = route.query.type as string | undefined
-  const hashType = hashParams.get('type') || undefined
+// Listen for PASSWORD_RECOVERY event
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    isPasswordRecoveryCookie.value = 'true'
+    loading.value = false
+  }
+})
 
-  return queryType || hashType || ''
+const handleResetPassword = async () => {
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  if (!newPassword.value || newPassword.value.length < 6) {
+    errorMessage.value = '新密碼至少需要 6 個字元'
+    return
+  }
+
+  if (newPassword.value !== confirmPassword.value) {
+    errorMessage.value = '兩次輸入的密碼不一致'
+    return
+  }
+
+  try {
+    isSubmitting.value = true
+
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword.value
+    })
+
+    if (error) throw error
+
+    // Success! Clear recovery state
+    isPasswordRecoveryCookie.value = null
+    successMessage.value = '密碼已更新，請重新登入。'
+
+    setTimeout(async () => {
+      await supabase.auth.signOut()
+      router.push('/auth/login')
+    }, 1500)
+  } catch (err: any) {
+    console.error('Reset password error:', err)
+    errorMessage.value = err.message || '更新密碼失敗'
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 onMounted(async () => {
   // Wait a bit to ensure the auth state is ready
   await new Promise((resolve) => setTimeout(resolve, 500))
   
-  const hash = route.hash
   const error = route.query.error as string
   const errorDescription = route.query.error_description as string
-  const authMode = resolveAuthMode()
 
-  // If we detect recovery mode, redirect to the dedicated page
-  if (authMode === 'recovery') {
-    isPasswordRecoveryCookie.value = 'true'
-    router.push('/auth/reset-password')
-    return
-  }
-
-  // Handle OAuth or PKCE errors from the URL
+  // Handle errors from the URL
   if (error) {
     errorMessage.value = errorDescription || '驗證過程中發生錯誤'
     loading.value = false
-    setTimeout(() => {
-      router.push('/auth/login')
-    }, 3000)
     return
   }
 
-  // Also check for error parameters in the hash (Supabase sometimes puts them there)
-  const hashParams = new URLSearchParams(hash.substring(1))
-  const oauthError = hashParams.get('error_description')
-  if (oauthError) {
-    errorMessage.value = decodeURIComponent(oauthError)
+  // If we have the cookie, we are in the right place
+  if (isPasswordRecoveryCookie.value === 'true') {
     loading.value = false
-    setTimeout(() => {
-      router.push('/auth/login')
-    }, 3000)
     return
   }
 
-  try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
+  // Check if we just landed here from a recovery link (type=recovery in hash or query)
+  const hashParams = new URLSearchParams(route.hash.substring(1))
+  const isRecovery = route.query.type === 'recovery' || hashParams.get('type') === 'recovery'
 
-    if (userError) throw userError
+  if (isRecovery) {
+    isPasswordRecoveryCookie.value = 'true'
+    loading.value = false
+    return
+  }
 
-    if (user) {
-      // 嘗試自動合併同 Email 的重複帳號（例如先 Google 後密碼註冊）
-      const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
-        body: {}
-      })
-      if (mergeError) {
-        console.warn('Auto merge skipped:', mergeError.message)
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (!profile || !profile.department) {
-        // Initialize profile if it doesn't exist
-        if (!profile) {
-          const metadata = user.user_metadata || {}
-          await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              name: metadata.name || metadata.full_name || user.email?.split('@')[0] || 'User',
-              avatar_url: metadata.avatar_url || null,
-              role: 'member',
-              points: 0
-            })
-        }
-        
-        successMessage.value = mergeData?.merged
-          ? '帳號已整合完成！即將跳轉完善資料...'
-          : '登入成功！即將跳轉完善資料...'
-        loading.value = false
-        setTimeout(() => {
-          router.push('/auth/social-signup')
-        }, 1500)
-      } else {
-        successMessage.value = mergeData?.merged
-          ? '帳號已整合完成！即將跳轉首頁...'
-          : '驗證成功！即將跳轉首頁...'
-        loading.value = false
-        setTimeout(() => {
-          router.push('/home')
-        }, 1500)
-      }
-    }
-  } catch (err: any) {
-    console.error('Confirmation error:', err)
-    // If there's an error but we're already logged in, just redirect to home
-    const { data: { session } } = await supabase.auth.getSession()
-    if (session) {
-      router.push('/home')
-    } else {
-      errorMessage.value = err.message || '電子郵件確認時發生錯誤'
-      loading.value = false
-      setTimeout(async () => {
-        await supabase.auth.signOut()
-        router.push('/auth/login')
-      }, 3000)
-    }
+  // If not in recovery mode and no user session, go to login
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    router.push('/auth/login')
+  } else {
+    // If logged in but not in recovery, maybe they shouldn't be here
+    loading.value = false
   }
 })
 </script>
@@ -172,15 +150,49 @@ onMounted(async () => {
 
         <div class="space-y-3">
           <h1 class="text-white text-2xl font-bold tracking-tight">
-            電子郵件確認
+            重設密碼
           </h1>
           
           <div v-if="loading" class="space-y-4">
-            <p class="text-white/70">正在驗證您的電子郵件...</p>
+            <p class="text-white/70">正在驗證您的身分...</p>
             <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
               <div class="bg-white h-full animate-progress-bar"></div>
             </div>
           </div>
+
+          <form v-else-if="!errorMessage && !successMessage" @submit.prevent="handleResetPassword" class="space-y-4 text-left">
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-white/80" for="new-password">新密碼</label>
+              <input
+                id="new-password"
+                v-model="newPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="輸入新密碼"
+                class="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 outline-none transition focus:border-white/35 focus:bg-white/15"
+              />
+            </div>
+
+            <div class="space-y-3">
+              <label class="block text-sm font-medium text-white/80" for="confirm-password">確認新密碼</label>
+              <input
+                id="confirm-password"
+                v-model="confirmPassword"
+                type="password"
+                autocomplete="new-password"
+                placeholder="再次輸入新密碼"
+                class="w-full rounded-2xl border border-white/15 bg-white/10 px-4 py-3 text-white placeholder:text-white/45 outline-none transition focus:border-white/35 focus:bg-white/15"
+              />
+            </div>
+
+            <button
+              type="submit"
+              :disabled="isSubmitting"
+              class="w-full rounded-2xl bg-white px-5 py-3 font-bold text-primary transition hover:bg-white/90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {{ isSubmitting ? '更新中...' : '更新密碼' }}
+            </button>
+          </form>
 
           <p v-else-if="errorMessage" class="text-red-200 font-medium">
             {{ errorMessage }}
