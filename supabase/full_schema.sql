@@ -4,6 +4,7 @@
 
 -- 1. Enable Required Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- 2. Profiles (Extends auth.users)
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -64,10 +65,40 @@ CREATE TABLE IF NOT EXISTS public.events (
   end_at       TIMESTAMPTZ  NOT NULL,
   all_day      BOOLEAN      DEFAULT false,
   color        TEXT         DEFAULT '#38bdf8',
+  status       TEXT         DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'closed')),
+  google_form_url TEXT,
+  google_sheet_id TEXT,
+  subdomain    TEXT,
+  registration_bonus INTEGER DEFAULT 0,
+  checkin_bonus INTEGER DEFAULT 0,
+  raffle_threshold INTEGER DEFAULT 0,
   participants TEXT[],
   created_by   UUID         REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ  DEFAULT NOW()
 );
+
+ALTER TABLE public.events
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft',
+  ADD COLUMN IF NOT EXISTS google_form_url TEXT,
+  ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
+  ADD COLUMN IF NOT EXISTS subdomain TEXT,
+  ADD COLUMN IF NOT EXISTS registration_bonus INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS checkin_bonus INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS raffle_threshold INTEGER DEFAULT 0;
+
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1
+    FROM pg_constraint
+    WHERE conname = 'events_status_check'
+      AND conrelid = 'public.events'::regclass
+  ) THEN
+    ALTER TABLE public.events
+      ADD CONSTRAINT events_status_check
+      CHECK (status IN ('draft', 'published', 'closed'));
+  END IF;
+END $$;
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 

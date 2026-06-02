@@ -51,12 +51,28 @@ const announcements = ref([
 
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
 
+const STATUS_LABEL_MAP = {
+  draft: '草稿',
+  published: '已發佈',
+  closed: '已關閉',
+} as const
+
+const STATUS_CLASS_MAP = {
+  draft: 'bg-amber-50 text-amber-700 border-amber-200',
+  published: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  closed: 'bg-slate-100 text-slate-600 border-slate-200',
+} as const
+
 const loadUpcomingEvent = async () => {
   isEventLoading.value = true
 
   try {
-    const events = await eventService.fetchUpcomingEvents(1)
-    const nextEvent = events[0]
+    const events = await eventService.fetchUpcomingEvents(5)
+    const visibleEvents = canAddEvent.value
+      ? events
+      : events.filter(event => event.status === 'published')
+
+    const nextEvent = visibleEvents[0]
 
     upcomingEvent.value = nextEvent
       ? {
@@ -104,12 +120,9 @@ const viewAllAnnouncements = () => {
 }
 
 onMounted(async () => {
-  await Promise.all([
-    loadUserData(),
-    loadEvents(),
-    loadUpcomingEvent(),
-    loadCurrentUserRole(),
-  ])
+  await loadUserData()
+  await loadCurrentUserRole()
+  await Promise.all([loadEvents(), loadUpcomingEvent()])
 })
 </script>
 
@@ -232,6 +245,12 @@ onMounted(async () => {
               </div>
               <div class="flex-1 min-w-0">
                 <h5 class="font-bold text-slate-900 text-base truncate mb-1">{{ event.title }}</h5>
+                <span
+                  class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide mb-2"
+                  :class="STATUS_CLASS_MAP[event.status]"
+                >
+                  {{ STATUS_LABEL_MAP[event.status] }}
+                </span>
                 <p v-if="event.description" class="text-xs text-slate-500 line-clamp-2 mb-2">{{ event.description }}</p>
                 <div class="flex flex-wrap items-center gap-y-1 gap-x-3">
                   <span class="text-[11px] text-slate-500 flex items-center gap-1 font-medium">

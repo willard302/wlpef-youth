@@ -45,6 +45,7 @@ export function useCalendar() {
   }
 
   const canAddEvent = computed(() => currentRole.value === 'admin')
+  const canViewAllEventStatus = computed(() => currentRole.value === 'admin')
 
   const canEditEvent = (createdBy: string): boolean => {
     if (currentRole.value === 'admin') return true
@@ -95,17 +96,25 @@ export function useCalendar() {
   }
 
   const eventsForSelectedDate = computed(() => {
-    return allEvents.value.filter(event => isEventOnDate(event, selectedDate.value))
+    const visibleEvents = canViewAllEventStatus.value
+      ? allEvents.value
+      : allEvents.value.filter(event => event.status === 'published')
+
+    return visibleEvents.filter(event => isEventOnDate(event, selectedDate.value))
   })
 
   const eventsInMonth = computed(() => {
     const eventsMap = new Map<number, boolean>()
+    const visibleEvents = canViewAllEventStatus.value
+      ? allEvents.value
+      : allEvents.value.filter(event => event.status === 'published')
+
     const monthStart = startOfMonth(currentDate.value)
     const monthEnd = endOfMonth(currentDate.value)
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
     daysInMonth.forEach((day) => {
-      if (allEvents.value.some(event => isEventOnDate(event, day))) {
+      if (visibleEvents.some(event => isEventOnDate(event, day))) {
         eventsMap.set(day.getDate(), true)
       }
     })

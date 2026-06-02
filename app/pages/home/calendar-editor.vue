@@ -191,6 +191,9 @@ const getTimeColumns = (timeStr: string) => {
             <option value="closed">已關閉</option>
           </select>
         </div>
+        <p class="px-3 pb-3 text-[11px] leading-relaxed text-slate-500">
+          草稿與已關閉活動僅管理員可見；已發佈活動會顯示在首頁與行事曆。
+        </p>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-start gap-3 px-3 py-4">
           <span class="material-symbols-outlined text-slate-400 mt-0.5">link</span>
