@@ -259,6 +259,9 @@ const getTimeColumns = (timeStr: string) => {
             class="w-20 bg-white/40 px-2 py-1 rounded-lg text-right text-sm text-[#2b9dee] outline-none"
           />
         </div>
+        <p class="px-3 pb-3 text-[11px] leading-relaxed text-slate-500">
+          * 系統每分鐘自動結算點數，報名或簽到後請稍候。
+        </p>
       </section>
 
       <section class="glass-card rounded-2xl p-5 space-y-4">

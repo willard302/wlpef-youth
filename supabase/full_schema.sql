@@ -113,7 +113,7 @@ CREATE POLICY "authenticated users can manage events"
 
 CREATE INDEX IF NOT EXISTS idx_events_start_at ON public.events (start_at);
 
--- 4. Event Registrations
+-- 4. Event Registrations & Checkins
 CREATE TABLE IF NOT EXISTS public.event_registrations (
   id           UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
   event_id     UUID         REFERENCES public.events(id) ON DELETE CASCADE,
@@ -124,10 +124,25 @@ CREATE TABLE IF NOT EXISTS public.event_registrations (
   form_submitted_at TIMESTAMPTZ DEFAULT NOW(),
   synced_at    TIMESTAMPTZ,
   registration_points_granted_at TIMESTAMPTZ,
+  created_at   TIMESTAMPTZ  DEFAULT NOW(),
+  UNIQUE(event_id, email)
+);
+
+CREATE TABLE IF NOT EXISTS public.checkin_records (
+  id           UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
+  event_id     UUID         REFERENCES public.events(id) ON DELETE CASCADE,
+  user_id      UUID         REFERENCES public.profiles(id) ON DELETE CASCADE,
+  registration_id UUID      REFERENCES public.event_registrations(id) ON DELETE SET NULL,
+  email        TEXT         NOT NULL,
+  checkin_method TEXT,       -- manual, qr_code, nfc
+  checked_in_by UUID        REFERENCES public.profiles(id) ON DELETE SET NULL,
+  checked_in_at TIMESTAMPTZ  DEFAULT NOW(),
+  checkin_points_granted_at TIMESTAMPTZ,
   created_at   TIMESTAMPTZ  DEFAULT NOW()
 );
 
 ALTER TABLE public.event_registrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.checkin_records ENABLE ROW LEVEL SECURITY;
 
 -- Registrations RLS
 CREATE POLICY "Users can view own registrations"
@@ -138,15 +153,19 @@ CREATE POLICY "Users can register for events"
   ON public.event_registrations FOR INSERT
   WITH CHECK (auth.uid() = matched_user_id);
 
--- Admin can view all registrations
+-- Checkins RLS
+CREATE POLICY "Users can view own checkins"
+  ON public.checkin_records FOR SELECT
+  USING (auth.uid() = user_id);
+
+-- Admin can view all
 CREATE POLICY "Admins can view all registrations"
   ON public.event_registrations FOR SELECT
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid() AND role = 'admin'
-    )
-  );
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
+CREATE POLICY "Admins can view all checkins"
+  ON public.checkin_records FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
 
 -- 5. Point Transactions
 CREATE TABLE IF NOT EXISTS public.point_transactions (
@@ -154,7 +173,7 @@ CREATE TABLE IF NOT EXISTS public.point_transactions (
   user_id      UUID         REFERENCES public.profiles(id) ON DELETE CASCADE,
   event_id     UUID         REFERENCES public.events(id) ON DELETE SET NULL,
   registration_id UUID      REFERENCES public.event_registrations(id) ON DELETE SET NULL,
-  checkin_id   UUID,        -- Placeholder for future checkin table
+  checkin_id   UUID         REFERENCES public.checkin_records(id) ON DELETE SET NULL,
   points       INTEGER      NOT NULL,
   type         TEXT         NOT NULL, -- registration, checkin, bonus, manual
   description  TEXT,
@@ -167,12 +186,13 @@ CREATE POLICY "Users can view own transactions"
   ON public.point_transactions FOR SELECT
   USING (auth.uid() = user_id);
 
--- 6. Point Granting Logic
-CREATE OR REPLACE FUNCTION public.process_event_registration_points(reg_id UUID DEFAULT NULL)
+-- 6. Point Granting Logic (Unified & Batch)
+CREATE OR REPLACE FUNCTION public.process_pending_points()
 RETURNS void AS $$
 DECLARE
   r RECORD;
 BEGIN
+  -- 1. Process Registration Points
   FOR r IN 
     SELECT 
       er.id as registration_id,
@@ -182,55 +202,55 @@ BEGIN
       e.registration_bonus as points
     FROM public.event_registrations er
     JOIN public.events e ON er.event_id = e.id
-    WHERE (reg_id IS NULL OR er.id = reg_id)
-      AND er.registration_points_granted_at IS NULL
+    WHERE er.registration_points_granted_at IS NULL
       AND er.matched_user_id IS NOT NULL
       AND e.registration_bonus > 0
   LOOP
-    -- 1. Insert into point_transactions
-    INSERT INTO public.point_transactions (
-      user_id,
-      event_id,
-      registration_id,
-      points,
-      type,
-      description
-    ) VALUES (
-      r.user_id,
-      r.event_id,
-      r.registration_id,
-      r.points,
-      'registration',
-      '報名活動獎勵: ' || r.event_title
-    );
+    -- Insert transaction
+    INSERT INTO public.point_transactions (user_id, event_id, registration_id, points, type, description)
+    VALUES (r.user_id, r.event_id, r.registration_id, r.points, 'registration', '報名活動獎勵: ' || r.event_title);
 
-    -- 2. Update profiles total points
-    UPDATE public.profiles
-    SET points = COALESCE(points, 0) + r.points
-    WHERE id = r.user_id;
+    -- Update profile
+    UPDATE public.profiles SET points = COALESCE(points, 0) + r.points WHERE id = r.user_id;
 
-    -- 3. Mark as granted
-    UPDATE public.event_registrations
-    SET registration_points_granted_at = NOW()
-    WHERE id = r.registration_id;
+    -- Mark granted
+    UPDATE public.event_registrations SET registration_points_granted_at = NOW() WHERE id = r.registration_id;
+  END LOOP;
+
+  -- 2. Process Check-in Points
+  FOR r IN 
+    SELECT 
+      cr.id as checkin_id,
+      cr.user_id,
+      cr.event_id,
+      e.title as event_title,
+      e.checkin_bonus as points
+    FROM public.checkin_records cr
+    JOIN public.events e ON cr.event_id = e.id
+    WHERE cr.checkin_points_granted_at IS NULL
+      AND cr.user_id IS NOT NULL
+      AND e.checkin_bonus > 0
+  LOOP
+    -- Insert transaction
+    INSERT INTO public.point_transactions (user_id, event_id, checkin_id, points, type, description)
+    VALUES (r.user_id, r.event_id, r.checkin_id, r.points, 'checkin', '活動簽到獎勵: ' || r.event_title);
+
+    -- Update profile
+    UPDATE public.profiles SET points = COALESCE(points, 0) + r.points WHERE id = r.user_id;
+
+    -- Mark granted
+    UPDATE public.checkin_records SET checkin_points_granted_at = NOW() WHERE id = r.checkin_id;
   END LOOP;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Trigger for instant point granting
-CREATE OR REPLACE FUNCTION public.on_event_registration_inserted()
-RETURNS TRIGGER AS $$
+-- Compatibility wrapper for the old RPC name
+CREATE OR REPLACE FUNCTION public.process_event_registration_points(reg_id UUID DEFAULT NULL)
+RETURNS void AS $$
 BEGIN
-  -- Call the processing function for this specific registration
-  PERFORM public.process_event_registration_points(NEW.id);
-  RETURN NEW;
+  PERFORM public.process_pending_points();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
-
-DROP TRIGGER IF EXISTS tr_on_event_registration_points ON public.event_registrations;
-CREATE TRIGGER tr_on_event_registration_points
-  AFTER INSERT ON public.event_registrations
-  FOR EACH ROW EXECUTE FUNCTION public.on_event_registration_inserted();
 
 -- 7. Realtime Enablement
 DO $$
