@@ -18,7 +18,6 @@ type FieldKey = keyof RegisterFormData
 const fields: { key: FieldKey; icon: string; placeholder: string; type?: 'email' | 'password'; autocomplete: string }[] = [
   { key: 'email',            icon: 'mail',   placeholder: '輸入您的 Email',         type: 'email',    autocomplete: 'email' },
   { key: 'fullName',         icon: 'person', placeholder: '輸入您的姓名',           autocomplete: 'name' },
-  { key: 'department',       icon: 'business', placeholder: '輸入您的校友會',           autocomplete: 'organization' },
   { key: 'password',         icon: 'lock',   placeholder: '建立密碼（至少 6 個字元）', type: 'password', autocomplete: 'new-password' },
   { key: 'confirmPassword',  icon: 'lock',   placeholder: '再次輸入密碼',            type: 'password', autocomplete: 'new-password' },
 ]
@@ -32,11 +31,6 @@ const showDuplicateEmailModal = ref(false)
 const handleRegister = async () => {
   if (!formData.value.fullName.trim() || !formData.value.email.trim() || !formData.value.password) {
     errorMessage.value = '請填寫所有必填欄位。'
-    return
-  }
-
-  if (!formData.value.department.trim()) {
-    errorMessage.value = '請填寫校友會欄位。'
     return
   }
 
