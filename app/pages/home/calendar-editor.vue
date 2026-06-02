@@ -181,14 +181,14 @@ const getTimeColumns = (timeStr: string) => {
       <section class="glass-card rounded-2xl p-2 space-y-1">
         <div class="flex items-center gap-3 px-3 py-4">
           <span class="material-symbols-outlined text-slate-400">visibility</span>
-          <label class="text-sm font-medium text-slate-700 min-w-20">Status</label>
+          <label class="text-sm font-medium text-slate-700 min-w-20">活動狀態</label>
           <select
             v-model="formData.status"
             class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 outline-none text-slate-700"
           >
-            <option value="draft">Draft</option>
-            <option value="published">Published</option>
-            <option value="closed">Closed</option>
+            <option value="draft">草稿</option>
+            <option value="published">已發佈</option>
+            <option value="closed">已關閉</option>
           </select>
         </div>
         <div class="h-[1px] bg-white/30 mx-3"></div>
@@ -197,7 +197,7 @@ const getTimeColumns = (timeStr: string) => {
           <input
             v-model="formData.googleFormUrl"
             type="url"
-            placeholder="Google Form URL"
+            placeholder="Google 表單網址"
             class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
           />
         </div>
@@ -207,7 +207,7 @@ const getTimeColumns = (timeStr: string) => {
           <input
             v-model="formData.googleSheetId"
             type="text"
-            placeholder="Google Sheet ID"
+            placeholder="Google 試算表 ID"
             class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
           />
         </div>
@@ -217,7 +217,7 @@ const getTimeColumns = (timeStr: string) => {
           <input
             v-model="formData.subdomain"
             type="text"
-            placeholder="Event subdomain"
+            placeholder="活動子網域"
             class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
           />
         </div>
@@ -226,7 +226,7 @@ const getTimeColumns = (timeStr: string) => {
       <section class="glass-card rounded-2xl p-2 space-y-1">
         <div class="flex items-center gap-3 px-3 py-4">
           <span class="material-symbols-outlined text-slate-400">how_to_reg</span>
-          <label class="text-sm font-medium text-slate-700 flex-1">Registration bonus</label>
+          <label class="text-sm font-medium text-slate-700 flex-1">報名獎勵點數</label>
           <input
             v-model.number="formData.registrationBonus"
             type="number"
@@ -237,7 +237,7 @@ const getTimeColumns = (timeStr: string) => {
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-center gap-3 px-3 py-4">
           <span class="material-symbols-outlined text-slate-400">fact_check</span>
-          <label class="text-sm font-medium text-slate-700 flex-1">Check-in bonus</label>
+          <label class="text-sm font-medium text-slate-700 flex-1">簽到獎勵點數</label>
           <input
             v-model.number="formData.checkinBonus"
             type="number"
@@ -248,7 +248,7 @@ const getTimeColumns = (timeStr: string) => {
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-center gap-3 px-3 py-4">
           <span class="material-symbols-outlined text-slate-400">social_leaderboard</span>
-          <label class="text-sm font-medium text-slate-700 flex-1">Raffle threshold</label>
+          <label class="text-sm font-medium text-slate-700 flex-1">抽獎門檻 (點數)</label>
           <input
             v-model.number="formData.raffleThreshold"
             type="number"
