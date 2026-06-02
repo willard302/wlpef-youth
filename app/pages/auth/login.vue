@@ -72,7 +72,6 @@ const handleLogin = async () => {
           email: user.email,
           name: metadata.name || metadata.display_name || user.email?.split('@')[0] || 'User',
           avatar_url: metadata.avatar_url || null,
-          role: 'member',
           points: 0
         })
 

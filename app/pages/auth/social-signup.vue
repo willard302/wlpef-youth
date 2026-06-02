@@ -104,7 +104,11 @@ const handleCompleteRegistration = async () => {
     router.push('/home')
   } catch (err: any) {
     console.error('Error completing registration:', err)
-    errorMessage.value = err.message || '完成註冊失敗'
+    if (err?.code === '22023' && String(err?.message || '').includes('role')) {
+      errorMessage.value = '帳號角色設定異常，請先登出後重新登入；若仍失敗請聯絡管理員。'
+    } else {
+      errorMessage.value = err.message || '完成註冊失敗'
+    }
   } finally {
     loading.value = false
   }
