@@ -37,15 +37,38 @@ const {
   canViewAllEventStatus,
 } = useCalendar()
 
-const isEventLoading = ref(false)
+const isEventLoading = ref(true)
 const upcomingEventData = ref<Event | null>(null)
+const isUpcomingRegistrationLoading = ref(false)
+const isUpcomingRegistered = ref(false)
 const upcomingEventDisplay = computed(() => {
-  if (!upcomingEventData.value) return { title: '敬請期待下次活動', meta: '新增活動後會顯示在這裡' }
-  return {
-    id: upcomingEventData.value.id,
-    title: upcomingEventData.value.title,
-    meta: `${fnsFormat(upcomingEventData.value.startAt, 'MM/dd HH:mm')}，${upcomingEventData.value.location || '待定地點'}`,
+  const event = upcomingEventData.value
+  if (!event) {
+    return {
+      title: '目前沒有即將到來的活動',
+      meta: canAddEvent.value ? '新增活動後會顯示在這裡' : '請稍後再查看最新活動',
+    }
   }
+
+  const timeText = event.allDay
+    ? fnsFormat(event.startAt, 'MM/dd')
+    : fnsFormat(event.startAt, 'MM/dd HH:mm')
+
+  return {
+    id: event.id,
+    title: event.title,
+    meta: `${timeText} · ${event.location || '地點未定'}`,
+  }
+})
+
+const upcomingRegistrationStatus = computed(() => {
+  const event = upcomingEventData.value
+  if (!event) return ''
+  if (canViewAllEventStatus.value) return STATUS_LABEL_MAP[event.status]
+  if (isUpcomingRegistrationLoading.value) return '確認報名狀態中'
+  if (isUpcomingRegistered.value) return '已報名'
+  if (event.status === 'closed') return '報名已關閉'
+  return '未報名'
 })
 
 // Event Detail Modal State
@@ -82,17 +105,26 @@ const STATUS_CLASS_MAP = {
 
 const loadUpcomingEvent = async () => {
   isEventLoading.value = true
+  isUpcomingRegistered.value = false
+  isUpcomingRegistrationLoading.value = false
 
   try {
-    const events = await eventService.fetchUpcomingEvents(5)
-    const visibleEvents = canAddEvent.value
-      ? events
-      : events.filter(event => event.status === 'published')
+    const events = await eventService.fetchUpcomingEvents(
+      1,
+      canViewAllEventStatus.value ? undefined : 'published'
+    )
 
-    upcomingEventData.value = visibleEvents[0] || null
+    upcomingEventData.value = events[0] || null
+    if (upcomingEventData.value && !canViewAllEventStatus.value) {
+      isUpcomingRegistrationLoading.value = true
+      isUpcomingRegistered.value = await eventService.checkRegistrationStatus(upcomingEventData.value.id)
+    }
   } catch (error) {
     console.error('Failed to load upcoming event', error)
+    upcomingEventData.value = null
+    isUpcomingRegistered.value = false
   } finally {
+    isUpcomingRegistrationLoading.value = false
     isEventLoading.value = false
   }
 }
@@ -147,6 +179,9 @@ const handleRegister = async () => {
     registering.value = true
     await eventService.registerForEvent(selectedEvent.value.id)
     isRegistered.value = true
+    if (upcomingEventData.value?.id === selectedEvent.value.id) {
+      isUpcomingRegistered.value = true
+    }
     addToast('報名成功！', 'success')
     // Refresh events to update attendee count
     await loadEvents()
@@ -173,6 +208,7 @@ onMounted(async () => {
     <AppHeroHeader
       eyebrow="領袖會社青團"
       :title="`哈囉，${userProfile?.name ?? '使用者'}`"
+      height-class="h-56"
     >
       <template #actions>
         <button
@@ -183,23 +219,35 @@ onMounted(async () => {
         </button>
       </template>
 
-      <p class="text-sky-100 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">UPCOMING EVENT</p>
-      <div v-if="isEventLoading" class="animate-pulse space-y-2">
-        <div class="h-8 w-3/4 bg-white/20 rounded-lg"></div>
-        <div class="h-4 w-1/2 bg-white/10 rounded-lg"></div>
+      <p class="text-sky-100 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">即將到來</p>
+      <div v-if="isEventLoading" class="flex items-center gap-3 py-2 text-sky-50">
+        <span class="size-5 rounded-full border-2 border-white/80 border-t-transparent animate-spin"></span>
+        <span class="text-sm font-bold">讀取即將到來活動中...</span>
       </div>
       <button
         v-else
-        class="space-y-1 text-left"
+        class="space-y-1 text-left disabled:cursor-default"
         :disabled="!upcomingEventData"
         @click="upcomingEventData && openEventDetail(upcomingEventData)"
       >
-        <h1 class="text-2xl font-extrabold leading-tight text-white drop-shadow-sm">{{ upcomingEventDisplay.title }}</h1>
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="min-w-0 text-2xl font-extrabold leading-tight text-white drop-shadow-sm">{{ upcomingEventDisplay.title }}</h1>
+          <span
+            v-if="upcomingEventData"
+            class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold"
+            :class="canViewAllEventStatus ? STATUS_CLASS_MAP[upcomingEventData.status] : 'border-white/25 bg-white/15 text-white'"
+          >
+            <span class="material-symbols-outlined text-[14px]">
+              {{ canViewAllEventStatus ? 'sell' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg') }}
+            </span>
+            {{ upcomingRegistrationStatus }}
+          </span>
+        </div>
         <p class="text-sky-50 text-sm font-medium opacity-90">{{ upcomingEventDisplay.meta }}</p>
       </button>
     </AppHeroHeader>
 
-    <main class="px-4 -mt-10 relative z-20 space-y-6">
+    <main class="px-4 -mt-8 relative z-20 space-y-6">
       <section class="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 shadow-xl border border-white">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-2">

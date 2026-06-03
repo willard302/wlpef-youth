@@ -7,7 +7,7 @@ interface Props {
 
 withDefaults(defineProps<Props>(), {
   eyebrow: '領袖會社青團',
-  heightClass: 'h-64'
+  heightClass: 'h-56'
 })
 </script>
 
@@ -18,7 +18,7 @@ withDefaults(defineProps<Props>(), {
       <div class="absolute inset-0 opacity-20 pattern-dots"></div>
     </div>
 
-    <div class="relative z-10 h-full flex flex-col justify-between p-6 text-white">
+    <div class="relative z-10 h-full flex flex-col justify-between p-5 text-white sm:p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center">
           <LogoIcon size="sm" />

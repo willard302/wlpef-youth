@@ -72,15 +72,15 @@ const getRoleName = (role?: string) => {
 </script>
 
 <template>
-  <AppHeroHeader title="會員中心" />
+  <AppHeroHeader title="會員中心" height-class="h-40" />
 
     <!-- Main Content -->
-    <main class="flex-1 -mt-10 px-4 pb-24 relative z-20">
+    <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
       <!-- Profile Info Card -->
       <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-6 flex flex-col items-center text-center mb-6">
-        <div class="relative -mt-20 mb-4 p-2 bg-white dark:bg-slate-800 rounded-full shadow-lg">
+        <div class="relative -mt-16 mb-4 p-2 bg-white dark:bg-slate-800 rounded-full shadow-lg">
           <div
-            class="w-32 h-32 rounded-full border-4 border-dashed border-primary/30 p-1 overflow-hidden cursor-pointer transition-transform hover:scale-105 relative"
+            class="w-28 h-28 rounded-full border-4 border-dashed border-primary/30 p-1 overflow-hidden cursor-pointer transition-transform hover:scale-105 relative"
             @click="handleAvatarClick"
           >
             <!-- Loading overlay -->

@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
-import type { CreateEventPayload, Event } from '@/types'
+import type { CreateEventPayload, Event, EventStatus } from '@/types'
 import type { Database } from '@/types/database.types'
 
 type EventRow = Database['public']['Tables']['events']['Row']
@@ -68,13 +68,19 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
-  async fetchUpcomingEvents(limit = 5): Promise<Event[]> {
+  async fetchUpcomingEvents(limit = 5, status?: EventStatus): Promise<Event[]> {
     const supabase = useSupabaseClient<Database>()
 
-    const { data, error } = await supabase
+    let query = supabase
       .from('events')
       .select('*')
-      .gte('end_at', new Date().toISOString())
+      .gte('start_at', new Date().toISOString())
+
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    const { data, error } = await query
       .order('start_at', { ascending: true })
       .limit(limit)
 
