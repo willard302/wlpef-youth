@@ -152,9 +152,11 @@ export type Database = {
           participants: string[] | null
           raffle_threshold: number | null
           registration_bonus: number | null
+          social_leaderboard: boolean | null
           start_at: string
           status: string | null
           subdomain: string | null
+          target_id: string | null
           title: string
         }
         Insert: {
@@ -172,9 +174,11 @@ export type Database = {
           participants?: string[] | null
           raffle_threshold?: number | null
           registration_bonus?: number | null
+          social_leaderboard?: boolean | null
           start_at: string
           status?: string | null
           subdomain?: string | null
+          target_id?: string | null
           title: string
         }
         Update: {
@@ -192,9 +196,11 @@ export type Database = {
           participants?: string[] | null
           raffle_threshold?: number | null
           registration_bonus?: number | null
+          social_leaderboard?: boolean | null
           start_at?: string
           status?: string | null
           subdomain?: string | null
+          target_id?: string | null
           title?: string
         }
         Relationships: []

@@ -14,9 +14,11 @@ export interface Event {
   status: EventStatus
   googleFormUrl?: string
   googleSheetId?: string
+  targetId?: string
   subdomain?: string
   registrationBonus: number
   checkinBonus: number
+  socialLeaderboard: boolean
   raffleThreshold: number
   // Derived display fields
   date: Date        // alias of startAt for calendar grid lookup
@@ -35,8 +37,10 @@ export interface CreateEventPayload {
   status?: EventStatus
   google_form_url?: string
   google_sheet_id?: string
+  target_id?: string
   subdomain?: string
   registration_bonus?: number
   checkin_bonus?: number
+  social_leaderboard?: boolean
   raffle_threshold?: number
 }

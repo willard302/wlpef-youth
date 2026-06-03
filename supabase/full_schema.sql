@@ -5,6 +5,9 @@
 -- 1. Enable Required Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+CREATE EXTENSION IF NOT EXISTS pg_net;
+CREATE EXTENSION IF NOT EXISTS supabase_vault;
 
 -- 2. Profiles (Extends auth.users)
 CREATE TABLE IF NOT EXISTS public.profiles (
@@ -12,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   name         TEXT NOT NULL,
   avatar_url   TEXT,
   role         TEXT DEFAULT 'member', -- admin, member
+  email        TEXT,
   department   TEXT,
   phone_number TEXT,
   points       INTEGER DEFAULT 0,
@@ -68,9 +72,11 @@ CREATE TABLE IF NOT EXISTS public.events (
   status       TEXT         DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'closed')),
   google_form_url TEXT,
   google_sheet_id TEXT,
+  target_id    TEXT,
   subdomain    TEXT,
   registration_bonus INTEGER DEFAULT 0,
   checkin_bonus INTEGER DEFAULT 0,
+  social_leaderboard BOOLEAN DEFAULT false,
   raffle_threshold INTEGER DEFAULT 0,
   participants TEXT[],
   created_by   UUID         REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -81,10 +87,15 @@ ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft',
   ADD COLUMN IF NOT EXISTS google_form_url TEXT,
   ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
+  ADD COLUMN IF NOT EXISTS target_id TEXT,
   ADD COLUMN IF NOT EXISTS subdomain TEXT,
   ADD COLUMN IF NOT EXISTS registration_bonus INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS checkin_bonus INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS social_leaderboard BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS raffle_threshold INTEGER DEFAULT 0;
+
+ALTER TABLE public.profiles
+  ADD COLUMN IF NOT EXISTS email TEXT;
 
 DO $$
 BEGIN
@@ -112,6 +123,8 @@ CREATE POLICY "authenticated users can manage events"
   WITH CHECK (auth.role() = 'authenticated');
 
 CREATE INDEX IF NOT EXISTS idx_events_start_at ON public.events (start_at);
+CREATE INDEX IF NOT EXISTS idx_events_google_sheet_id ON public.events (google_sheet_id) WHERE google_sheet_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_events_target_id ON public.events (target_id) WHERE target_id IS NOT NULL;
 
 -- 4. Event Registrations & Checkins
 CREATE TABLE IF NOT EXISTS public.event_registrations (
@@ -127,6 +140,14 @@ CREATE TABLE IF NOT EXISTS public.event_registrations (
   created_at   TIMESTAMPTZ  DEFAULT NOW(),
   UNIQUE(event_id, email)
 );
+
+CREATE INDEX IF NOT EXISTS idx_profiles_normalized_email ON public.profiles (lower(email)) WHERE email IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_registrations_matched_user_id
+  ON public.event_registrations (matched_user_id)
+  WHERE matched_user_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_event_registrations_pending_points
+  ON public.event_registrations (event_id, matched_user_id)
+  WHERE registration_points_granted_at IS NULL AND matched_user_id IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS public.checkin_records (
   id           UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -252,7 +273,92 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 7. Realtime Enablement
+-- 7. Social leaderboard view
+CREATE OR REPLACE VIEW public.social_leaderboard AS
+SELECT
+  e.id AS event_id,
+  e.title AS event_title,
+  e.target_id,
+  e.raffle_threshold,
+  er.matched_user_id AS user_id,
+  p.name,
+  p.email,
+  p.department,
+  COALESCE(SUM(pt.points), 0)::INTEGER AS event_points,
+  COALESCE(p.points, 0)::INTEGER AS total_points,
+  CASE
+    WHEN e.raffle_threshold > 0 THEN COALESCE(p.points, 0) >= e.raffle_threshold
+    ELSE true
+  END AS raffle_eligible,
+  MIN(er.form_submitted_at) AS first_registered_at
+FROM public.events e
+JOIN public.event_registrations er ON er.event_id = e.id
+JOIN public.profiles p ON p.id = er.matched_user_id
+LEFT JOIN public.point_transactions pt ON pt.event_id = e.id AND pt.user_id = p.id
+WHERE e.social_leaderboard = true
+GROUP BY
+  e.id,
+  e.title,
+  e.target_id,
+  e.raffle_threshold,
+  er.matched_user_id,
+  p.name,
+  p.email,
+  p.department,
+  p.points;
+
+-- 8. Scheduled Google Sheet sync
+-- Add Supabase Vault secrets named:
+--   supabase_project_url      = https://<project-ref>.supabase.co
+--   supabase_service_role_key = <service-role-key>
+CREATE OR REPLACE FUNCTION public.trigger_google_sheet_sync()
+RETURNS void AS $$
+DECLARE
+  project_url TEXT;
+  service_role_key TEXT;
+BEGIN
+  SELECT decrypted_secret
+    INTO project_url
+    FROM vault.decrypted_secrets
+   WHERE name = 'supabase_project_url'
+   LIMIT 1;
+
+  SELECT decrypted_secret
+    INTO service_role_key
+    FROM vault.decrypted_secrets
+   WHERE name = 'supabase_service_role_key'
+   LIMIT 1;
+
+  IF project_url IS NULL OR service_role_key IS NULL THEN
+    RAISE WARNING 'Missing Supabase Vault secrets for Google Sheet sync cron';
+    RETURN;
+  END IF;
+
+  PERFORM net.http_post(
+    url := project_url || '/functions/v1/sync-google-sheet',
+    headers := jsonb_build_object(
+      'Content-Type', 'application/json',
+      'Authorization', 'Bearer ' || service_role_key
+    ),
+    body := '{}'::jsonb
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'sync-google-sheet-every-minute') THEN
+    PERFORM cron.unschedule('sync-google-sheet-every-minute');
+  END IF;
+
+  PERFORM cron.schedule(
+    'sync-google-sheet-every-minute',
+    '* * * * *',
+    'SELECT public.trigger_google_sheet_sync();'
+  );
+END $$;
+
+-- 9. Realtime Enablement
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
