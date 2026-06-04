@@ -48,6 +48,8 @@
   - `start_at` / `end_at`: 起迄時間。
   - `location`: 地點。
   - `color`: 行事曆標記顏色。
+  - `google_sheet_id`: 連動的 Google 試算表 ID，用於同步外部報名資料。
+  - `registration_bonus`: 報名活動可獲得的獎勵點數。
 
 ### 架構優勢
 1. **關聯性**: 方便將使用者與活動進行關聯查詢。
@@ -56,7 +58,18 @@
 
 ---
 
-## 4. UI/UX 標準 (UI/UX Standards)
+## 4. 外部整合功能 (External Integrations)
+
+### Google 試算表同步
+系統支援透過 Google 表單收集報名資訊，並自動同步至本平台：
+- **運作原理**: 後端 Edge Function 會定期讀取指定的 `google_sheet_id`。
+- **自動比對**: 透過 Email 比對試算表紀錄與平台會員帳號。
+- **自動獎勵**: 比對成功後，系統會自動發放「報名獎勵點數」並更新活動參與人數。
+- **設定方式**: 僅需在創建活動時填入 **Google 試算表 ID** 即可（確保該試算表已授權給系統服務帳戶讀取）。
+
+---
+
+## 5. UI/UX 標準 (UI/UX Standards)
 - **行動優先 (Mobile-First)**: 針對移動端設備進行優化，提供流暢的觸控體驗。
 - **視覺風格**: 以「天空藍」(`sky-500`) 為主色調，結合毛玻璃效果 (`backdrop-blur`) 與現代化圓角。
 - **全域元件**:
@@ -66,7 +79,7 @@
 
 ---
 
-## 5. 開發指南 (Development Guide)
+## 6. 開發指南 (Development Guide)
 
 ### 目錄結構 (Folder Structure)
 - `app/components`: 可複用的 Vue 元件。
