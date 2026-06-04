@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
-import { withSupabase } from "@supabase/server"
+// 💡 改用官方標準的 Supabase Client 建立器，拋棄 withSupabase
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 type EventRow = {
   id: string
@@ -36,8 +37,7 @@ type SyncResult = {
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
 
-const publishableKey = Deno.env.get("SUPABASE_KEY")
-
+// 💡 確保跨網域請求順暢，所有的 Response 都會帶上它
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -320,36 +320,47 @@ async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]>
   return (data || []).filter((event: EventRow) => !!event.google_sheet_id)
 }
 
-const handler = withSupabase({
-  auth: ["publishable", "secret", "user"],
-  cors: corsHeaders,
-  env: publishableKey
-    ? {
-        publishableKeys: {
-          default: publishableKey,
+// 💡 核心改動：直接使用官方標準的 Deno.serve 進入點
+Deno.serve(async (req) => {
+  // 1. 處理前端 Nuxt 的 CORS 預檢請求 (OPTIONS)
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders })
+  }
+
+  try {
+    // 2. 自動抓取內建的環境變數，直接建立純淨的高權限管理端客戶端
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
         },
       }
-    : undefined,
-}, async (req, ctx) => {
-  try {
+    )
+
     const body = await req.json().catch(() => ({}))
-    const events = await resolveEvents(ctx.supabaseAdmin, body)
+    const events = await resolveEvents(supabaseAdmin, body)
 
     if (events.length === 0) {
-      return Response.json({ message: "No events with google_sheet_id to sync", results: [] }, { status: 200 })
+      return Response.json(
+        { message: "No events with google_sheet_id to sync", results: [] }, 
+        { status: 200, headers: corsHeaders }
+      )
     }
 
     const [googleToken, profilesByEmail] = await Promise.all([
       getGoogleAccessToken(Deno.env.get("GCP_SERVICE_ACCOUNT")),
-      loadProfilesByEmail(ctx.supabaseAdmin),
+      loadProfilesByEmail(supabaseAdmin),
     ])
 
     const results: SyncResult[] = []
     for (const event of events) {
-      results.push(await syncEvent(ctx.supabaseAdmin, event, googleToken, profilesByEmail))
+      results.push(await syncEvent(supabaseAdmin, event, googleToken, profilesByEmail))
     }
 
-    const { error: pointsError } = await ctx.supabaseAdmin.rpc("process_pending_points")
+    const { error: pointsError } = await supabaseAdmin.rpc("process_pending_points")
     if (pointsError) throw new Error(`Failed to process points: ${pointsError.message}`)
 
     return Response.json({
@@ -359,16 +370,16 @@ const handler = withSupabase({
       matchedCount: results.reduce((sum, result) => sum + result.matchedCount, 0),
       skippedCount: results.reduce((sum, result) => sum + result.skippedCount, 0),
       results,
-    })
+    }, { headers: corsHeaders })
+
   } catch (error: any) {
     console.error("sync-google-sheet error:", error)
     return Response.json(
-      { error: error?.message || "Internal Server Error" },
-      { status: 500 },
+      { 
+        error: "Internal Server Error", 
+        message: error?.message || "未知錯誤" 
+      },
+      { status: 500, headers: corsHeaders },
     )
   }
 })
-
-export default {
-  fetch: handler,
-}
