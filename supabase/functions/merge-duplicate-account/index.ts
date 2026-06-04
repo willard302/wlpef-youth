@@ -52,24 +52,44 @@ const getCreatedAt = (user: MinimalAuthUser) => {
 const isMissingRelation = (error: { code?: string } | null) => error?.code === "42P01"
 
 async function listUsersByEmail(
-  listUsers: (params: { page?: number; perPage?: number }) => Promise<{ data: { users: MinimalAuthUser[] } | null; error: { message: string } | null }>,
+  ctx: any,
   email: string,
 ): Promise<MinimalAuthUser[]> {
+  // 優先從 profiles 表查找 ID，避免遍歷整個 Auth 用戶列表
+  const { data: profiles, error: profileError } = await ctx.supabaseAdmin
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+
+  if (profileError) {
+    throw new Error(`Failed to query profiles by email: ${profileError.message}`)
+  }
+
   const users: MinimalAuthUser[] = []
-  const perPage = 200
-  let page = 1
-
-  while (true) {
-    const { data, error } = await listUsers({ page, perPage })
-    if (error) throw new Error(error.message)
-
-    const pageUsers = data?.users || []
-    users.push(...pageUsers.filter((user) => normalizeEmail(user.email) === email))
-
-    if (pageUsers.length < perPage) {
-      break
+  
+  // 根據找到的 ID 獲取完整 Auth 用戶資料
+  if (profiles && profiles.length > 0) {
+    for (const p of profiles) {
+      const { data: { user }, error } = await ctx.supabaseAdmin.auth.admin.getUserById(p.id)
+      if (!error && user) {
+        users.push(user)
+      }
     }
-    page += 1
+  }
+
+  // 如果 profile 沒找到，才 fallback 到慢速的分頁查找 (避免新註冊還沒 profile 的情況)
+  if (users.length === 0) {
+    const perPage = 100
+    let page = 1
+    while (true) {
+      const { data, error } = await ctx.supabaseAdmin.auth.admin.listUsers({ page, perPage })
+      if (error) throw new Error(error.message)
+      const pageUsers = data?.users || []
+      const filtered = pageUsers.filter((u: any) => normalizeEmail(u.email) === email)
+      users.push(...filtered)
+      if (pageUsers.length < perPage || users.length > 0) break
+      page += 1
+    }
   }
 
   return users
@@ -110,10 +130,7 @@ export default {
         return Response.json({ merged: false, reason: "missing-email" }, { status: 200 })
       }
 
-      const users = await listUsersByEmail(
-        (params) => ctx.supabaseAdmin.auth.admin.listUsers(params),
-        normalizedEmail,
-      )
+      const users = await listUsersByEmail(ctx, normalizedEmail)
 
       if (users.length <= 1) {
         return Response.json({ merged: false, reason: "no-duplicate" }, { status: 200 })
