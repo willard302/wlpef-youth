@@ -187,8 +187,8 @@ const getTimeColumns = (timeStr: string) => {
             class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 outline-none text-slate-700"
           >
             <option value="draft">草稿</option>
-            <option value="published">已發佈</option>
-            <option value="closed">已關閉</option>
+            <option value="published">發佈</option>
+            <option value="closed">關閉</option>
           </select>
         </div>
         <p class="px-3 pb-3 text-[11px] leading-relaxed text-slate-500">
