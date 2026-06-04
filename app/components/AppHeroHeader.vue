@@ -3,12 +3,17 @@ interface Props {
   title: string
   eyebrow?: string
   heightClass?: string
+  showBack?: boolean
 }
 
-withDefaults(defineProps<Props>(), {
+const props = withDefaults(defineProps<Props>(), {
   eyebrow: '領袖會社青團',
-  heightClass: 'h-56'
+  heightClass: 'h-56',
+  showBack: false
 })
+
+const router = useRouter()
+const handleBack = () => router.back()
 </script>
 
 <template>
@@ -21,8 +26,15 @@ withDefaults(defineProps<Props>(), {
     <div class="relative z-10 h-full flex flex-col justify-between p-5 text-white sm:p-6">
       <div class="flex items-center justify-between">
         <div class="flex items-center">
-          <LogoIcon size="sm" />
-          <div class="flex flex-col ml-4">
+          <button
+            v-if="showBack"
+            @click="handleBack"
+            class="mr-2 -ml-2 size-10 rounded-full flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"
+          >
+            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+          </button>
+          <LogoIcon v-else size="sm" />
+          <div class="flex flex-col" :class="{ 'ml-4': !showBack }">
             <span class="text-sky-200 text-[10px] font-bold tracking-[0.2em] uppercase">{{ eyebrow }}</span>
             <h2 class="text-xl font-bold tracking-tight">{{ title }}</h2>
           </div>

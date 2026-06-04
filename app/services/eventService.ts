@@ -6,6 +6,23 @@ type EventRow = Database['public']['Tables']['events']['Row']
 type EventInsert = Database['public']['Tables']['events']['Insert']
 type EventUpdate = Database['public']['Tables']['events']['Update']
 
+type RegistrationRow = Database['public']['Tables']['event_registrations']['Row']
+
+function mapToRegistration(row: RegistrationRow): EventRegistration {
+  return {
+    id: row.id,
+    eventId: row.event_id || '',
+    matchedUserId: row.matched_user_id,
+    email: row.email,
+    name: row.name,
+    googleSheetRowId: row.google_sheet_row_id,
+    formSubmittedAt: parseISO(row.form_submitted_at || row.created_at),
+    syncedAt: row.synced_at ? parseISO(row.synced_at) : null,
+    registrationPointsGrantedAt: row.registration_points_granted_at ? parseISO(row.registration_points_granted_at) : null,
+    createdAt: parseISO(row.created_at)
+  }
+}
+
 function mapToEvent(row: EventRow): Event {
   const startAt = parseISO(row.start_at)
   const endAt = parseISO(row.end_at)
@@ -239,5 +256,34 @@ export const eventService = {
       console.error('Error settling points:', error)
       throw new Error('點數結算失敗')
     }
+  },
+
+  /**
+   * 獲取所有活動 (管理員專用，不分狀態)
+   */
+  async fetchAllEventsForAdmin(): Promise<Event[]> {
+    const supabase = useSupabaseClient<Database>()
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .order('start_at', { ascending: false })
+
+    if (error) throw error
+    return (data ?? []).map(mapToEvent)
+  },
+
+  /**
+   * 獲取特定活動的報名名單
+   */
+  async fetchRegistrationsByEventId(eventId: string): Promise<EventRegistration[]> {
+    const supabase = useSupabaseClient<Database>()
+    const { data, error } = await supabase
+      .from('event_registrations')
+      .select('*')
+      .eq('event_id', eventId)
+      .order('form_submitted_at', { ascending: false })
+
+    if (error) throw error
+    return (data ?? []).map(mapToRegistration)
   }
 }

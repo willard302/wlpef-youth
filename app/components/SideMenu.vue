@@ -29,6 +29,16 @@ const menuItems = computed(() => [
     action: () => emit('navigate-to-editor'),
   },
   {
+    id: 'registrations',
+    label: '報名狀況',
+    icon: 'group',
+    bgClass: 'bg-indigo-50',
+    textClass: 'text-indigo-600',
+    hoverClass: 'hover:bg-indigo-100',
+    show: props.canAddEvent, // canAddEvent is equivalent to isAdmin in this context
+    action: () => router.push('/home/registrations'),
+  },
+  {
     id: 'user-center',
     label: '會員中心',
     icon: 'account_circle',

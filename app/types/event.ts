@@ -42,3 +42,16 @@ export interface CreateEventPayload {
   social_leaderboard?: boolean
   raffle_threshold?: number
 }
+
+export interface EventRegistration {
+  id: string
+  eventId: string
+  matchedUserId: string | null
+  email: string
+  name: string | null
+  googleSheetRowId: string | null
+  formSubmittedAt: Date
+  syncedAt: Date | null
+  registrationPointsGrantedAt: Date | null
+  createdAt: Date
+}
