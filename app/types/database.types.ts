@@ -145,7 +145,6 @@ export type Database = {
           created_by: string | null
           description: string | null
           end_at: string
-          google_form_url: string | null
           google_sheet_id: string | null
           id: string
           location: string | null
@@ -158,8 +157,8 @@ export type Database = {
           subdomain: string | null
           target_id: string | null
           title: string
-        }
-        Insert: {
+          }
+          Insert: {
           all_day?: boolean | null
           checkin_bonus?: number | null
           color?: string | null
@@ -167,7 +166,6 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_at: string
-          google_form_url?: string | null
           google_sheet_id?: string | null
           id?: string
           location?: string | null
@@ -180,8 +178,8 @@ export type Database = {
           subdomain?: string | null
           target_id?: string | null
           title: string
-        }
-        Update: {
+          }
+          Update: {
           all_day?: boolean | null
           checkin_bonus?: number | null
           color?: string | null
@@ -189,7 +187,6 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           end_at?: string
-          google_form_url?: string | null
           google_sheet_id?: string | null
           id?: string
           location?: string | null
@@ -202,7 +199,7 @@ export type Database = {
           subdomain?: string | null
           target_id?: string | null
           title?: string
-        }
+          }
         Relationships: []
       }
       point_transactions: {

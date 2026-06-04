@@ -12,7 +12,6 @@ export interface Event {
   createdBy: string
   attendees: number
   status: EventStatus
-  googleFormUrl?: string
   googleSheetId?: string
   targetId?: string
   subdomain?: string
@@ -35,7 +34,6 @@ export interface CreateEventPayload {
   all_day?: boolean
   color?: string
   status?: EventStatus
-  google_form_url?: string
   google_sheet_id?: string
   target_id?: string
   subdomain?: string

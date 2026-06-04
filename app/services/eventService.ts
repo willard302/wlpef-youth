@@ -23,7 +23,6 @@ function mapToEvent(row: EventRow): Event {
     createdBy: row.created_by ?? '',
     attendees: row.participants?.length ?? 0,
     status: (row.status ?? 'draft') as Event['status'],
-    googleFormUrl: row.google_form_url ?? undefined,
     googleSheetId: row.google_sheet_id ?? undefined,
     targetId: row.target_id ?? undefined,
     subdomain: row.subdomain ?? undefined,
