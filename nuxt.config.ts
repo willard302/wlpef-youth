@@ -3,6 +3,8 @@ const sanitizedSupabaseUrl = process.env.SUPABASE_URL
   ?.replace(/\/rest\/v1\/?$/, '')
   .replace(/\/$/, '')
 
+const supabasePublishableKey = process.env.SUPABASE_KEY
+
 export default defineNuxtConfig({
   srcDir: './app',
   compatibilityDate: '2025-07-15',
@@ -37,7 +39,7 @@ export default defineNuxtConfig({
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@vant/nuxt'],
 
   supabase: {
-    url: sanitizedSupabaseUrl,
+    url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
     redirectOptions: {
       login: '/auth/login',

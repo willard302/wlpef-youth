@@ -19,6 +19,7 @@ const events = ref<Event[]>([])
 const registrations = ref<EventRegistration[]>([])
 const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
+const isSyncing = ref(false)
 
 const loadEvents = async () => {
   isEventsLoading.value = true
@@ -26,7 +27,7 @@ const loadEvents = async () => {
     events.value = await eventService.fetchAllEventsForAdmin()
     if (events.value.length > 0) {
       // Default to the most recent event
-      await selectEvent(events.value[0])
+      await selectEvent(events.value[0]!!)
     }
   } catch (err: any) {
     addToast(err.message || '載入活動列表失敗', 'error')
@@ -46,6 +47,29 @@ const selectEvent = async (event: Event) => {
     registrations.value = []
   } finally {
     isLoading.value = false
+  }
+}
+
+const handleSync = async () => {
+  if (!selectedEvent.value?.googleSheetId) {
+    addToast('此活動未設定 Google 試算表 ID', 'error')
+    return
+  }
+
+  isSyncing.value = true
+  try {
+    const result = await eventService.syncGoogleSheet(
+      selectedEvent.value.id,
+      selectedEvent.value.googleSheetId
+    )
+    addToast(`同步完成！匯入 ${result.importedCount} 筆，比對成功 ${result.matchedCount} 筆`, 'success')
+    // Reload registrations
+    await selectEvent(selectedEvent.value)
+  } catch (err: any) {
+    console.error('Sync error:', err)
+    addToast(err.message || '同步失敗，請檢查設定', 'error')
+  } finally {
+    isSyncing.value = false
   }
 }
 
@@ -108,9 +132,21 @@ onMounted(async () => {
 
       <!-- Stats Summary -->
       <div v-if="selectedEvent && !isLoading" class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm relative group">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總報名人數</p>
-          <p class="text-2xl font-black text-slate-800">{{ registrations.length }}</p>
+          <div class="flex items-end justify-between">
+            <p class="text-2xl font-black text-slate-800">{{ registrations.length }}</p>
+            <button
+              @click="handleSync"
+              :disabled="isSyncing || !selectedEvent.googleSheetId"
+              class="size-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center hover:bg-sky-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              title="立即同步 Google 試算表"
+            >
+              <span class="material-symbols-outlined text-lg" :class="{ 'animate-spin': isSyncing }">
+                {{ isSyncing ? 'sync' : 'sync_saved_locally' }}
+              </span>
+            </button>
+          </div>
         </div>
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Google 同步</p>

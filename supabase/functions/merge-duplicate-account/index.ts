@@ -1,6 +1,8 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { withSupabase } from "@supabase/server"
 
+const publishableKey = Deno.env.get("SUPABASE_KEY")
+
 type MinimalAuthUser = {
   id: string
   email?: string | null
@@ -113,7 +115,16 @@ async function reassignReference(
 }
 
 export default {
-  fetch: withSupabase({ auth: ["publishable", "secret"] }, async (_req, ctx) => {
+  fetch: withSupabase({
+    auth: ["publishable", "secret"],
+    env: publishableKey
+      ? {
+          publishableKeys: {
+            default: publishableKey,
+          },
+        }
+      : undefined,
+  }, async (_req, ctx) => {
     try {
       const { data: authData, error: authError } = await ctx.supabase.auth.getUser()
       if (authError) {

@@ -36,9 +36,19 @@ type SyncResult = {
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
 
+const publishableKey = Deno.env.get("SUPABASE_KEY")
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Max-Age": "86400",
+  Vary: "Origin",
+}
+
 const HEADER_ALIASES = {
   timestamp: ["timestamp", "time", "submittedat", "submittedtime", "時間戳記", "提交時間", "報名時間"],
-  email: ["email", "mail", "e-mail", "電子郵件", "電子信箱", "信箱", "電郵"],
+  email: ["email", "mail", "e-mail", "電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
   name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱"],
 }
 
@@ -310,43 +320,55 @@ async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]>
   return (data || []).filter((event: EventRow) => !!event.google_sheet_id)
 }
 
-export default {
-  fetch: withSupabase({ auth: ["publishable", "secret"] }, async (req, ctx) => {
-    try {
-      const body = await req.json().catch(() => ({}))
-      const events = await resolveEvents(ctx.supabaseAdmin, body)
-
-      if (events.length === 0) {
-        return Response.json({ message: "No events with google_sheet_id to sync", results: [] }, { status: 200 })
+const handler = withSupabase({
+  auth: ["publishable", "secret", "user"],
+  cors: corsHeaders,
+  env: publishableKey
+    ? {
+        publishableKeys: {
+          default: publishableKey,
+        },
       }
+    : undefined,
+}, async (req, ctx) => {
+  try {
+    const body = await req.json().catch(() => ({}))
+    const events = await resolveEvents(ctx.supabaseAdmin, body)
 
-      const [googleToken, profilesByEmail] = await Promise.all([
-        getGoogleAccessToken(Deno.env.get("GCP_SERVICE_ACCOUNT")),
-        loadProfilesByEmail(ctx.supabaseAdmin),
-      ])
-
-      const results: SyncResult[] = []
-      for (const event of events) {
-        results.push(await syncEvent(ctx.supabaseAdmin, event, googleToken, profilesByEmail))
-      }
-
-      const { error: pointsError } = await ctx.supabaseAdmin.rpc("process_pending_points")
-      if (pointsError) throw new Error(`Failed to process points: ${pointsError.message}`)
-
-      return Response.json({
-        message: "Google Sheet data synced successfully",
-        eventCount: results.length,
-        importedCount: results.reduce((sum, result) => sum + result.importedCount, 0),
-        matchedCount: results.reduce((sum, result) => sum + result.matchedCount, 0),
-        skippedCount: results.reduce((sum, result) => sum + result.skippedCount, 0),
-        results,
-      })
-    } catch (error: any) {
-      console.error("sync-google-sheet error:", error)
-      return Response.json(
-        { error: error?.message || "Internal Server Error" },
-        { status: 500 },
-      )
+    if (events.length === 0) {
+      return Response.json({ message: "No events with google_sheet_id to sync", results: [] }, { status: 200 })
     }
-  }),
+
+    const [googleToken, profilesByEmail] = await Promise.all([
+      getGoogleAccessToken(Deno.env.get("GCP_SERVICE_ACCOUNT")),
+      loadProfilesByEmail(ctx.supabaseAdmin),
+    ])
+
+    const results: SyncResult[] = []
+    for (const event of events) {
+      results.push(await syncEvent(ctx.supabaseAdmin, event, googleToken, profilesByEmail))
+    }
+
+    const { error: pointsError } = await ctx.supabaseAdmin.rpc("process_pending_points")
+    if (pointsError) throw new Error(`Failed to process points: ${pointsError.message}`)
+
+    return Response.json({
+      message: "Google Sheet data synced successfully",
+      eventCount: results.length,
+      importedCount: results.reduce((sum, result) => sum + result.importedCount, 0),
+      matchedCount: results.reduce((sum, result) => sum + result.matchedCount, 0),
+      skippedCount: results.reduce((sum, result) => sum + result.skippedCount, 0),
+      results,
+    })
+  } catch (error: any) {
+    console.error("sync-google-sheet error:", error)
+    return Response.json(
+      { error: error?.message || "Internal Server Error" },
+      { status: 500 },
+    )
+  }
+})
+
+export default {
+  fetch: handler,
 }

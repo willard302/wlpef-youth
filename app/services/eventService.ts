@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
-import type { CreateEventPayload, Event, EventStatus } from '@/types'
+import type { CreateEventPayload, Event, EventRegistration, EventStatus } from '@/types'
 import type { Database } from '@/types/database.types'
 
 type EventRow = Database['public']['Tables']['events']['Row']
@@ -16,10 +16,10 @@ function mapToRegistration(row: RegistrationRow): EventRegistration {
     email: row.email,
     name: row.name,
     googleSheetRowId: row.google_sheet_row_id,
-    formSubmittedAt: parseISO(row.form_submitted_at || row.created_at),
+    formSubmittedAt: parseISO(row.form_submitted_at || row.created_at as string),
     syncedAt: row.synced_at ? parseISO(row.synced_at) : null,
     registrationPointsGrantedAt: row.registration_points_granted_at ? parseISO(row.registration_points_granted_at) : null,
-    createdAt: parseISO(row.created_at)
+    createdAt: parseISO(row.created_at as string),
   }
 }
 
@@ -285,5 +285,18 @@ export const eventService = {
 
     if (error) throw error
     return (data ?? []).map(mapToRegistration)
+  },
+
+  /**
+   * 觸發 Google 試算表同步 (呼叫 Edge Function)
+   */
+  async syncGoogleSheet(eventId: string, sheetId: string): Promise<any> {
+    const supabase = useSupabaseClient<Database>()
+    const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
+      body: { eventId, sheetId }
+    })
+
+    if (error) throw error
+    return data
   }
 }
