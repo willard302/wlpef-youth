@@ -18,7 +18,7 @@ export default defineNuxtConfig({
       meta: [
         { name: 'description', content: '領袖會社青團官方會員平台 — 活動報名、行事曆、點數管理' },
         { name: 'theme-color', content: '#0ea5e9' },
-        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'mobile-web-app-capable', content: 'yes' },
         { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
       ],
       link: [
