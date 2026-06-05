@@ -55,6 +55,38 @@ CREATE TRIGGER tr_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 
+-- Trigger to link registrations and update participant counts when a profile is created
+CREATE OR REPLACE FUNCTION public.handle_after_profile_create()
+RETURNS TRIGGER AS $$
+DECLARE
+  reg_record RECORD;
+BEGIN
+  -- 1. Link any registrations that match the new profile's email
+  -- Use trim and lower for robust matching
+  FOR reg_record IN 
+    UPDATE public.event_registrations
+    SET matched_user_id = NEW.id
+    WHERE lower(trim(email)) = lower(trim(NEW.email))
+      AND matched_user_id IS NULL
+    RETURNING event_id
+  LOOP
+    -- 2. Add the new user to the participants array of the event
+    -- Use array_append and COALESCE to handle nulls
+    UPDATE public.events
+    SET participants = array_append(COALESCE(participants, ARRAY[]::UUID[]), NEW.id)
+    WHERE id = reg_record.event_id
+      AND (participants IS NULL OR NOT (participants @> ARRAY[NEW.id]));
+  END LOOP;
+    
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_after_profile_create ON public.profiles;
+CREATE TRIGGER tr_after_profile_create
+  AFTER INSERT ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.handle_after_profile_create();
+
 -- Disable auto-creating profile on signup.
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 DROP FUNCTION IF EXISTS public.handle_new_user();
