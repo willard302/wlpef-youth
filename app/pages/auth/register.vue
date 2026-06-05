@@ -27,6 +27,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 const showDuplicateEmailModal = ref(false)
+const isSocialOnlyUser = ref(false)
 
 const handleRegister = async () => {
   if (!formData.value.fullName.trim() || !formData.value.email.trim() || !formData.value.password) {
@@ -60,7 +61,7 @@ const handleRegister = async () => {
 
     // Detect if user already exists (Supabase returns a user with empty identities if already registered)
     if (data.user && (!data.user.identities || data.user.identities.length === 0)) {
-      showDuplicateEmailModal.value = true
+      await checkExistingUserStatus()
       loading.value = false
       return
     }
@@ -72,8 +73,7 @@ const handleRegister = async () => {
     const message = error?.message || ''
 
     if (message.toLowerCase().includes('already registered')) {
-      errorMessage.value = ''
-      showDuplicateEmailModal.value = true
+      await checkExistingUserStatus()
       return
     }
 
@@ -83,8 +83,49 @@ const handleRegister = async () => {
   }
 }
 
-const handleContinueRegister = () => {
-  showDuplicateEmailModal.value = false
+const checkExistingUserStatus = async () => {
+  try {
+    loading.value = true
+    const { data, error } = await supabase.functions.invoke('check-user-registration', {
+      body: { email: formData.value.email }
+    })
+
+    if (!error && data?.isSocialOnly) {
+      isSocialOnlyUser.value = true
+    } else {
+      isSocialOnlyUser.value = false
+    }
+    showDuplicateEmailModal.value = true
+  } catch (err) {
+    console.error('Error checking user status:', err)
+    showDuplicateEmailModal.value = true // Fallback to generic duplicate modal
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleContinueRegister = async () => {
+  if (isSocialOnlyUser.value) {
+    // For Google-only users, we send a reset password email to allow them to add a password
+    try {
+      loading.value = true
+      showDuplicateEmailModal.value = false
+      
+      const { error } = await supabase.auth.resetPasswordForEmail(formData.value.email, {
+        redirectTo: `${window.location.origin}/auth/reset-password`
+      })
+
+      if (error) throw error
+      
+      successMessage.value = '密碼設定信已發送！請至信箱點擊連結以設定密碼並啟用一般登入。'
+    } catch (err: any) {
+      errorMessage.value = err.message || '發送驗證信失敗，請稍後再試。'
+    } finally {
+      loading.value = false
+    }
+  } else {
+    showDuplicateEmailModal.value = false
+  }
 }
 
 const handleGoLogin = () => {
@@ -170,9 +211,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
       class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 px-6"
     >
       <div class="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl">
-        <h3 class="text-lg font-bold text-slate-900">Email 已被註冊</h3>
+        <h3 class="text-lg font-bold text-slate-900">
+          {{ isSocialOnlyUser ? '偵測到社群帳號' : 'Email 已被註冊' }}
+        </h3>
         <p class="mt-2 text-sm leading-relaxed text-slate-600">
-          這個 Email 已有帳號，請改用既有方式登入。
+          {{ isSocialOnlyUser 
+            ? '您之前已使用社群帳號登入過。點擊『繼續』我們將發送驗證信，驗證後即可為此帳號新增密碼。' 
+            : '這個 Email 已有帳號，請改用既有方式登入。' 
+          }}
         </p>
         <div class="mt-6 flex gap-3">
           <button
@@ -180,14 +226,14 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
             @click="handleContinueRegister"
             class="flex-1 rounded-xl border border-slate-200 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
           >
-            繼續註冊
+            {{ isSocialOnlyUser ? '繼續' : '取消' }}
           </button>
           <button
             type="button"
             @click="handleGoLogin"
             class="flex-1 rounded-xl bg-primary py-2.5 text-sm font-bold text-white hover:bg-primary/90"
           >
-            前往登錄
+            前往登入
           </button>
         </div>
       </div>
