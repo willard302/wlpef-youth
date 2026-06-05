@@ -19,6 +19,7 @@ function mapToRegistration(row: RegistrationRow): EventRegistration {
     formSubmittedAt: parseISO(row.form_submitted_at || row.created_at as string),
     syncedAt: row.synced_at ? parseISO(row.synced_at) : null,
     registrationPointsGrantedAt: row.registration_points_granted_at ? parseISO(row.registration_points_granted_at) : null,
+    rawData: row.raw_data as Record<string, any> | undefined,
     createdAt: parseISO(row.created_at as string),
   }
 }

@@ -53,5 +53,6 @@ export interface EventRegistration {
   formSubmittedAt: Date
   syncedAt: Date | null
   registrationPointsGrantedAt: Date | null
+  rawData?: Record<string, any>
   createdAt: Date
 }

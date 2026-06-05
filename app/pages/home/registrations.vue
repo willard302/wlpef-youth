@@ -21,6 +21,14 @@ const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const isSyncing = ref(false)
 
+const selectedRegistration = ref<EventRegistration | null>(null)
+const showRegistrationDetail = ref(false)
+
+const openRegistrationDetail = (reg: EventRegistration) => {
+  selectedRegistration.value = reg
+  showRegistrationDetail.value = true
+}
+
 const loadEvents = async () => {
   isEventsLoading.value = true
   try {
@@ -176,7 +184,8 @@ onMounted(async () => {
           <div
             v-for="reg in registrations"
             :key="reg.id"
-            class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all"
+            @click="openRegistrationDetail(reg)"
+            class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
           >
             <div class="flex justify-between items-start mb-3">
               <div>
@@ -218,6 +227,59 @@ onMounted(async () => {
       close-on-click-action
       class="rounded-t-[2.5rem]"
     />
+
+    <!-- Registration Detail Modal -->
+    <van-action-sheet v-model:show="showRegistrationDetail" title="報名詳細資料" class="rounded-t-[2.5rem] overflow-hidden">
+      <div v-if="selectedRegistration" class="px-6 pb-12 pt-4 space-y-6 max-h-[70vh] overflow-y-auto">
+        <!-- Basic Info -->
+        <div class="flex items-center gap-4">
+          <div class="size-14 rounded-full bg-sky-500 flex items-center justify-center text-white shadow-lg">
+            <span class="material-symbols-outlined text-2xl">person</span>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold text-slate-900">{{ selectedRegistration.name || '未提供姓名' }}</h3>
+            <p class="text-sm text-slate-500 font-medium">{{ selectedRegistration.email }}</p>
+          </div>
+        </div>
+
+        <!-- Sync & Points Info -->
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-slate-50 rounded-2xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">來源</p>
+            <p class="text-sm font-bold text-slate-700">{{ getSyncStatus(selectedRegistration) }}</p>
+          </div>
+          <div class="bg-slate-50 rounded-2xl p-4">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">點數狀態</p>
+            <p class="text-sm font-bold text-slate-700">{{ getPointsStatus(selectedRegistration) }}</p>
+          </div>
+        </div>
+
+        <!-- Raw Data (Google Form Fields) -->
+        <div v-if="selectedRegistration.rawData && Object.keys(selectedRegistration.rawData).length > 0" class="space-y-4">
+          <div class="flex items-center gap-2 px-1">
+            <span class="w-1 h-4 bg-sky-500 rounded-full"></span>
+            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">表單完整欄位</h4>
+          </div>
+          
+          <div class="bg-slate-50 rounded-3xl p-5 space-y-4">
+            <div 
+              v-for="(value, key) in selectedRegistration.rawData" 
+              :key="key"
+              class="border-b border-slate-200/50 last:border-0 pb-3 last:pb-0"
+            >
+              <p class="text-[10px] font-bold text-slate-400 mb-1">{{ key }}</p>
+              <p class="text-sm text-slate-700 font-medium break-words">{{ value || '(未填寫)' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Meta -->
+        <div class="text-[10px] text-center text-slate-400 space-y-1">
+          <p>報名時間：{{ fnsFormat(selectedRegistration.formSubmittedAt, 'yyyy/MM/dd HH:mm:ss') }}</p>
+          <p v-if="selectedRegistration.googleSheetRowId">同步標記：{{ selectedRegistration.googleSheetRowId }}</p>
+        </div>
+      </div>
+    </van-action-sheet>
   </div>
 </template>
 
