@@ -13,15 +13,8 @@ const formData = ref({
   email: '',
   fullName: '',
   department: '',
-  gender: '',
   bio: ''
 })
-
-const genderOptions = [
-  { label: '請選擇性別', value: '' },
-  { label: '男', value: 'male' },
-  { label: '女', value: 'female' }
-]
 
 // Fetch existing user data if any
 const fetchUserData = async () => {
@@ -48,14 +41,13 @@ const fetchUserData = async () => {
     if (profile) {
       formData.value.fullName = profile.name || ''
       formData.value.department = profile.department || ''
-      formData.value.gender = profile.gender || ''
       formData.value.bio = profile.bio || ''
       
       // 如果資料已經完整，直接跳轉首頁
-      if (user.email && profile.department) {
-        router.push('/home')
-        return
-      }
+      // if (user.email && profile.department) {
+      //   router.push('/home')
+      //   return
+      // }
     } else {
       // Fallback to metadata
       const metadata = user.user_metadata || {}
@@ -75,11 +67,6 @@ const handleCompleteRegistration = async () => {
     return
   }
 
-  if (!formData.value.department.trim()) {
-    errorMessage.value = '請輸入或選擇您的校友會'
-    return
-  }
-
   try {
     loading.value = true
     errorMessage.value = ''
@@ -94,7 +81,6 @@ const handleCompleteRegistration = async () => {
       email: formData.value.email.trim(),
       name: formData.value.fullName.trim(),
       department: formData.value.department.trim(),
-      gender: formData.value.gender,
       bio: formData.value.bio.trim()
     })
 
@@ -128,8 +114,8 @@ onMounted(() => {
           <div class="size-20 bg-sky-500 rounded-3xl shadow-xl flex items-center justify-center mx-auto mb-4 animate-bounce-slow">
             <span class="material-symbols-outlined text-white text-4xl">person_add</span>
           </div>
-          <h1 class="text-slate-900 text-2xl font-bold tracking-tight">完善基本資料</h1>
-          <p class="text-slate-500 text-sm font-medium">歡迎加入領袖會！請填寫以下資訊以完成註冊</p>
+          <h1 class="text-slate-900 text-2xl font-bold tracking-tight">歡迎加入</h1>
+          <p class="text-slate-500 text-sm font-medium text-left">確認以下資訊以完成領袖會社青團活動中心的註冊流程。</p>
         </div>
 
         <!-- Initializing State -->
@@ -151,11 +137,12 @@ onMounted(() => {
                 class="w-full bg-transparent border-none text-slate-700 focus:ring-0 text-base py-3 px-3 outline-none cursor-not-allowed"
               />
             </div>
+            <p class="text-red-600 text-sm font-medium text-left">請確認您的Email為您報名活動所使用的Email</p>
           </div>
 
           <!-- Full Name -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">全名 (選填)</label>
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">全名</label>
             <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-center transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
               <span class="material-symbols-outlined text-slate-400 ml-3">badge</span>
               <input
@@ -181,26 +168,9 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Gender -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">性別</label>
-            <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-center transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
-              <span class="material-symbols-outlined text-slate-400 ml-3">wc</span>
-              <select
-                v-model="formData.gender"
-                class="w-full bg-transparent border-none text-slate-900 focus:ring-0 text-base py-3 px-3 outline-none appearance-none cursor-pointer"
-              >
-                <option v-for="opt in genderOptions" :key="opt.value" :value="opt.value">
-                  {{ opt.label }}
-                </option>
-              </select>
-              <span class="material-symbols-outlined text-slate-300 mr-3 pointer-events-none text-xl">expand_more</span>
-            </div>
-          </div>
-
           <!-- Bio -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">個人簡介 (選填)</label>
+            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">個人簡介</label>
             <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-start transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
               <span class="material-symbols-outlined text-slate-400 ml-3 mt-3">description</span>
               <textarea
@@ -253,7 +223,7 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 .animate-bounce-slow {
   animation: bounce 3s infinite;
 }
