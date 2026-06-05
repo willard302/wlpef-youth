@@ -67,6 +67,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "checkin_records_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "social_leaderboard"
+            referencedColumns: ["event_id"]
+          },
+          {
             foreignKeyName: "checkin_records_registration_id_fkey"
             columns: ["registration_id"]
             isOneToOne: false
@@ -128,6 +135,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "social_leaderboard"
+            referencedColumns: ["event_id"]
+          },
+          {
             foreignKeyName: "event_registrations_matched_user_id_fkey"
             columns: ["matched_user_id"]
             isOneToOne: false
@@ -157,8 +171,8 @@ export type Database = {
           subdomain: string | null
           target_id: string | null
           title: string
-          }
-          Insert: {
+        }
+        Insert: {
           all_day?: boolean | null
           checkin_bonus?: number | null
           color?: string | null
@@ -178,8 +192,8 @@ export type Database = {
           subdomain?: string | null
           target_id?: string | null
           title: string
-          }
-          Update: {
+        }
+        Update: {
           all_day?: boolean | null
           checkin_bonus?: number | null
           color?: string | null
@@ -199,7 +213,7 @@ export type Database = {
           subdomain?: string | null
           target_id?: string | null
           title?: string
-          }
+        }
         Relationships: []
       }
       point_transactions: {
@@ -250,6 +264,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "events"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "point_transactions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "social_leaderboard"
+            referencedColumns: ["event_id"]
           },
           {
             foreignKeyName: "point_transactions_registration_id_fkey"
@@ -314,13 +335,39 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      social_leaderboard: {
+        Row: {
+          department: string | null
+          email: string | null
+          event_id: string | null
+          event_points: number | null
+          event_title: string | null
+          first_registered_at: string | null
+          name: string | null
+          raffle_eligible: boolean | null
+          raffle_threshold: number | null
+          target_id: string | null
+          total_points: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_matched_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       process_event_registration_points: {
         Args: { reg_id?: string }
         Returns: undefined
       }
+      process_pending_points: { Args: never; Returns: undefined }
+      trigger_google_sheet_sync: { Args: never; Returns: undefined }
     }
     Enums: {
       attendance_status: "attendance" | "lateness" | "leave" | "absence"
