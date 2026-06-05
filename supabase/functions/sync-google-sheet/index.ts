@@ -22,6 +22,7 @@ type SheetRegistration = {
   google_sheet_row_id: string
   form_submitted_at: string
   synced_at: string
+  raw_data?: Record<string, any>
 }
 
 type SyncResult = {
@@ -48,7 +49,7 @@ const corsHeaders = {
 const HEADER_ALIASES = {
   timestamp: ["timestamp", "time", "submittedat", "submittedtime", "時間戳記", "提交時間", "報名時間"],
   email: ["email", "mail", "e-mail", "電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
-  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱"],
+  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"],
 }
 
 const normalizeEmail = (value?: string | null) => (value || "").trim().toLowerCase()
@@ -240,6 +241,13 @@ function toRegistrations(
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
 
+    // 💡【新功能】將整列資料轉為物件，Key 是表頭名稱，Value 是儲存格內容
+    const raw_data: Record<string, any> = {}
+    headers.forEach((header, i) => {
+      const key = (header || `column_${i}`).trim()
+      raw_data[key] = row[i] || ""
+    })
+
     return [{
       event_id: event.id,
       matched_user_id: matchedProfile?.id || null,
@@ -248,6 +256,7 @@ function toRegistrations(
       google_sheet_row_id: `${event.target_id || event.id}:row_${index + 2}`,
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
+      raw_data,
     }]
   })
 
@@ -308,7 +317,7 @@ async function syncEvent(
     sheetId: event.google_sheet_id,
     targetId: event.target_id,
     importedCount: registrations.length,
-    matchedCount: matchedUserIds.length,
+    matchedCount: allEmails.length,
     skippedCount,
   }
 }

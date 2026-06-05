@@ -155,6 +155,7 @@ CREATE TABLE IF NOT EXISTS public.event_registrations (
   form_submitted_at TIMESTAMPTZ DEFAULT NOW(),
   synced_at    TIMESTAMPTZ,
   registration_points_granted_at TIMESTAMPTZ,
+  raw_data     JSONB,
   created_at   TIMESTAMPTZ  DEFAULT NOW(),
   UNIQUE(event_id, email)
 );
