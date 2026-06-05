@@ -44,10 +44,10 @@ const fetchUserData = async () => {
       formData.value.bio = profile.bio || ''
       
       // 如果資料已經完整，直接跳轉首頁
-      // if (user.email && profile.department) {
-      //   router.push('/home')
-      //   return
-      // }
+      if (user.email) {
+        router.push('/home')
+        return
+      }
     } else {
       // Fallback to metadata
       const metadata = user.user_metadata || {}
