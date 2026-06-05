@@ -91,6 +91,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   color        TEXT         DEFAULT '#38bdf8',
   status       TEXT         DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'closed')),
   google_sheet_id TEXT,
+  google_form_url TEXT,
   target_id    TEXT,
   subdomain    TEXT,
   registration_bonus INTEGER DEFAULT 0,
@@ -105,6 +106,7 @@ CREATE TABLE IF NOT EXISTS public.events (
 ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft',
   ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
+  ADD COLUMN IF NOT EXISTS google_form_url TEXT,
   ADD COLUMN IF NOT EXISTS target_id TEXT,
   ADD COLUMN IF NOT EXISTS subdomain TEXT,
   ADD COLUMN IF NOT EXISTS registration_bonus INTEGER DEFAULT 0,
