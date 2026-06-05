@@ -31,7 +31,7 @@ const {
   loadEvents,
   loadCurrentUserRole,
   isCalendarLoading,
-  canAddEvent,
+  isAdmin,
   canEditEvent,
   canDeleteEvent,
   canViewAllEventStatus,
@@ -46,7 +46,7 @@ const upcomingEventDisplay = computed(() => {
   if (!event) {
     return {
       title: '目前沒有即將到來的活動',
-      meta: canAddEvent.value ? '新增活動後會顯示在這裡' : '請稍後再查看最新活動',
+      meta: isAdmin.value ? '新增活動後會顯示在這裡' : '請稍後再查看最新活動',
     }
   }
 
@@ -302,7 +302,7 @@ onMounted(async () => {
             {{ format(selectedDate, 'M/d') }} 活動
           </h4>
           <button
-            v-if="canAddEvent"
+            v-if="isAdmin"
             @click="navigateToEditor"
             class="flex items-center gap-1.5 text-[11px] font-bold text-sky-500 bg-sky-50 px-3 py-1.5 rounded-full hover:bg-sky-100 transition-all"
           >
@@ -401,7 +401,7 @@ onMounted(async () => {
     <!-- Side Menu -->
     <SideMenu
       v-model:show="menuVisible"
-      :can-add-event="canAddEvent"
+      :is-admin="isAdmin"
       @navigate-to-editor="navigateToEditor"
     />
 

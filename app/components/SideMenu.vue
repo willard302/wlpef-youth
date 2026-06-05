@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const props = defineProps<{
   show: boolean
-  canAddEvent: boolean
+  isAdmin: boolean
 }>()
 
 const emit = defineEmits<{
@@ -25,7 +25,7 @@ const menuItems = computed(() => [
     bgClass: 'bg-sky-50',
     textClass: 'text-sky-600',
     hoverClass: 'hover:bg-sky-100',
-    show: props.canAddEvent,
+    show: props.isAdmin,
     action: () => emit('navigate-to-editor'),
   },
   {
@@ -35,7 +35,7 @@ const menuItems = computed(() => [
     bgClass: 'bg-indigo-50',
     textClass: 'text-indigo-600',
     hoverClass: 'hover:bg-indigo-100',
-    show: props.canAddEvent, // canAddEvent is equivalent to isAdmin in this context
+    show: props.isAdmin,
     action: () => router.push('/home/registrations'),
   },
   {

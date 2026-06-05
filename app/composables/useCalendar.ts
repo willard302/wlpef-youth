@@ -44,7 +44,7 @@ export function useCalendar() {
     currentRole.value = (profile?.role || 'member') as Role
   }
 
-  const canAddEvent = computed(() => currentRole.value === 'admin')
+  const isAdmin = computed(() => currentRole.value === 'admin')
   const canViewAllEventStatus = computed(() => currentRole.value === 'admin')
 
   const canEditEvent = (createdBy: string): boolean => {
@@ -158,7 +158,7 @@ export function useCalendar() {
     loadEvents,
     loadCurrentUserRole,
     isCalendarLoading,
-    canAddEvent,
+    isAdmin,
     canEditEvent,
     canDeleteEvent,
     canViewAllEventStatus
