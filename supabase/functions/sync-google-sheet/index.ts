@@ -215,6 +215,9 @@ function toRegistrations(
   const nameIndex = findHeaderIndex(headers, HEADER_ALIASES.name, 2)
   const syncedAt = new Date().toISOString()
   let skippedCount = 0
+  let duplicateCount = 0
+
+  const seenEmails = new Set<string>()
 
   const registrations = rows.slice(1).flatMap((row, index): SheetRegistration[] => {
     const email = normalizeEmail(row[emailIndex])
@@ -222,6 +225,16 @@ function toRegistrations(
       skippedCount += 1
       return []
     }
+
+    // 💡【核心改動】如果這個 Email 在這份試算表前面已經出現過了，直接跳過它！
+    //    這樣可以確保傳給隨後 .upsert() 的陣列中，(event_id, email) 絕對唯一
+    if (seenEmails.has(email)) {
+      duplicateCount += 1
+      return []
+    }
+
+    // 記錄這個 Email，表示後面再遇到就要過濾掉
+    seenEmails.add(email)
 
     const matchedProfile = profilesByEmail.get(email)
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
@@ -238,7 +251,7 @@ function toRegistrations(
     }]
   })
 
-  return { registrations, skippedCount }
+  return { registrations, skippedCount, duplicateCount }
 }
 
 async function syncEvent(
