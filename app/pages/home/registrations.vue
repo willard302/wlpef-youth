@@ -121,9 +121,9 @@ onMounted(async () => {
     <main class="px-4 -mt-6 relative z-20 space-y-6">
       <!-- Event Selector -->
       <section class="bg-white/95 backdrop-blur-xl rounded-3xl p-5 shadow-xl border border-white">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目前檢視活動</p>
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">目前檢視活動</p>
             <h3 class="text-lg font-bold text-slate-800 truncate">
               {{ selectedEvent?.title || (isEventsLoading ? '載入中...' : '尚未選擇活動') }}
             </h3>
