@@ -224,7 +224,7 @@ export const eventService = {
     }
 
     // 2. 同時更新 events 表的 participants 欄位 (用於快速統計人數)
-    // 獲取目前的 participants
+    // 獲取目前的 participants (儲存的是 Email)
     const { data: eventData } = await supabase
       .from('events')
       .select('participants')
@@ -232,11 +232,13 @@ export const eventService = {
       .single()
 
     const currentParticipants = eventData?.participants || []
-    if (!currentParticipants.includes(user.id)) {
+    const userEmail = user.email!
+    
+    if (!currentParticipants.includes(userEmail)) {
       await supabase
         .from('events')
         .update({
-          participants: [...currentParticipants, user.id]
+          participants: [...currentParticipants, userEmail]
         })
         .eq('id', eventId)
     }

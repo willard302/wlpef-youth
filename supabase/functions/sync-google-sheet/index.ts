@@ -278,11 +278,11 @@ async function syncEvent(
     if (error) throw new Error(`Failed to upsert registrations for ${event.id}: ${error.message}`)
   }
 
-  const matchedUserIds = [...new Set(registrations
-    .map((registration) => registration.matched_user_id)
-    .filter((userId): userId is string => !!userId))]
+  const allEmails = [...new Set(registrations
+    .map((registration) => registration.email)
+    .filter((email): email is string => !!email))]
 
-  if (matchedUserIds.length > 0) {
+  if (allEmails.length > 0) {
     const { data: eventData, error: eventError } = await supabaseAdmin
       .from("events")
       .select("participants")
@@ -292,7 +292,8 @@ async function syncEvent(
     if (eventError) throw new Error(`Failed to load event participants: ${eventError.message}`)
 
     const currentParticipants = eventData?.participants || []
-    const participants = [...new Set([...currentParticipants, ...matchedUserIds])]
+    // Merge and ensure unique emails
+    const participants = [...new Set([...currentParticipants, ...allEmails])]
 
     const { error: updateError } = await supabaseAdmin
       .from("events")
