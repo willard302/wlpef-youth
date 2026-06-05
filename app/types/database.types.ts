@@ -99,6 +99,7 @@ export type Database = {
           id: string
           matched_user_id: string | null
           name: string | null
+          raw_data: Json | null
           registration_points_granted_at: string | null
           synced_at: string | null
         }
@@ -111,6 +112,7 @@ export type Database = {
           id?: string
           matched_user_id?: string | null
           name?: string | null
+          raw_data?: Json | null
           registration_points_granted_at?: string | null
           synced_at?: string | null
         }
@@ -123,6 +125,7 @@ export type Database = {
           id?: string
           matched_user_id?: string | null
           name?: string | null
+          raw_data?: Json | null
           registration_points_granted_at?: string | null
           synced_at?: string | null
         }
