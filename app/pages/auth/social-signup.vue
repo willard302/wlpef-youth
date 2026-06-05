@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-
 definePageMeta({
   layout: 'auth'
 })

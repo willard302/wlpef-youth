@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
 import { format as fnsFormat } from 'date-fns'
 import { eventService } from '@/services/eventService'
 import type { Event, EventRegistration } from '@/types'

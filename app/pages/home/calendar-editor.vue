@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { COLOR_OPTIONS } from '@/composables/useCalendarEditor'
 
 definePageMeta({

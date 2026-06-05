@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import { useUser } from '@/composables/useUser'
 import { useToast } from '@/composables/useToast'
 

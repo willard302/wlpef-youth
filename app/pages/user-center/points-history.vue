@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import { userService } from '@/services/userService'
 import { format as fnsFormat } from 'date-fns'
 import type { PointTransaction } from '@/types'

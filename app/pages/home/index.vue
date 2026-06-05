@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { onMounted, computed, ref } from 'vue'
 import { format as fnsFormat } from 'date-fns'
 import { showDialog } from 'vant'
 import { eventService } from '@/services/eventService'

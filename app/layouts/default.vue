@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useTabbarConfig } from '@/composables/useTabbarConfig'
 import { useToast } from '@/composables/useToast'
 
