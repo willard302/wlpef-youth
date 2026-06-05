@@ -13,6 +13,7 @@ export interface Event {
   attendees: number
   status: EventStatus
   googleSheetId?: string
+  googleFormUrl?: string
   targetId?: string
   subdomain?: string
   registrationBonus: number
@@ -35,6 +36,7 @@ export interface CreateEventPayload {
   color?: string
   status?: EventStatus
   google_sheet_id?: string
+  google_form_url: string
   target_id?: string
   subdomain?: string
   registration_bonus?: number

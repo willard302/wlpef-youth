@@ -76,7 +76,6 @@ const eventDetailVisible = ref(false)
 const selectedEvent = ref<Event | null>(null)
 const isRegistered = ref(false)
 const checkingRegistration = ref(false)
-const registering = ref(false)
 
 const announcements = ref([
   {
@@ -185,21 +184,13 @@ const openEventDetail = async (event: Event) => {
 const handleRegister = async () => {
   if (!selectedEvent.value || isRegistered.value) return
 
-  try {
-    registering.value = true
-    await eventService.registerForEvent(selectedEvent.value.id)
-    isRegistered.value = true
-    if (upcomingEventData.value?.id === selectedEvent.value.id) {
-      isUpcomingRegistered.value = true
-    }
-    addToast('報名成功！', 'success')
-    // Refresh events to update attendee count
-    await loadEvents()
-  } catch (err: any) {
-    addToast(err.message || '報名失敗，請稍後再試', 'error')
-  } finally {
-    registering.value = false
+  const formUrl = selectedEvent.value.googleFormUrl
+  if (!formUrl) {
+    addToast('此活動尚未設定 Google 表單連結', 'error')
+    return
   }
+
+  window.open(formUrl, '_blank', 'noopener,noreferrer')
 }
 
 const viewAllAnnouncements = () => {
@@ -466,18 +457,17 @@ onMounted(async () => {
         <div class="pt-4">
           <button
             @click="handleRegister"
-            :disabled="isRegistered || registering || checkingRegistration || selectedEvent.status === 'closed'"
+            :disabled="isRegistered || checkingRegistration || selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl"
             class="w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
             :class="[
               isRegistered 
                 ? 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200' 
-                : (selectedEvent.status === 'closed' ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
+                : (selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
             ]"
           >
-            <span v-if="registering" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span v-else class="material-symbols-outlined">{{ isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'how_to_reg') }}</span>
+            <span class="material-symbols-outlined">{{ isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'open_in_new') }}</span>
             <span>
-              {{ isRegistered ? '已完成報名' : (registering ? '處理中...' : (selectedEvent.status === 'closed' ? '報名已截止' : '立即報名')) }}
+              {{ isRegistered ? '已完成報名' : (selectedEvent.status === 'closed' ? '報名已截止' : (!selectedEvent.googleFormUrl ? '尚未開放報名' : '前往 Google 表單報名')) }}
             </span>
           </button>
           <p v-if="isRegistered" class="text-[10px] text-center text-slate-400 mt-2">

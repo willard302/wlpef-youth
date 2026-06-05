@@ -39,6 +39,7 @@ export function useCalendarEditor() {
     color: COLOR_OPTIONS[0] as string,
     status: 'draft' as CreateEventPayload['status'],
     googleSheetId: '',
+    googleFormUrl: '',
     targetId: '',
     subdomain: '',
     registrationBonus: 0,
@@ -75,6 +76,7 @@ export function useCalendarEditor() {
     formData.value.color = event.color || COLOR_OPTIONS[0]
     formData.value.status = event.status
     formData.value.googleSheetId = event.googleSheetId || ''
+    formData.value.googleFormUrl = event.googleFormUrl || ''
     formData.value.targetId = event.targetId || ''
     formData.value.subdomain = event.subdomain || ''
     formData.value.registrationBonus = event.registrationBonus
@@ -138,6 +140,19 @@ export function useCalendarEditor() {
       return { valid: false, error: '活動期間不能超過 7 天' }
     }
 
+    if (!formData.value.googleFormUrl.trim()) {
+      return { valid: false, error: '請輸入 Google 表單連結' }
+    }
+
+    try {
+      const url = new URL(formData.value.googleFormUrl.trim())
+      if (!['http:', 'https:'].includes(url.protocol)) {
+        return { valid: false, error: 'Google 表單連結格式不正確' }
+      }
+    } catch {
+      return { valid: false, error: 'Google 表單連結格式不正確' }
+    }
+
     if (formData.value.registrationBonus < 0 || formData.value.checkinBonus < 0 || formData.value.raffleThreshold < 0) {
       return { valid: false, error: 'Point settings cannot be negative' }
     }
@@ -165,6 +180,7 @@ export function useCalendarEditor() {
         color: formData.value.color,
         status: formData.value.status,
         google_sheet_id: formData.value.googleSheetId.trim() || undefined,
+        google_form_url: formData.value.googleFormUrl.trim(),
         target_id: formData.value.targetId.trim() || undefined,
         subdomain: formData.value.subdomain.trim() || undefined,
         registration_bonus: Number(formData.value.registrationBonus) || 0,
