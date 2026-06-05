@@ -1,5 +1,3 @@
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
 import type { TabbarItem } from '@/types'
 import { baseTabbarItems } from '@/config/tabbar'
 

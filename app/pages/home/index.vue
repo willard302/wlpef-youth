@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, computed, ref } from 'vue'
 import { format as fnsFormat } from 'date-fns'
+import { showDialog } from 'vant'
 import { eventService } from '@/services/eventService'
 import type { Event } from '@/types'
 
@@ -138,7 +139,17 @@ const navigateToEditEvent = (eventId: string) => {
 }
 
 const handleDeleteEvent = async (eventId: string) => {
-  if (!window.confirm('確定要刪除這個活動嗎？')) return
+  try {
+    await showDialog({
+      title: '刪除活動',
+      message: '確定要刪除這個活動嗎？此操作無法復原。',
+      confirmButtonText: '刪除',
+      cancelButtonText: '取消',
+      confirmButtonColor: '#ef4444',
+    })
+  } catch {
+    return
+  }
 
   try {
     await eventService.deleteEvent(eventId)

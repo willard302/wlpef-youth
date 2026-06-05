@@ -1,4 +1,3 @@
-import { ref, computed, watch } from 'vue'
 import {
   add,
   eachDayOfInterval,
@@ -111,13 +110,24 @@ export function useCalendar() {
 
     const monthStart = startOfMonth(currentDate.value)
     const monthEnd = endOfMonth(currentDate.value)
-    const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-    daysInMonth.forEach((day) => {
-      if (visibleEvents.some(event => isEventOnDate(event, day))) {
+    // O(events) — 遍歷活動一次，標記有活動的日期
+    for (const event of visibleEvents) {
+      const start = startOfDay(event.startAt)
+      const end = startOfDay(event.endAt)
+
+      // 只處理與當月有交集的活動
+      if (end < monthStart || start > monthEnd) continue
+
+      // 計算活動在當月的實際範圍
+      const clampedStart = start < monthStart ? monthStart : start
+      const clampedEnd = end > monthEnd ? monthEnd : end
+
+      const days = eachDayOfInterval({ start: clampedStart, end: clampedEnd })
+      for (const day of days) {
         eventsMap.set(day.getDate(), true)
       }
-    })
+    }
 
     return eventsMap
   })

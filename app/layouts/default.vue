@@ -7,11 +7,10 @@ const route = useRoute()
 const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()
 
-// 检查当前路由是否隐藏 tabbar
+// 檢查當前路由是否隱藏 tabbar
 const hideTabbarRoutes = ['/user-center/change-password', '/user-center/user-info']
 const showTabbar = computed(() => {
   const path = route.path
-  // 检查完整路由路径
   if (hideTabbarRoutes.includes(path)) {
     return false
   }
@@ -21,17 +20,18 @@ const showTabbar = computed(() => {
 
 <template>
   <div class="relative flex min-h-screen w-full flex-col max-w-[430px] mx-auto shadow-2xl bg-white overflow-y-auto overflow-x-hidden">
-    <!-- 页面内容 -->
+    <!-- 頁面內容 -->
     <slot />
 
     <!-- Toast 通知 -->
-    <div class="fixed top-0 right-0 z-50 p-4 space-y-2">
+    <div class="absolute top-0 right-0 z-50 p-4 space-y-2 pointer-events-none">
       <Toast
         v-for="toast in toasts"
         :key="toast.id"
         :message="toast.message"
         :type="toast.type"
         :duration="toast.duration"
+        class="pointer-events-auto"
         @close="removeToast(toast.id)"
       />
     </div>

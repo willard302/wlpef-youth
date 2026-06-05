@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
 import { userService } from '@/services/userService'
 import type { UserProfile, Activity, Role } from '@/types'
 

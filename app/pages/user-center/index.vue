@@ -1,3 +1,4 @@
+
 <script setup lang="ts">
 import type { StatCard, MenuItem } from '@/types';
 
@@ -10,7 +11,8 @@ const {
   userProfile,
   isUploadingAvatar,
   loadUserData,
-  uploadAvatar
+  uploadAvatar,
+  handleLogout,
 } = useUser()
 
 // 使用 Toast
@@ -151,15 +153,16 @@ const getRoleName = (role?: string) => {
             </div>
             <span class="material-symbols-outlined text-slate-300">chevron_right</span>
           </NuxtLink>
-          <a
-            href="/auth/login"
-            class="flex items-center justify-between p-4 hover:bg-red-50 transition-colors"
+          <!-- 登出按鈕：呼叫 handleLogout 正確清除 session -->
+          <button
+            @click="handleLogout"
+            class="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors"
           >
             <div class="flex items-center gap-3 text-red-500">
               <span class="material-symbols-outlined">logout</span>
               <span class="font-bold">登出</span>
             </div>
-          </a>
+          </button>
         </div>
       </div>
     </main>

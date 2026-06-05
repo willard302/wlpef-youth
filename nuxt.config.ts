@@ -12,6 +12,15 @@ export default defineNuxtConfig({
   css: ['~/assets/styles/global.css'],
   app: {
     head: {
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no',
+      title: '領袖會社青團',
+      meta: [
+        { name: 'description', content: '領袖會社青團官方會員平台 — 活動報名、行事曆、點數管理' },
+        { name: 'theme-color', content: '#0ea5e9' },
+        { name: 'apple-mobile-web-app-capable', content: 'yes' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'default' },
+      ],
       link: [
         {
           rel: 'stylesheet',
@@ -33,7 +42,7 @@ export default defineNuxtConfig({
   },
 
   imports: {
-    dirs: ['app/stores', 'app/composables']
+    dirs: ['~/stores', '~/composables']
   },
 
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@vant/nuxt'],

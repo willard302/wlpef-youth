@@ -1,5 +1,5 @@
-import { computed, ref, watch } from 'vue'
 import { addHours, format, parseISO, set } from 'date-fns'
+import { showDialog } from 'vant'
 import type { CreateEventPayload, Event } from '@/types'
 import { eventService } from '@/services/eventService'
 
@@ -191,7 +191,19 @@ export function useCalendarEditor() {
 
   const deleteEvent = async () => {
     if (!editingEventId.value) return
-    if (!window.confirm('確定要刪除這個活動嗎？')) return
+
+    try {
+      await showDialog({
+        title: '刪除活動',
+        message: '確定要刪除這個活動嗎？此操作無法復原。',
+        confirmButtonText: '刪除',
+        cancelButtonText: '取消',
+        confirmButtonColor: '#ef4444',
+      })
+    } catch {
+      // 使用者取消
+      return
+    }
 
     isDeleting.value = true
 

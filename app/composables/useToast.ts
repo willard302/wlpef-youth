@@ -1,5 +1,3 @@
-import { ref } from 'vue'
-
 interface Toast {
   id: string
   message: string
@@ -7,25 +5,19 @@ interface Toast {
   duration: number
 }
 
-const toasts = ref<Toast[]>([])
-
 export function useToast() {
+  // useState 確保 SSR 安全且跨組件共用同一份狀態
+  const toasts = useState<Toast[]>('app:toasts', () => [])
+
   const addToast = (message: string, type: 'success' | 'error' | 'info' = 'info', duration = 3000) => {
     const id = Date.now().toString()
-    const toast: Toast = {
-      id,
-      message,
-      type,
-      duration
-    }
+    const toast: Toast = { id, message, type, duration }
 
     toasts.value.push(toast)
 
     // 自動移除
     if (duration > 0) {
-      setTimeout(() => {
-        removeToast(id)
-      }, duration)
+      setTimeout(() => removeToast(id), duration)
     }
 
     return id
@@ -48,6 +40,6 @@ export function useToast() {
     removeToast,
     success,
     error,
-    info
+    info,
   }
 }
