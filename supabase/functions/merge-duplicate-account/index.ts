@@ -1,7 +1,5 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
-import { withSupabase } from "@supabase/server"
-
-const publishableKey = Deno.env.get("SUPABASE_KEY")
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 type MinimalAuthUser = {
   id: string
@@ -20,6 +18,14 @@ type ProfileRow = {
   phone_number: string | null
   role: string | null
   points: number | null
+}
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Max-Age": "86400",
+  Vary: "Origin",
 }
 
 const PROFILE_REF_UPDATES: Array<{ table: string; column: string }> = [
@@ -54,11 +60,11 @@ const getCreatedAt = (user: MinimalAuthUser) => {
 const isMissingRelation = (error: { code?: string } | null) => error?.code === "42P01"
 
 async function listUsersByEmail(
-  ctx: any,
+  supabaseAdmin: any,
   email: string,
 ): Promise<MinimalAuthUser[]> {
   // 優先從 profiles 表查找 ID，避免遍歷整個 Auth 用戶列表
-  const { data: profiles, error: profileError } = await ctx.supabaseAdmin
+  const { data: profiles, error: profileError } = await supabaseAdmin
     .from("profiles")
     .select("id")
     .eq("email", email)
@@ -72,7 +78,7 @@ async function listUsersByEmail(
   // 根據找到的 ID 獲取完整 Auth 用戶資料
   if (profiles && profiles.length > 0) {
     for (const p of profiles) {
-      const { data: { user }, error } = await ctx.supabaseAdmin.auth.admin.getUserById(p.id)
+      const { data: { user }, error } = await supabaseAdmin.auth.admin.getUserById(p.id)
       if (!error && user) {
         users.push(user)
       }
@@ -84,7 +90,7 @@ async function listUsersByEmail(
     const perPage = 100
     let page = 1
     while (true) {
-      const { data, error } = await ctx.supabaseAdmin.auth.admin.listUsers({ page, perPage })
+      const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
       if (error) throw new Error(error.message)
       const pageUsers = data?.users || []
       const filtered = pageUsers.filter((u: any) => normalizeEmail(u.email) === email)
@@ -114,108 +120,133 @@ async function reassignReference(
   }
 }
 
-export default {
-  fetch: withSupabase({
-    auth: ["publishable", "secret"],
-    env: publishableKey
-      ? {
-          publishableKeys: {
-            default: publishableKey,
-          },
-        }
-      : undefined,
-  }, async (_req, ctx) => {
-    try {
-      const { data: authData, error: authError } = await ctx.supabase.auth.getUser()
-      if (authError) {
-        return Response.json({ error: authError.message }, { status: 401 })
-      }
+Deno.serve(async(req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders })
+  }
 
-      const currentUser = authData?.user
-      if (!currentUser || !currentUser.id || !currentUser.email) {
-        return Response.json({ merged: false, reason: "no-auth-user" }, { status: 200 })
-      }
+  try {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")
+    const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS")
+    const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS")
 
-      const normalizedEmail = normalizeEmail(currentUser.email)
-      if (!normalizedEmail) {
-        return Response.json({ merged: false, reason: "missing-email" }, { status: 200 })
-      }
+    const publishableKeys = publishableKeysRaw ? JSON.parse(publishableKeysRaw) : {}
+    const secretKeys = secretKeysRaw ? JSON.parse(secretKeysRaw) : {}
 
-      const users = await listUsersByEmail(ctx, normalizedEmail)
+    const supabasePublishableKey = publishableKeys.default
+    const secretKey = secretKeys.default
 
-      if (users.length <= 1) {
-        return Response.json({ merged: false, reason: "no-duplicate" }, { status: 200 })
-      }
+    if (!supabaseUrl || !secretKey || !supabasePublishableKey) {
+      throw new Error("Missing Supabase URL or Secret Key in environment variables")
+    }
 
-      const canonicalUser = [...users].sort((left, right) => {
-        const createdAtDiff = getCreatedAt(left) - getCreatedAt(right)
-        if (createdAtDiff !== 0) return createdAtDiff
-        return left.id.localeCompare(right.id)
-      })[0]
-
-      let mergedCount = 0
-
-      const duplicateUsers = users.filter((user) => user.id !== canonicalUser.id)
-
-      for (const duplicate of duplicateUsers) {
-        const secondaryId = duplicate.id
-        const primaryId = canonicalUser.id
-
-        const [{ data: primaryProfile }, { data: secondaryProfile }] = await Promise.all([
-          ctx.supabaseAdmin.from("profiles").select("*").eq("id", primaryId).maybeSingle(),
-          ctx.supabaseAdmin.from("profiles").select("*").eq("id", secondaryId).maybeSingle(),
-        ]) as Array<{ data: ProfileRow | null }>
-
-        const name = pickString(
-          primaryProfile?.name,
-          secondaryProfile?.name,
-          normalizedEmail.split("@")[0],
-          "User",
-        )
-
-        const mergedProfile = {
-          id: primaryId,
-          name,
-          department: pickString(primaryProfile?.department, secondaryProfile?.department) || null,
-          gender: pickString(primaryProfile?.gender, secondaryProfile?.gender) || null,
-          bio: pickString(primaryProfile?.bio, secondaryProfile?.bio) || null,
-          avatar_url: pickString(primaryProfile?.avatar_url, secondaryProfile?.avatar_url) || null,
-          phone_number: pickString(primaryProfile?.phone_number, secondaryProfile?.phone_number) || null,
-          role: toRole(primaryProfile?.role, secondaryProfile?.role),
-          points: Math.max(primaryProfile?.points || 0, secondaryProfile?.points || 0),
-          updated_at: new Date().toISOString(),
-        }
-
-        const { error: upsertError } = await ctx.supabaseAdmin
-          .from("profiles")
-          .upsert(mergedProfile)
-
-        if (upsertError) {
-          throw new Error(`Failed to upsert merged profile: ${upsertError.message}`)
-        }
-
-        for (const target of PROFILE_REF_UPDATES) {
-          await reassignReference(ctx.supabaseAdmin, target.table, target.column, secondaryId, primaryId)
-        }
-
-        // 清掉次帳號 profile，避免殘留重複身份
-        await ctx.supabaseAdmin.from("profiles").delete().eq("id", secondaryId)
-
-        const { error: deleteUserError } = await ctx.supabaseAdmin.auth.admin.deleteUser(secondaryId)
-        if (deleteUserError) {
-          throw new Error(`Failed to delete duplicate auth user: ${deleteUserError.message}`)
-        }
-
-        mergedCount += 1
-      }
-
-      return Response.json({ merged: true, mergedCount }, { status: 200 })
-    } catch (error: any) {
-      console.error("merge-duplicate-account error:", error)
+    const authHeader = req.headers.get("Authorization")
+    if (!authHeader) {
       return Response.json(
-        { error: error?.message || "Internal Server Error" },
-        { status: 500 },
+        { error: "Missing Authorization Header" }, 
+        { status: 401, headers: corsHeaders }
       )
     }
-  }),
-}
+
+    const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+      global: { headers: { Authorization: authHeader }},
+      auth: { persistSession: false, autoRefreshToken: false }
+    })
+
+    const supabaseAdmin = createClient(supabaseUrl, secretKey, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    })
+
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+    if (authError) {
+      return Response.json(
+        { error: authError.message }, 
+        { status: 401, headers: corsHeaders }
+      )
+    }
+
+    const currentUser = authData?.user
+    if (!currentUser || !currentUser.id || !currentUser.email) {
+      return Response.json(
+        { merged: false, reason: "no-auth-user" },
+        { status: 200, headers: corsHeaders }
+      )
+    }
+
+    const normalizedEmail = normalizeEmail(currentUser.email)
+    if (!normalizedEmail) {
+      return Response.json(
+        { merged: false, reason: "missing-email" },
+        { status: 200, headers: corsHeaders }
+      )
+    }
+
+    const users = await listUsersByEmail(supabaseAdmin, normalizedEmail)
+    if (users.length <= 1) {
+      return Response.json(
+        { merged: false, reason: "no-duplicate" },
+        { status: 200, headers: corsHeaders }
+      )
+    }
+
+    const canonicalUser = [...users].sort((left, right) => {
+      const createdAtDiff = getCreatedAt(left) - getCreatedAt(right)
+      if (createdAtDiff !== 0) return createdAtDiff
+      return left.id.localeCompare(right.id)
+    })[0]
+
+    let mergedCount = 0
+    const duplicateUsers = users.filter((user) => user.id !== canonicalUser.id)
+
+    for (const duplicate of duplicateUsers) {
+      const secondaryId = duplicate.id
+      const primaryId = canonicalUser.id
+
+      const [{ data: primaryProfile }, { data: secondaryProfile }] = await Promise.all([
+        supabaseAdmin.from("profiles").select("*").eq("id", primaryId).maybeSingle(),
+        supabaseAdmin.from("profiles").select("*").eq("id", secondaryId).maybeSingle()
+      ]) as Array<{ data: ProfileRow | null }>
+
+      const name = pickString(
+        primaryProfile?.name,
+        secondaryProfile?.name,
+        normalizedEmail.split("@")[0],
+        "User"
+      )
+  
+      const mergedProfile = {
+        id: primaryId,
+        name,
+        department: pickString(primaryProfile?.department, secondaryProfile?.department) || null,
+        gender: pickString(primaryProfile?.gender, secondaryProfile?.gender) || null,
+        bio: pickString(primaryProfile?.bio, secondaryProfile?.bio) || null,
+        avatar_url: pickString(primaryProfile?.avatar_url, secondaryProfile?.avatar_url) || null,
+        phone_number: pickString(primaryProfile?.phone_number, secondaryProfile?.phone_number) || null,
+        role: toRole(primaryProfile?.role, secondaryProfile?.role),
+        points: Math.max(primaryProfile?.points || 0, secondaryProfile?.points || 0),
+        updated_at: new Date().toISOString(),
+      }
+  
+      const { error: upsertError } = await supabaseAdmin.from("profiles").upsert(mergedProfile)
+      if (upsertError) throw new Error(`Failed to upsert merged profile: ${upsertError.message}`)
+  
+      for (const target of PROFILE_REF_UPDATES) {
+        await reassignReference(supabaseAdmin, target.table, target.column, secondaryId, primaryId)
+      }
+  
+      await supabaseAdmin.from("profiles").delete().eq("id", secondaryId)
+  
+      const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(secondaryId)
+      if (deleteUserError) throw new Error(`Failed to delete duplicate auth user: ${deleteUserError.message}`)
+  
+      mergedCount += 1
+    }
+    return Response.json({ merged: true, mergedCount }, { status: 200, headers: corsHeaders })
+  } catch (error: any) {
+    console.error("merge-duplicate-account error:", error)
+    return Response.json(
+      { error: error?.message || "Internal Server Error" },
+      { status: 500, headers: corsHeaders }
+    )
+  }
+})

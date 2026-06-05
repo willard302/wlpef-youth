@@ -1,5 +1,4 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
-// 💡 改用官方標準的 Supabase Client 建立器，拋棄 withSupabase
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 type EventRow = {
@@ -320,7 +319,6 @@ async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]>
   return (data || []).filter((event: EventRow) => !!event.google_sheet_id)
 }
 
-// 💡 核心改動：直接使用官方標準的 Deno.serve 進入點
 Deno.serve(async (req) => {
   // 1. 處理前端 Nuxt 的 CORS 預檢請求 (OPTIONS)
   if (req.method === "OPTIONS") {
@@ -331,7 +329,7 @@ Deno.serve(async (req) => {
     // 2. 自動抓取內建的環境變數，直接建立純淨的高權限管理端客戶端
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      Deno.env.get("SUPABASE_SECRET_KEYS")!,
       {
         auth: {
           persistSession: false,
