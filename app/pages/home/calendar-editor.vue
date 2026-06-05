@@ -69,7 +69,7 @@ const getTimeColumns = (timeStr: string) => {
         <button
           @click="saveEvent"
           :disabled="isSaving || isDeleting || isInitializing"
-          class="text-slate-900 dark:text-slate-100 text-sm font-bold tracking-widest active:opacity-70 active:scale-95 transition-all disabled:opacity-40"
+          class="text-slate-900 text-sm font-bold tracking-widest active:opacity-70 active:scale-95 transition-all disabled:opacity-40"
         >
           {{ isSaving ? '儲存中...' : (isEditMode ? '更新' : '儲存') }}
         </button>

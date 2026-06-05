@@ -131,7 +131,7 @@ const handleAppleLogin = async () => {
 </script>
 
 <template>
-  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-background-light dark:bg-background-dark font-display">
+  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-background-light font-display">
     <!-- Background Image with Overlay -->
     <div class="absolute inset-0 z-0">
       <div

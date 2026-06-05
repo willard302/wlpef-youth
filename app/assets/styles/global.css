@@ -3,7 +3,6 @@
 
 :root {
   --sky-gradient: linear-gradient(135deg, #7DD3FC 0%, #BAE6FD 100%);
-  --sky-gradient-dark: linear-gradient(180deg, #0EA5E9 0%, #38BDF8 100%);
   --cloud-shadow: 0 10px 30px -5px rgba(14, 165, 233, 0.08);
   --ios-blur: saturate(180%) blur(20px);
 }
@@ -26,7 +25,7 @@
   }
 
   .form-input {
-    @apply block w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none;
+    @apply block w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none;
   }
 }
 

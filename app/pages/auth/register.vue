@@ -141,7 +141,7 @@ onMounted(() => window.addEventListener('keydown', closeModalOnEsc))
 onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
 </script>
 <template>
-  <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden max-w-full">
+  <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light font-display text-slate-900 transition-colors duration-300 overflow-x-hidden max-w-full">
     <!-- Hero Section with Background Image -->
     <div class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden min-h-[160px] relative shadow-lg" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDgikn6xndc6b81auSFUuHvXMxgVFzpZbjSBYb3vJeufHCcJJr6LwMi-N3ecO0zG7kVwdP6-PVDClIlHPVG6-O8QVCvp-vdXMOICqJWwfRnNneu6nNeHMTlR19yucoqXullhXJ07qvYjYxISAk4_nYAhG1wZtdVbiqG_yDA4ErihwyqBAYIcBjq3pnUbxovStiHkNuSeNPoFt3HGuKZitv_U3ooygHK6EKVcw_YT8KHAM2aFfCLgp3VN7bBRWRl917yYzsgu65hwMo");'>
       <!-- Overlay for text readability -->
@@ -163,8 +163,8 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
     <div class="flex-1">
       <!-- Header Text -->
       <div class="px-6 pt-6 pb-2">
-        <h2 class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight">建立帳號</h2>
-        <p class="text-slate-500 dark:text-slate-400 text-base font-normal mt-1">開始你的內心平靜與正念之旅。</p>
+        <h2 class="text-slate-900 text-3xl font-bold leading-tight">建立帳號</h2>
+        <p class="text-slate-500 text-base font-normal mt-1">開始你的內心平靜與正念之旅。</p>
       </div>
 
       <!-- Registration Form -->
@@ -197,7 +197,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', closeModalOnEsc))
             {{ loading ? '註冊中...' : '註冊' }}
           </button>
           <div class="flex items-center justify-center gap-2">
-            <p class="text-slate-500 dark:text-slate-400 text-sm">已有帳號？</p>
+            <p class="text-slate-500 text-sm">已有帳號？</p>
             <NuxtLink to="/auth/login" class="text-primary font-semibold text-sm hover:underline">返回登入</NuxtLink>
           </div>
         </div>

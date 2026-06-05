@@ -81,7 +81,7 @@ const inputType = computed(() => {
         v-if="type === 'password'"
         @click="showPassword = !showPassword"
         type="button"
-        class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+        class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
         :aria-label="showPassword ? '隱藏密碼' : '顯示密碼'"
       >
         <i class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>

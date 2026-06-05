@@ -77,8 +77,8 @@ const getRoleName = (role?: string) => {
     <!-- Main Content -->
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
       <!-- Profile Info Card -->
-      <div class="bg-white dark:bg-slate-800 rounded-3xl shadow-xl p-6 flex flex-col items-center text-center mb-6">
-        <div class="relative -mt-16 mb-4 p-2 bg-white dark:bg-slate-800 rounded-full shadow-lg">
+      <div class="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center text-center mb-6">
+        <div class="relative -mt-16 mb-4 p-2 bg-white rounded-full shadow-lg">
           <div
             class="w-28 h-28 rounded-full border-4 border-dashed border-primary/30 p-1 overflow-hidden cursor-pointer transition-transform hover:scale-105 relative"
             @click="handleAvatarClick"
@@ -113,7 +113,7 @@ const getRoleName = (role?: string) => {
         />
 
         <div class="mb-4">
-          <h2 class="text-2xl font-bold text-slate-900 dark:text-white">
+          <h2 class="text-2xl font-bold text-slate-900">
             {{ userProfile?.name ?? '載入中...' }}
           </h2>
           <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
@@ -123,27 +123,27 @@ const getRoleName = (role?: string) => {
           </div>
         </div>
 
-        <div class="w-full grid grid-cols-2 gap-4 border-t border-slate-100 dark:border-slate-700 pt-4">
+        <div class="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
           <div class="text-left">
-            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">校友會</p>
-            <p class="font-semibold text-slate-800 dark:text-slate-200">{{ userProfile?.department ?? '載入中...' }}</p>
+            <p class="text-xs text-slate-500 uppercase tracking-wider">校友會</p>
+            <p class="font-semibold text-slate-800">{{ userProfile?.department ?? '載入中...' }}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wider">點數</p>
-            <p class="font-semibold text-slate-800 dark:text-slate-200">{{ userProfile?.points ?? '載入中...' }}</p>
+            <p class="text-xs text-slate-500 uppercase tracking-wider">點數</p>
+            <p class="font-semibold text-slate-800">{{ userProfile?.points ?? '載入中...' }}</p>
           </div>
         </div>
       </div>
 
       <!-- Action Items List -->
       <div class="space-y-3 mb-8">
-        <h3 class="px-2 text-sm font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">帳戶設定</h3>
-        <div class="bg-white/80 dark:bg-slate-800/80 rounded-2xl overflow-hidden shadow-sm">
+        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">帳戶設定</h3>
+        <div class="bg-white/80 rounded-2xl overflow-hidden shadow-sm">
           <NuxtLink
             v-for="(item, index) in menuItems"
             :key="item.label"
             :to="item.path || '#'"
-            class="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors border-b border-slate-50 dark:border-slate-700"
+            class="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors border-b border-slate-50"
           >
             <div class="flex items-center gap-3">
               <span class="material-symbols-outlined text-slate-400">{{ item.icon }}</span>
@@ -153,7 +153,7 @@ const getRoleName = (role?: string) => {
           </NuxtLink>
           <a
             href="/auth/login"
-            class="flex items-center justify-between p-4 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            class="flex items-center justify-between p-4 hover:bg-red-50 transition-colors"
           >
             <div class="flex items-center gap-3 text-red-500">
               <span class="material-symbols-outlined">logout</span>

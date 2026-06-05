@@ -13,7 +13,6 @@ export default {
       colors: {
         'primary': '#2b9dee',
         'background-light': '#f6f7f8',
-        'background-dark': '#101a22',
       },
       fontFamily: {
         'display': ['Plus Jakarta Sans', 'sans-serif']

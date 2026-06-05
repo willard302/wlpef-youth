@@ -56,7 +56,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 transition-colors duration-300 overflow-x-hidden max-w-full">
+  <div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light font-display text-slate-900 transition-colors duration-300 overflow-x-hidden max-w-full">
     <!-- Hero Section with Background Image -->
     <div class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden min-h-[160px] relative shadow-lg" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDgikn6xndc6b81auSFUuHvXMxgVFzpZbjSBYb3vJeufHCcJJr6LwMi-N3ecO0zG7kVwdP6-PVDClIlHPVG6-O8QVCvp-vdXMOICqJWwfRnNneu6nNeHMTlR19yucoqXullhXJ07qvYjYxISAk4_nYAhG1wZtdVbiqG_yDA4ErihwyqBAYIcBjq3pnUbxovStiHkNuSeNPoFt3HGuKZitv_U3ooygHK6EKVcw_YT8KHAM2aFfCLgp3VN7bBRWRl917yYzsgu65hwMo");'>
       <!-- Overlay for text readability -->
@@ -78,21 +78,21 @@ onBeforeUnmount(() => {
     <div class="flex-1">
       <!-- Header Text -->
       <div v-if="!successMessage" class="px-6 pt-6 pb-2">
-        <h2 class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight">忘記密碼</h2>
-        <p class="text-slate-500 dark:text-slate-400 text-base font-normal mt-1">
+        <h2 class="text-slate-900 text-3xl font-bold leading-tight">忘記密碼</h2>
+        <p class="text-slate-500 text-base font-normal mt-1">
           {{ '請輸入您的電子郵件以重設密碼。' }}
         </p>
       </div>
 
       <!-- Success State -->
       <div v-if="successMessage" class="px-6 py-8 flex flex-col items-center gap-6 animate-fade-in">
-        <div class="size-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400">
+        <div class="size-20 rounded-full bg-green-100 flex items-center justify-center text-green-600">
           <span class="material-symbols-outlined text-4xl">mark_email_read</span>
         </div>
         <div class="text-center space-y-2">
-          <p class="text-slate-900 dark:text-slate-100 font-bold text-lg">{{ successMessage }}</p>
+          <p class="text-slate-900 font-bold text-lg">{{ successMessage }}</p>
           <div class="flex flex-col gap-1">
-            <p class="text-slate-500 dark:text-slate-400 text-sm">若沒看到信件，請檢查垃圾郵件匣。</p>
+            <p class="text-slate-500 text-sm">若沒看到信件，請檢查垃圾郵件匣。</p>
           </div>
         </div>
 
@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
             {{ loading ? '傳送中...' : '發送重設信件' }}
           </button>
           <div class="flex items-center justify-center gap-2">
-            <p class="text-slate-500 dark:text-slate-400 text-sm">記得密碼了？</p>
+            <p class="text-slate-500 text-sm">記得密碼了？</p>
             <NuxtLink to="/auth/login" class="text-primary font-semibold text-sm hover:underline">返回登入</NuxtLink>
           </div>
         </div>
