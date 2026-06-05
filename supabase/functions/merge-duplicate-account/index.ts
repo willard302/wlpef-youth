@@ -127,8 +127,8 @@ Deno.serve(async(req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
-    const publishableKeysRaw = Deno.env.get("SUPABASE_PUBLISHABLE_KEYS")
-    const secretKeysRaw = Deno.env.get("SUPABASE_SECRET_KEYS")
+    const publishableKeysRaw = Deno.env.get("SUPABASE_ANON_KEYS")
+    const secretKeysRaw = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
     const publishableKeys = publishableKeysRaw ? JSON.parse(publishableKeysRaw) : {}
     const secretKeys = secretKeysRaw ? JSON.parse(secretKeysRaw) : {}

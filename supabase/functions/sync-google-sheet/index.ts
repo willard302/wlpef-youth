@@ -329,7 +329,7 @@ Deno.serve(async (req) => {
     // 2. 自動抓取內建的環境變數，直接建立純淨的高權限管理端客戶端
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SECRET_KEYS")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
       {
         auth: {
           persistSession: false,
