@@ -7,22 +7,30 @@ const showOverlay = ref(false)
 
 onMounted(() => {
   const ua = navigator.userAgent || navigator.vendor || (window as any).opera
-  isLine.value = /Line/i.test(ua)
-  isFB.value = /FBAN|FBAV/i.test(ua)
-  isIOS.value = /iPhone|iPad|iPod/i.test(ua)
-  isAndroid.value = /Android/i.test(ua)
+  const isLine = /Line/i.test(ua)
+  const isFB = /FBAN|FBAV/i.test(ua)
+  const isIOS = /iPhone|iPad|iPod/i.test(ua)
+  const isAndroid = /Android/i.test(ua)
+  const url = new URL(window.location.href)
 
-  // 如果是在 LINE 或 FB 內開啟
-  if (isLine.value || isFB.value) {
-    if (isAndroid.value) {
-      // Android: 嘗試自動跳轉
-      const currentUrl = window.location.href
-      // 使用 intent scheme 強制用外部瀏覽器開啟 (通常是 Chrome)
-      window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`
-    } else if (isIOS.value) {
-      // iOS: 無法自動跳轉，顯示引導遮罩
-      showOverlay.value = true
-    }
+  // 1. 處理 LINE 的自動跳轉 (iOS & Android 通用最簡單方式)
+  if (isLine && !url.searchParams.has('openExternalBrowser')) {
+    url.searchParams.set('openExternalBrowser', '1')
+    window.location.href = url.toString()
+    return
+  }
+
+  // 2. 處理 Android 的強制跳轉 (針對 FB 或其他內建瀏覽器)
+  if (isAndroid && (isLine || isFB)) {
+    const currentUrl = window.location.href
+    window.location.href = `intent://${currentUrl.replace(/^https?:\/\//, '')}#Intent;scheme=https;package=com.android.chrome;end`
+    return
+  }
+
+  // 3. 如果是 iOS FB，因為系統限制無法 100% 自動強制開啟，
+  // 但我們還是嘗試顯示一個極簡的自動跳轉提示，或是嘗試特定的 URL scheme
+  if (isIOS && (isLine || isFB)) {
+    showOverlay.value = true
   }
 })
 </script>
