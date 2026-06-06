@@ -41,6 +41,7 @@ export const userService = {
       const points = await fetchProfilePoints(user.id, profile?.points)
 
       return {
+        id: user.id,
         name: profile?.name || metadata.name || user.email?.split('@')[0] || 'User',
         role: (profile?.role as Role) || 'member',
         joinDate: profile?.created_at || metadata.join_date || 'Since 2024',

@@ -39,6 +39,16 @@ const menuItems = computed(() => [
     action: () => router.push('/home/registrations'),
   },
   {
+    id: 'qr-code',
+    label: '報到碼',
+    icon: 'qr_code',
+    bgClass: 'bg-green-50',
+    textClass: 'text-green-600',
+    hoverClass: 'hover:bg-green-100',
+    show: true,
+    action: () => router.push('/user-center/qr-code'),
+  },
+  {
     id: 'user-center',
     label: '會員中心',
     icon: 'account_circle',

@@ -6,6 +6,7 @@ export const ROLE_LABEL: Record<Role, string> = {
 }
 
 export interface UserProfile {
+  id: string
   name: string
   role: Role
   joinDate: string
