@@ -64,7 +64,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
             </li>
             <li class="flex gap-2">
               <span class="text-sky-400 font-bold">03.</span>
-              <span>若 QRCode 無法掃描，請提供您的姓名或手機號碼。</span>
+              <span>若 QRCode 無法掃描，請提供您報名用的Email。</span>
             </li>
           </ul>
         </div>
