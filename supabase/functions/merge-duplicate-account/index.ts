@@ -127,17 +127,11 @@ Deno.serve(async(req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
-    const publishableKeysRaw = Deno.env.get("SUPABASE_ANON_KEYS")
-    const secretKeysRaw = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY") || Deno.env.get("SUPABASE_ANON_KEYS")
+    const secretKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
-    const publishableKeys = publishableKeysRaw ? JSON.parse(publishableKeysRaw) : {}
-    const secretKeys = secretKeysRaw ? JSON.parse(secretKeysRaw) : {}
-
-    const supabasePublishableKey = publishableKeys.default
-    const secretKey = secretKeys.default
-
-    if (!supabaseUrl || !secretKey || !supabasePublishableKey) {
-      throw new Error("Missing Supabase URL or Secret Key in environment variables")
+    if (!supabaseUrl || !secretKey || !supabaseAnonKey) {
+      throw new Error("Missing Supabase URL, Anon Key or Secret Key in environment variables")
     }
 
     const authHeader = req.headers.get("Authorization")
@@ -148,7 +142,7 @@ Deno.serve(async(req) => {
       )
     }
 
-    const supabase = createClient(supabaseUrl, supabasePublishableKey, {
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader }},
       auth: { persistSession: false, autoRefreshToken: false }
     })
