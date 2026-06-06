@@ -77,27 +77,49 @@ const handleItemClick = (action: () => void) => {
 </script>
 
 <template>
-  <van-action-sheet v-model:show="menuVisible" title="選單" class="rounded-t-[2.5rem] overflow-hidden">
-    <div class="px-6 pb-12 pt-4 space-y-3">
-      <template v-for="item in menuItems" :key="item.id">
-        <button
-          v-if="item.show"
-          @click="handleItemClick(item.action)"
-          class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all"
-          :class="[item.bgClass, item.textClass, item.hoverClass]"
+  <van-action-sheet v-model:show="menuVisible" class="rounded-t-[2.5rem] overflow-hidden">
+    <template #default>
+      <!-- Custom Header to replace the default one which has layout issues on some mobile devices -->
+      <div class="px-6 py-5 flex items-center justify-between border-b border-slate-50">
+        <h3 class="text-lg font-black text-slate-900">選單</h3>
+        <button 
+          @click="menuVisible = false"
+          class="size-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 active:bg-slate-200 transition-colors"
         >
-          <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-            <span class="material-symbols-outlined">{{ item.icon }}</span>
-          </div>
-          <span>{{ item.label }}</span>
+          <span class="material-symbols-outlined text-xl">close</span>
         </button>
-      </template>
-    </div>
+      </div>
+
+      <div class="px-6 pb-12 pt-6 space-y-3 menu-content">
+        <template v-for="item in menuItems" :key="item.id">
+          <button
+            v-if="item.show"
+            @click="handleItemClick(item.action)"
+            class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all"
+            :class="[item.bgClass, item.textClass, item.hoverClass]"
+          >
+            <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+              <span class="material-symbols-outlined">{{ item.icon }}</span>
+            </div>
+            <span>{{ item.label }}</span>
+          </button>
+        </template>
+      </div>
+    </template>
   </van-action-sheet>
 </template>
 
 <style scoped>
 .van-action-sheet {
   max-height: 80%;
+}
+
+.menu-content {
+  /* Handle iPhone safe area (home indicator) */
+  padding-bottom: calc(3rem + env(safe-area-inset-bottom));
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 </style>
