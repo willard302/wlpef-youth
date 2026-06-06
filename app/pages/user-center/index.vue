@@ -59,13 +59,22 @@ const getAvatarUrl = () => {
   return userProfile.value?.avatar || '/images/avatar_default.png'
 }
 
+const isAdmin = computed(() => userProfile.value?.role === 'admin')
+
 // 統計數據
-const menuItems = computed<MenuItem[]>(() => [
-  { icon: 'qr_code_2', label: '我的報到碼', path: '/user-center/qr-code' },
-  { icon: 'history', label: '點數交易紀錄', path: '/user-center/points-history' },
-  { icon: 'person_edit', label: '編輯個人資料', path: '/user-center/user-info' },
-  { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
-])
+const menuItems = computed<MenuItem[]>(() => {
+  if (isAdmin.value) {
+    return [
+      { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
+    ]
+  }
+  return [
+    { icon: 'qr_code_2', label: '我的報到碼', path: '/user-center/qr-code' },
+    { icon: 'history', label: '點數交易紀錄', path: '/user-center/points-history' },
+    { icon: 'person_edit', label: '編輯個人資料', path: '/user-center/user-info' },
+    { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
+  ]
+})
 
 const getRoleName = (role?: string) => {
   if (role === 'admin') return '管理員'
@@ -76,7 +85,7 @@ const getRoleName = (role?: string) => {
 
 <template>
   <div class="user-center-page">
-    <AppHeroHeader title="會員中心" height-class="h-40" />
+    <AppHeroHeader :title="isAdmin ? '管理設定' : '會員中心'" height-class="h-40" />
 
     <!-- Main Content -->
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
@@ -127,7 +136,7 @@ const getRoleName = (role?: string) => {
           </div>
         </div>
 
-        <div class="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+        <div v-if="!isAdmin" class="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
           <div class="text-left">
             <p class="text-xs text-slate-500 uppercase tracking-wider">校友會</p>
             <p class="font-semibold text-slate-800">{{ userProfile?.department ?? '載入中...' }}</p>
@@ -141,7 +150,7 @@ const getRoleName = (role?: string) => {
 
       <!-- Action Items List -->
       <div class="space-y-3 mb-8">
-        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">帳戶設定</h3>
+        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ isAdmin ? '帳號管理' : '帳戶設定' }}</h3>
         <div class="bg-white/80 rounded-2xl overflow-hidden shadow-sm">
           <NuxtLink
             v-for="(item, index) in menuItems"

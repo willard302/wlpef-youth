@@ -45,7 +45,7 @@ const menuItems = computed(() => [
     bgClass: 'bg-green-50',
     textClass: 'text-green-600',
     hoverClass: 'hover:bg-green-100',
-    show: true,
+    show: !props.isAdmin,
     action: () => router.push('/user-center/qr-code'),
   },
   {
@@ -55,7 +55,7 @@ const menuItems = computed(() => [
     bgClass: 'bg-slate-50',
     textClass: 'text-slate-600',
     hoverClass: 'hover:bg-slate-100',
-    show: true,
+    show: !props.isAdmin,
     action: () => router.push('/user-center'),
   },
   {
