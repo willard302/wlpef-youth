@@ -75,7 +75,8 @@ const getRoleName = (role?: string) => {
 </script>
 
 <template>
-  <AppHeroHeader title="會員中心" height-class="h-40" />
+  <div class="user-center-page">
+    <AppHeroHeader title="會員中心" height-class="h-40" />
 
     <!-- Main Content -->
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
@@ -167,5 +168,5 @@ const getRoleName = (role?: string) => {
         </div>
       </div>
     </main>
-
+  </div>
 </template>
