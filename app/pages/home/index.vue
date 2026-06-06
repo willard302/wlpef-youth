@@ -39,13 +39,14 @@ const {
 
 const isEventLoading = ref(true)
 const upcomingEventData = ref<Event | null>(null)
+const isOngoing = ref(false)
 const isUpcomingRegistrationLoading = ref(false)
 const isUpcomingRegistered = ref(false)
 const upcomingEventDisplay = computed(() => {
   const event = upcomingEventData.value
   if (!event) {
     return {
-      title: '目前沒有即將到來的活動',
+      title: '目前沒有活動',
       meta: isAdmin.value ? '新增活動後會顯示在這裡' : '請稍後再查看最新活動',
     }
   }
@@ -106,20 +107,30 @@ const loadUpcomingEvent = async () => {
   isEventLoading.value = true
   isUpcomingRegistered.value = false
   isUpcomingRegistrationLoading.value = false
+  isOngoing.value = false
 
   try {
-    const events = await eventService.fetchUpcomingEvents(
-      1,
-      canViewAllEventStatus.value ? undefined : 'published'
-    )
+    const status = canViewAllEventStatus.value ? undefined : 'published'
+    
+    // First, check for ongoing events
+    const ongoingEvents = await eventService.fetchOngoingEvents(status)
+    
+    if (ongoingEvents.length > 0) {
+      upcomingEventData.value = ongoingEvents[0] || null
+      isOngoing.value = true
+    } else {
+      // If no ongoing events, fetch upcoming events
+      const events = await eventService.fetchUpcomingEvents(1, status)
+      upcomingEventData.value = events[0] || null
+      isOngoing.value = false
+    }
 
-    upcomingEventData.value = events[0] || null
     if (upcomingEventData.value && !canViewAllEventStatus.value) {
       isUpcomingRegistrationLoading.value = true
       isUpcomingRegistered.value = await eventService.checkRegistrationStatus(upcomingEventData.value.id)
     }
   } catch (error) {
-    console.error('Failed to load upcoming event', error)
+    console.error('Failed to load events', error)
     upcomingEventData.value = null
     isUpcomingRegistered.value = false
   } finally {
@@ -220,10 +231,10 @@ onMounted(async () => {
         </button>
       </template>
 
-      <p class="text-sky-100 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">即將到來</p>
+      <p class="text-sky-100 text-xs font-bold uppercase tracking-widest mb-1 opacity-80">{{ isOngoing ? '正在進行' : '即將到來' }}</p>
       <div v-if="isEventLoading" class="flex items-center gap-3 py-2 text-sky-50">
         <span class="size-5 rounded-full border-2 border-white/80 border-t-transparent animate-spin"></span>
-        <span class="text-sm font-bold">讀取即將到來活動中...</span>
+        <span class="text-sm font-bold">讀取活動中...</span>
       </div>
       <button
         v-else
@@ -232,7 +243,10 @@ onMounted(async () => {
         @click="upcomingEventData && openEventDetail(upcomingEventData)"
       >
         <div class="flex flex-wrap items-center gap-2">
-          <h1 class="min-w-0 text-2xl font-extrabold leading-tight text-white drop-shadow-sm">{{ upcomingEventDisplay.title }}</h1>
+          <div class="flex items-center gap-2 min-w-0">
+            <span v-if="isOngoing" class="flex-shrink-0 size-2 rounded-full bg-rose-400 animate-pulse shadow-[0_0_8px_rgba(251,113,133,0.8)]"></span>
+            <h1 class="min-w-0 text-2xl font-extrabold leading-tight text-white drop-shadow-sm truncate">{{ upcomingEventDisplay.title }}</h1>
+          </div>
           <span
             v-if="upcomingEventData"
             class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold"

@@ -88,6 +88,27 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
+  async fetchOngoingEvents(status?: EventStatus): Promise<Event[]> {
+    const supabase = useSupabaseClient<Database>()
+    const now = new Date().toISOString()
+
+    let query = supabase
+      .from('events')
+      .select('*')
+      .lte('start_at', now)
+      .gte('end_at', now)
+
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    const { data, error } = await query
+      .order('start_at', { ascending: true })
+
+    if (error) throw error
+    return (data ?? []).map(mapToEvent)
+  },
+
   async fetchUpcomingEvents(limit = 5, status?: EventStatus): Promise<Event[]> {
     const supabase = useSupabaseClient<Database>()
 
