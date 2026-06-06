@@ -8,17 +8,20 @@ export function useUser() {
   const router = useRouter()
   const supabase = useSupabaseClient()
 
-  // 狀態 (State)
-  const userProfile = ref<UserProfile | null>(null)
-  const recentActivities = ref<Activity[]>([])
-  const isLoading = ref(false)
-  const isUploadingAvatar = ref(false)
-  const isUpdatingProfile = ref(false)
-  const isChangingPassword = ref(false)
-  const error = ref<string | null>(null)
+  // 全域狀態 (Global State)
+  const userProfile = useState<UserProfile | null>('user-profile', () => null)
+  const recentActivities = useState<Activity[]>('recent-activities', () => [])
+  const isLoading = useState('user-loading', () => false)
+  const isUploadingAvatar = useState('user-avatar-loading', () => false)
+  const isUpdatingProfile = useState('user-updating', () => false)
+  const isChangingPassword = useState('user-password-changing', () => false)
+  const error = useState<string | null>('user-error', () => null)
 
   // 動作 (Actions)
-  const loadUserData = async () => {
+  const loadUserData = async (force = false) => {
+    // 如果已經有資料且不是強制更新，則跳過
+    if (userProfile.value && !force) return
+
     isLoading.value = true
     error.value = null
     try {
@@ -33,7 +36,10 @@ export function useUser() {
     } catch (err: any) {
       error.value = err.message || '載入用戶資料失敗'
       console.error(err)
-      router.push('/auth/login')
+      // 只有在真的沒權限時才跳轉
+      if (err.message === 'User not authenticated') {
+        router.push('/auth/login')
+      }
     } finally {
       isLoading.value = false
     }

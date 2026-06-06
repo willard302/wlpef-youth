@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = useSupabaseUser()
 
   // Check if user is in password recovery mode
   const isPasswordRecovery = useCookie('is_password_recovery')
@@ -11,7 +11,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  if (!user) {
+  if (!user.value) {
     if (!to.path.startsWith('/auth')) {
       return navigateTo('/auth/login')
     }
@@ -24,13 +24,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const excludedPaths = ['/auth/login', '/auth/register', '/auth/confirm', '/auth/reset-password', '/auth/social-signup']
   if (!excludedPaths.includes(to.path)) {
+    // 這裡可以考慮將 profile 快取在全域狀態中，減少 middleware 阻塞
     const { data: profile } = await supabase
       .from('profiles')
       .select('department')
-      .eq('id', user.id)
+      .eq('id', user.value.id)
       .maybeSingle()
 
-    if (!user.email || !profile || !profile.department) {
+    if (!user.value.email || !profile || !profile.department) {
       return navigateTo('/auth/social-signup')
     }
   }
