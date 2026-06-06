@@ -228,6 +228,10 @@ CREATE POLICY "Users can view own transactions"
   ON public.point_transactions FOR SELECT
   USING (auth.uid() = user_id);
 
+CREATE POLICY "Admins can view all transactions"
+  ON public.point_transactions FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+
 -- 6. Point Granting Logic (Unified & Batch)
 CREATE OR REPLACE FUNCTION public.process_pending_points()
 RETURNS void AS $$
