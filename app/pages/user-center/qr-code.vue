@@ -30,45 +30,20 @@ const qrValue = computed(() => userProfile.value?.id || '')
 
       <div v-else-if="userProfile" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <!-- User Info Card -->
-        <div class="bg-white rounded-[2.5rem] p-8 shadow-xl shadow-slate-200/50 border border-white relative overflow-hidden text-center">
-          <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-sky-400 to-indigo-400"></div>
-          
-          <div class="mb-6 inline-flex size-20 rounded-full bg-slate-100 items-center justify-center overflow-hidden border-4 border-white shadow-md">
-            <img 
-              v-if="userProfile.avatar" 
-              :src="userProfile.avatar" 
-              alt="Avatar" 
-              class="size-full object-cover"
-            />
-            <span v-else class="material-symbols-outlined text-4xl text-slate-300">person</span>
-          </div>
-
-          <h2 class="text-2xl font-black text-slate-900 mb-1">{{ userProfile.name }}</h2>
-          <p class="text-sky-500 font-bold text-sm tracking-widest uppercase mb-8">
-            {{ userProfile.department || '尚未填寫單位' }}
-          </p>
-
-          <!-- QR Code Section -->
-          <div class="relative inline-block p-6 bg-white rounded-3xl shadow-inner border border-slate-50">
-            <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-slate-900 text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">
-              Check-in Pass
-            </div>
-            
-            <div class="p-4 bg-white rounded-2xl">
-              <qrcode-vue
-                :value="qrValue"
-                :size="200"
-                level="H"
-                render-as="svg"
-                class="mx-auto"
-                :margin="2"
-              />
-            </div>
-            
-            <div class="mt-4 flex items-center justify-center gap-2 text-slate-400">
-              <span class="material-symbols-outlined text-sm">info</span>
-              <span class="text-[11px] font-medium">活動當天出示此碼完成報到</span>
-            </div>
+         
+        <!-- QR Code Section -->
+        <div class="p-4 bg-white rounded-2xl shadow-md border border-slate-200 text-center qr-code-card">
+          <qrcode-vue
+            :value="qrValue"
+            :size="200"
+            level="H"
+            render-as="svg"
+            class="mx-auto"
+            :margin="2"
+          />
+          <div class="mt-4 flex items-center justify-center gap-2 text-slate-400">
+            <span class="material-symbols-outlined text-sm">info</span>
+            <span class="text-[11px] font-medium">活動當天出示此碼完成報到</span>
           </div>
         </div>
 
@@ -101,5 +76,9 @@ const qrValue = computed(() => userProfile.value?.id || '')
 <style scoped>
 .qr-code-page {
   background-color: #f8fafc;
+}
+.qr-code-card {
+  width: 270px;
+  margin: 0 auto;
 }
 </style>
