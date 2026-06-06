@@ -22,8 +22,11 @@ const loading = ref(false)
 const errorMessage = ref('')
 
 const isPasswordRecoveryCookie = useCookie('is_password_recovery')
+const { clearUserData } = useUser()
+
 onMounted(() => {
   isPasswordRecoveryCookie.value = null
+  clearUserData()
 })
 
 type OAuthProvider = 'google' | 'apple'

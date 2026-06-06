@@ -103,12 +103,20 @@ export function useUser() {
     }
   }
 
+  const clearUserData = () => {
+    userProfile.value = null
+    recentActivities.value = []
+    error.value = null
+  }
+
   const handleLogout = async () => {
     try {
       await supabase.auth.signOut()
+      clearUserData()
       router.push('/auth/login')
     } catch (err) {
       console.error('Logout error:', err)
+      clearUserData()
       router.push('/auth/login')
     }
   }
@@ -203,6 +211,7 @@ export function useUser() {
     isChangingPassword,
     error,
     loadUserData,
+    clearUserData,
     uploadAvatar,
     updateUserProfile,
     changePassword,

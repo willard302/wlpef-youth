@@ -33,6 +33,9 @@ onMounted(async () => {
   // Wait a bit to ensure the auth state is ready
   await new Promise((resolve) => setTimeout(resolve, 500))
   
+  const { clearUserData } = useUser()
+  clearUserData()
+  
   const hash = route.hash
   const error = route.query.error as string
   const errorDescription = route.query.error_description as string
