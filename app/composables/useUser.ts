@@ -152,7 +152,7 @@ export function useUser() {
   const completeSocialSignup = async (socialSignupData: {
     fullName: string
     points: number
-    department: string
+    department?: string
     phoneNumber?: string
     gender?: string
     bio?: string

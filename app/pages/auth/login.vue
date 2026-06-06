@@ -48,7 +48,7 @@ const handleLogin = async () => {
     if (error) throw error
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    if (!user?.id) {
       throw new Error('User not authenticated')
     }
 

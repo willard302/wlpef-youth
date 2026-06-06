@@ -21,7 +21,7 @@ const fetchUserData = async () => {
   try {
     initializing.value = true
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
+    if (!user?.id) {
       errorMessage.value = '使用者未登入，請重新登入。'
       setTimeout(() => {
         router.push('/auth/login')
@@ -34,7 +34,7 @@ const fetchUserData = async () => {
     // Try to get existing profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, name, department, bio')
       .eq('id', user.id)
       .maybeSingle()
 
@@ -43,8 +43,8 @@ const fetchUserData = async () => {
       formData.value.department = profile.department || ''
       formData.value.bio = profile.bio || ''
       
-      // 如果資料已經完整，直接跳轉首頁
-      if (user.email) {
+      // 如果 profile 已存在，代表基本資料已初始化，直接跳轉首頁
+      if (user.email && profile.id) {
         router.push('/home')
         return
       }
@@ -72,7 +72,7 @@ const handleCompleteRegistration = async () => {
     errorMessage.value = ''
 
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) throw new Error('User not found')
+    if (!user?.id) throw new Error('User not found')
 
     const { userService } = await import('@/services/userService')
     

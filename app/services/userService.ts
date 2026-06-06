@@ -285,13 +285,14 @@ export const userService = {
     id: string
     email: string
     name?: string
-    department: string
+    department?: string
     gender?: string
     bio?: string
   }): Promise<void> {
     try {
       const supabase = useSupabaseClient<Database>()
       const profileName = data.name?.trim() || data.email.split('@')[0] || 'User'
+      const normalizedDepartment = data.department?.trim() || null
       
       // 1. 在 profiles 表中創建或更新資料
       const { error: profileError } = await supabase
@@ -300,7 +301,7 @@ export const userService = {
           id: data.id,
           email: data.email,
           name: profileName,
-          department: data.department,
+          department: normalizedDepartment,
           gender: data.gender,
           bio: data.bio,
           points: 0,

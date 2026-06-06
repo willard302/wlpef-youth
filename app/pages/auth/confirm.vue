@@ -21,6 +21,14 @@ const resolveAuthMode = () => {
   return queryType || hashType || ''
 }
 
+const redirectWithSuccess = (message: string, path: '/home') => {
+  successMessage.value = message
+  loading.value = false
+  setTimeout(() => {
+    router.push(path)
+  }, 1500)
+}
+
 onMounted(async () => {
   // Wait a bit to ensure the auth state is ready
   await new Promise((resolve) => setTimeout(resolve, 500))
@@ -61,56 +69,53 @@ onMounted(async () => {
 
   try {
     const { data: { user }, error: userError } = await supabase.auth.getUser()
-
     if (userError) throw userError
 
-    if (user) {
-      // 嘗試自動合併同 Email 的重複帳號（例如先 Google 後密碼註冊）
-      const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
-        body: {}
-      })
-      if (mergeError) {
-        console.warn('Auto merge skipped:', mergeError.message)
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      if (!profile || !profile.department) {
-        // Initialize profile if it doesn't exist
-        if (!profile) {
-          const metadata = user.user_metadata || {}
-          await supabase
-            .from('profiles')
-            .insert({
-              id: user.id,
-              email: user.email,
-              name: metadata.name || metadata.full_name || user.email?.split('@')[0] || 'User',
-              avatar_url: metadata.avatar_url || null,
-              points: 0
-            })
-        }
-        
-        successMessage.value = mergeData?.merged
-          ? '帳號已整合完成！即將跳轉完善資料...'
-          : '登入成功！即將跳轉完善資料...'
-        loading.value = false
-        setTimeout(() => {
-          router.push('/auth/social-signup')
-        }, 1500)
-      } else {
-        successMessage.value = mergeData?.merged
-          ? '帳號已整合完成！即將跳轉首頁...'
-          : '驗證成功！即將跳轉首頁...'
-        loading.value = false
-        setTimeout(() => {
-          router.push('/home')
-        }, 1500)
-      }
+    if (!user?.id) {
+      errorMessage.value = '登入狀態已失效，請重新登入。'
+      loading.value = false
+      setTimeout(() => {
+        router.push('/auth/login')
+      }, 1200)
+      return
     }
+
+    // 嘗試自動合併同 Email 的重複帳號（例如先 Google 後密碼註冊）
+    const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
+      body: {}
+    })
+    if (mergeError) {
+      console.warn('Auto merge skipped:', mergeError.message)
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (!profile) {
+      // Initialize profile if it doesn't exist
+      const metadata = user.user_metadata || {}
+      const { error: insertProfileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          email: user.email,
+          name: metadata.name || metadata.full_name || user.email?.split('@')[0] || 'User',
+          avatar_url: metadata.avatar_url || null,
+          points: 0
+        })
+
+      if (insertProfileError) throw insertProfileError
+    }
+
+    redirectWithSuccess(
+      mergeData?.merged
+        ? '帳號已整合完成！即將跳轉首頁...'
+        : '驗證成功！即將跳轉首頁...',
+      '/home'
+    )
   } catch (err: any) {
     console.error('Confirmation error:', err)
     // If there's an error but we're already logged in, just redirect to home
