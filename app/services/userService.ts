@@ -352,5 +352,42 @@ export const userService = {
       console.error('Error fetching point transactions:', error)
       throw error
     }
+  },
+
+  /**
+   * (管理員) 取得系統中所有的點數交易紀錄
+   */
+  async fetchAllPointTransactions(): Promise<PointTransaction[]> {
+    try {
+      const supabase = useSupabaseClient<Database>()
+      
+      const { data, error } = await supabase
+        .from('point_transactions')
+        .select(`
+          *,
+          events(title),
+          profiles(name, email)
+        `)
+        .order('created_at', { ascending: false })
+        .limit(1000) // 限制筆數避免效能問題
+
+      if (error) throw error
+
+      return (data || []).map((row: any) => ({
+        id: row.id,
+        userId: row.user_id,
+        eventId: row.event_id,
+        points: row.points,
+        type: row.type,
+        description: row.description,
+        createdAt: row.created_at,
+        eventTitle: row.events?.title,
+        userName: row.profiles?.name,
+        userEmail: row.profiles?.email
+      }))
+    } catch (error: any) {
+      console.error('Error fetching all point transactions:', error)
+      throw error
+    }
   }
 }

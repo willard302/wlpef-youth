@@ -65,6 +65,7 @@ const isAdmin = computed(() => userProfile.value?.role === 'admin')
 const menuItems = computed<MenuItem[]>(() => {
   if (isAdmin.value) {
     return [
+      { icon: 'database', label: '點數交易紀錄', path: '/home/all-points-history' },
       { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
     ]
   }

@@ -47,4 +47,6 @@ export interface PointTransaction {
   description: string | null
   createdAt: string
   eventTitle?: string
+  userName?: string
+  userEmail?: string
 }
