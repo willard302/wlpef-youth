@@ -65,13 +65,13 @@ const isAdmin = computed(() => userProfile.value?.role === 'admin')
 const menuItems = computed<MenuItem[]>(() => {
   if (isAdmin.value) {
     return [
-      { icon: 'database', label: '點數交易紀錄', path: '/home/all-points-history' },
+      { icon: 'database', label: '點數交易紀錄', path: '/points-history/admin' },
       { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
     ]
   }
   return [
     { icon: 'qr_code_2', label: '我的報到碼', path: '/user-center/qr-code' },
-    { icon: 'history', label: '點數交易紀錄', path: '/user-center/points-history' },
+    { icon: 'history', label: '點數交易紀錄', path: '/points-history' },
     { icon: 'person_edit', label: '編輯個人資料', path: '/user-center/user-info' },
     { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
   ]

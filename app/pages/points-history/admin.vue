@@ -1,0 +1,148 @@
+<script setup lang="ts">
+import { userService } from '@/services/userService'
+import { format as fnsFormat } from 'date-fns'
+import type { PointTransaction } from '@/types'
+
+definePageMeta({
+  layout: 'default',
+  middleware: ['auth', 'admin']
+})
+
+const router = useRouter()
+const transactions = ref<PointTransaction[]>([])
+const isLoading = ref(true)
+const searchQuery = ref('')
+
+const fetchTransactions = async () => {
+  try {
+    isLoading.value = true
+    transactions.value = await userService.fetchAllPointTransactions()
+  } catch (error) {
+    console.error('Failed to fetch transactions', error)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+const filteredTransactions = computed(() => {
+  if (!searchQuery.value) return transactions.value
+  const query = searchQuery.value.toLowerCase()
+  return transactions.value.filter(tx => 
+    tx.userName?.toLowerCase().includes(query) || 
+    tx.userEmail?.toLowerCase().includes(query) ||
+    tx.eventTitle?.toLowerCase().includes(query) ||
+    tx.description?.toLowerCase().includes(query)
+  )
+})
+
+const getTypeName = (type: string) => {
+  switch (type) {
+    case 'registration': return '活動報名'
+    case 'checkin': return '現場簽到'
+    case 'bonus': return '額外獎勵'
+    case 'manual': return '手動調整'
+    default: return '點數異動'
+  }
+}
+
+const getTypeIcon = (type: string) => {
+  switch (type) {
+    case 'registration': return 'how_to_reg'
+    case 'checkin': return 'fact_check'
+    case 'bonus': return 'redeem'
+    case 'manual': return 'edit_note'
+    default: return 'stars'
+  }
+}
+
+const getTypeColor = (type: string) => {
+  switch (type) {
+    case 'registration': return 'text-sky-500 bg-sky-50'
+    case 'checkin': return 'text-emerald-500 bg-emerald-50'
+    case 'bonus': return 'text-amber-500 bg-amber-50'
+    default: return 'text-slate-500 bg-slate-50'
+  }
+}
+
+onMounted(() => {
+  fetchTransactions()
+})
+</script>
+
+<template>
+  <div class="min-h-screen bg-slate-50 pb-20">
+    <AppPageHeader title="點數紀錄" @back="router.back()" />
+
+    <main class="px-4 py-6 max-w-md mx-auto space-y-6">
+      <!-- Search Bar -->
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+        <input 
+          v-model="searchQuery"
+          type="text"
+          placeholder="搜尋姓名、Email 或活動..."
+          class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
+        />
+      </div>
+
+      <div v-if="isLoading" class="flex flex-col items-center py-20 text-slate-400">
+        <div class="size-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-sm font-bold tracking-widest">載入中...</p>
+      </div>
+
+      <div v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center py-20 text-slate-400 text-center">
+        <span class="material-symbols-outlined text-6xl opacity-20 mb-4">history_toggle_off</span>
+        <p class="font-medium">找不到相關紀錄</p>
+      </div>
+
+      <div v-else class="space-y-4">
+        <div 
+          v-for="tx in filteredTransactions" 
+          :key="tx.id"
+          class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4"
+        >
+          <!-- User Info Header -->
+          <div class="flex items-center justify-between pb-3 border-b border-slate-50">
+            <div class="flex items-center gap-2">
+              <div class="size-8 rounded-full bg-slate-100 flex items-center justify-center">
+                <span class="material-symbols-outlined text-sm text-slate-400">person</span>
+              </div>
+              <div>
+                <p class="text-sm font-black text-slate-900 leading-none">{{ tx.userName || '未知用戶' }}</p>
+                <p class="text-[10px] text-slate-400 mt-1">{{ tx.userEmail }}</p>
+              </div>
+            </div>
+            <div class="text-right">
+              <span :class="['text-lg font-black', tx.points >= 0 ? 'text-emerald-500' : 'text-red-500']">
+                {{ tx.points >= 0 ? '+' : '' }}{{ tx.points }}
+              </span>
+              <p class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">PTS</p>
+            </div>
+          </div>
+
+          <!-- Transaction Info -->
+          <div class="flex items-center gap-4">
+            <div :class="['size-10 rounded-xl flex items-center justify-center shrink-0', getTypeColor(tx.type)]">
+              <span class="material-symbols-outlined text-xl">{{ getTypeIcon(tx.type) }}</span>
+            </div>
+            
+            <div class="flex-1 min-w-0">
+              <h4 class="text-sm font-bold text-slate-800 truncate">{{ tx.eventTitle || getTypeName(tx.type) }}</h4>
+              <p class="text-[11px] text-slate-400 mt-0.5">{{ fnsFormat(new Date(tx.createdAt), 'yyyy/MM/dd HH:mm') }}</p>
+            </div>
+          </div>
+
+          <div v-if="tx.description" class="bg-slate-50 p-3 rounded-xl">
+            <p class="text-[11px] text-slate-600 leading-relaxed">{{ tx.description }}</p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</template>
+
+<style scoped>
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+</style>
