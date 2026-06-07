@@ -27,18 +27,27 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
+CREATE OR REPLACE FUNCTION public.is_admin(user_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1
+    FROM public.profiles p
+    WHERE p.id = user_id
+      AND p.role = 'admin'
+  );
+$$;
+
 -- Profiles RLS
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
 CREATE POLICY "Users can view own profile or admins can view all"
   ON public.profiles FOR SELECT
   USING (
     auth.uid() = id
-    OR EXISTS (
-      SELECT 1
-      FROM public.profiles admin_profile
-      WHERE admin_profile.id = auth.uid()
-        AND admin_profile.role = 'admin'
-    )
+    OR public.is_admin(auth.uid())
   );
 
 CREATE POLICY "Users can update own profile"
@@ -148,12 +157,7 @@ CREATE POLICY "Users can view published events, own events, or admin events"
   USING (
     status = 'published'
     OR created_by = auth.uid()
-    OR EXISTS (
-      SELECT 1
-      FROM public.profiles admin_profile
-      WHERE admin_profile.id = auth.uid()
-        AND admin_profile.role = 'admin'
-    )
+    OR public.is_admin(auth.uid())
   );
 
 DROP POLICY IF EXISTS "authenticated users can manage events" ON public.events;
@@ -165,33 +169,18 @@ CREATE POLICY "Admins and creators can update events"
   ON public.events FOR UPDATE
   USING (
     created_by = auth.uid()
-    OR EXISTS (
-      SELECT 1
-      FROM public.profiles admin_profile
-      WHERE admin_profile.id = auth.uid()
-        AND admin_profile.role = 'admin'
-    )
+    OR public.is_admin(auth.uid())
   )
   WITH CHECK (
     created_by = auth.uid()
-    OR EXISTS (
-      SELECT 1
-      FROM public.profiles admin_profile
-      WHERE admin_profile.id = auth.uid()
-        AND admin_profile.role = 'admin'
-    )
+    OR public.is_admin(auth.uid())
   );
 
 CREATE POLICY "Admins and creators can delete events"
   ON public.events FOR DELETE
   USING (
     created_by = auth.uid()
-    OR EXISTS (
-      SELECT 1
-      FROM public.profiles admin_profile
-      WHERE admin_profile.id = auth.uid()
-        AND admin_profile.role = 'admin'
-    )
+    OR public.is_admin(auth.uid())
   );
 
 CREATE INDEX IF NOT EXISTS idx_events_start_at ON public.events (start_at);
@@ -286,11 +275,11 @@ CREATE POLICY "Users can view own checkins"
 -- Admin can view all
 CREATE POLICY "Admins can view all registrations"
   ON public.event_registrations FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin(auth.uid()));
 
 CREATE POLICY "Admins can view all checkins"
   ON public.checkin_records FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin(auth.uid()));
 
 -- 5. Point Transactions
 CREATE TABLE IF NOT EXISTS public.point_transactions (
@@ -313,7 +302,7 @@ CREATE POLICY "Users can view own transactions"
 
 CREATE POLICY "Admins can view all transactions"
   ON public.point_transactions FOR SELECT
-  USING (EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin'));
+  USING (public.is_admin(auth.uid()));
 
 -- 6. Point Granting Logic (Unified & Batch)
 CREATE OR REPLACE FUNCTION public.process_pending_points()
