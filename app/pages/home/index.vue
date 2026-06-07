@@ -508,7 +508,7 @@ onMounted(async () => {
             </span>
           </button>
           <p v-if="isRegistered" class="text-[10px] text-center text-slate-400 mt-2">
-            * 點數將於一分鐘內自動發放。
+            * 點數將於五分鐘內自動發放。
           </p>
           <p v-else-if="checkingRegistration" class="text-[10px] text-center text-slate-400 mt-2">正在確認報名狀態...</p>
         </div>

@@ -60,7 +60,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
             </li>
             <li class="flex gap-2">
               <span class="text-sky-400 font-bold">02.</span>
-              <span>工作人員掃描成功後，系統將自動發放參與點數。</span>
+              <span>工作人員掃描成功後，系統每五分鐘自動發放參與點數。</span>
             </li>
             <li class="flex gap-2">
               <span class="text-sky-400 font-bold">03.</span>
