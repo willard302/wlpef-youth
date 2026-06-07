@@ -20,9 +20,8 @@ const { success: showSuccessToast, error: showErrorToast } = useToast()
 
 // 表單欄位定義 (使用從 types 導入的統一型別)
 const formFields: FormFieldDefinition[] = [
+  { key: 'email', label: 'Email', icon: 'email', placeholder: '請輸入Email', type: 'email' },
   { key: 'name', label: '姓名', icon: 'person', placeholder: '請輸入姓名', type: 'text' },
-  { key: 'department', label: '校友會 / 單位', icon: 'corporate_fare', placeholder: '例：台北校友會', type: 'text' },
-  { key: 'phoneNumber', label: '電話號碼', icon: 'call', placeholder: '請輸入電話號碼', type: 'tel' },
   { 
     key: 'gender', 
     label: '性別', 
@@ -35,6 +34,8 @@ const formFields: FormFieldDefinition[] = [
       { label: '其他', value: 'other' }
     ] 
   },
+  { key: 'department', label: '校友會 / 單位', icon: 'corporate_fare', placeholder: '例：台北校友會', type: 'text' },
+  { key: 'phoneNumber', label: '電話號碼', icon: 'call', placeholder: '請輸入電話號碼', type: 'tel' },
   { 
     key: 'bio', 
     label: '個人簡介', 
@@ -164,7 +165,8 @@ onMounted(async () => {
           :type="field.type"
           :options="field.options"
           :rows="field.rows"
-          :disabled="isLoading"
+          :disabled="isLoading || field.key === 'email'"
+          :class="field.key === 'email' ? 'cursor-not-allowed' : ''"
         />
       </div>
 

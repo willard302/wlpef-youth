@@ -69,6 +69,7 @@ export const userService = {
 
       return {
         id: user.id,
+        email: profile?.email || user.email || '',
         name: profile?.name || metadata.name || user.email?.split('@')[0] || 'User',
         role: (profile?.role as Role) || 'member',
         joinDate: profile?.created_at || metadata.join_date || 'Since 2024',
@@ -222,6 +223,7 @@ export const userService = {
   async updateUserProfile(
     supabase: TypedSupabaseClient,
     profileData: {
+      email?: string
       name?: string
       points?: number
       role?: string
@@ -238,6 +240,7 @@ export const userService = {
 
       // 1. 更新 profiles 表
       const dbUpdate: Database['public']['Tables']['profiles']['Update'] = {}
+      if (profileData.email !== undefined) dbUpdate.email = profileData.email
       if (profileData.name !== undefined) dbUpdate.name = profileData.name
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
       if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role

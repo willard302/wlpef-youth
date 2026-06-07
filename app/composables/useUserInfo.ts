@@ -8,10 +8,11 @@ export function useUserInfo() {
 
   // 表單狀態
   const formData = ref<UserInfoFormData>({
+    email: '',
+    gender: '',
     name: '',
     department: '',
     phoneNumber: '',
-    gender: '',
     bio: ''
   })
 
@@ -34,10 +35,11 @@ export function useUserInfo() {
       }
 
       formData.value = {
+        email: profile.email || '',
         name: profile.name || '',
+        gender: profile.gender || '',
         department: profile.department || '',
         phoneNumber: profile.phoneNumber || '',
-        gender: profile.gender || '',
         bio: profile.bio || ''
       }
     } catch (err: any) {
@@ -55,10 +57,11 @@ export function useUserInfo() {
 
     try {
       await updateUserProfile({
+        email: formData.value.email,
         name: formData.value.name,
+        gender: formData.value.gender,
         department: formData.value.department,
         phoneNumber: formData.value.phoneNumber,
-        gender: formData.value.gender,
         bio: formData.value.bio
       })
 

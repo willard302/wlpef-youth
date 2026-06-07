@@ -91,6 +91,7 @@ export function useUser() {
    */
   const updateUserProfile = async (
     profileData: {
+      email: string
       name?: string
       points?: number
       role?: string
