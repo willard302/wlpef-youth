@@ -1,152 +1,151 @@
-# WLPEF Youth Project Documentation
+# WLPEF Youth Project Guide
 
-## 1. 專案概觀 (Project Overview)
-本專案為一個完整的社團管理應用程式，採用 **Nuxt 4**、**TailwindCSS**、**Vant UI** 以及 **Supabase** 構建。專案設計初衷是為了解決社團活動排程與成員管理的需求。
+最後更新：2026-06-07
 
-### 核心技術棧 (Core Tech Stack)
-- **前端框架**: Nuxt 4 (Vue 3)
-- **樣式處理**: TailwindCSS
-- **UI 元件庫**: Vant UI
-- **後端與認證**: Supabase (PostgreSQL + Auth + Storage)
-- **語言**: 繁體中文 (zh-TW)
+## 1. 專案定位
+本專案是「領袖會社青團」的會員與活動管理平台，核心目標是整合：
 
-### 目前架構重點 (Current Architecture Notes)
-- **角色分區**: 依 `admin` / `member` 分流頁面路由，管理頁面集中在 `app/pages/admin`，一般使用者頁面維持在 `home`、`user-center`、`points-history` 等區塊。
-- **版型分流**: `default` layout 用於一般使用者，`admin` layout 用於後台，`auth` layout 用於登入 / 註冊流程。
-- **導覽控制**: Tabbar 顯示與 active 狀態由 `route meta` 驅動，不再依賴路徑字串推斷。
-- **共用設定**: 點數交易類型、Tabbar 配置等可共用的 UI 對照資料已抽到 `app/config`。
+- 使用者登入與帳號資料管理
+- 行事曆活動發布與報名入口
+- Google 表單/試算表報名同步
+- 點數交易查詢與後台管理
 
----
+前端採 Nuxt 4（Vue 3），後端依賴 Supabase（Auth、Postgres、Storage、Edge Functions）。
 
-## 2. 主要功能 (Main Features)
+## 2. 技術與版本
+- Nuxt: `^4.4.2`
+- Vue: `^3.5.30`
+- Vue Router: `^5.0.4`
+- Tailwind CSS: `^3.4.1`
+- Vant: `^4.9.1`
+- Nuxt Supabase Module: `^2.0.4`
+- TypeScript 型別檢查：`nuxt typecheck`
 
-### 🏠 整合式數位儀表板 (Unified Dashboard)
-- **即將到來活動**: 頂部 Banner 自動顯示最近的一場社團活動。
-- **互動式行事曆**: 整合於首頁，支援月份切換、日期選擇與活動標記點。
-- **活動列表**: 根據選擇日期顯示詳細的活動資訊（時間、地點、參與人數）。
-- **活動報名入口**: 使用者在活動詳情中點選報名時，會開啟該活動指定的 Google 表單連結。
-- **報名狀況檢視 (管理員)**: 管理員可進入專用頁面，檢視各活動的報名名單，並追蹤 Google 試算表同步狀態。
-- **權限管理**: 管理員與建立者可編輯或刪除活動。
+## 3. 功能現況
 
-### 🔐 智慧註冊與帳號整合流程 (Smart Registration & Account Merging)
-- **社群優先註冊**: 支援 Google 與 Apple 快速登入，初次登入時會自動以社群信箱建立帳號。
-- **自動偵測重複信箱**: 當使用者嘗試以相同信箱進行一般註冊時，系統會自動偵測該信箱是否已被社群帳號佔用。
-- **無縫帳號升級 (Linking)**: 
-  - 若偵測到該信箱僅有社群登入權限（無密碼），系統會引導使用者透過「重設密碼」流程為現有帳號補設密碼。
-  - 完成驗證後，使用者即可同時使用社群登入與一般信箱密碼登入，保留所有原始資料與點數。
-- **重複帳號自動合併**: 透過 Edge Function (`merge-duplicate-account`)，在登入確認階段自動處理可能產生的重複帳號紀錄，確保使用者權益（如點數與報名紀錄）不因登入方式不同而分散。
+### 3.1 驗證與帳號流程
+- Email/密碼登入、註冊、忘記密碼、重設密碼
+- OAuth 登入：Google、Apple
+- 註冊時重複 Email 偵測：呼叫 Edge Function `check-user-registration`
+- OAuth callback (`/auth/confirm`) 會嘗試觸發 `merge-duplicate-account`，整併同 Email 重複帳號
+- `auth` middleware 會確保已登入使用者具備 `profiles` 資料，不完整時導向補填流程
 
-### 👤 會員中心 (User Center)
-- **個人資料管理**: 支援姓名、校友會/單位、性別及個人簡介的編輯。
-- **大頭照上傳**: 整合 Supabase Storage 進行頭像存取。
-- **安全設定**: 支援密碼修改。
-- **註冊補完**: 針對 Google 登入等外部驗證，提供專用的資料完善頁面 (`social-signup.vue`)。
+### 3.2 活動與日曆
+- 首頁顯示「進行中或即將到來」活動
+- 月曆支援月份切換、日期選擇、活動標記
+- 活動狀態：`draft` / `published` / `closed`
+- 一般會員只看 `published` 活動；管理員可看全部狀態
+- 管理員可於活動編輯器新增/編輯/刪除活動，欄位包含：
+  - 基本資料（名稱、地點、描述、顏色、全天）
+  - 外部整合（Google Form URL、Google Sheet ID、target_id、subdomain）
+  - 點數規則（registration_bonus、checkin_bonus、raffle_threshold）
 
-### 🛠️ 管理後台 (Admin Console)
-- **活動管理**: 建立、編輯與刪除活動，並支援活動編輯器獨立頁面。
-- **報名管理**: 檢視活動報名名單、同步 Google 試算表資料、查看報名明細。
-- **點數管理**: 查閱全站點數交易紀錄，並依交易類型顯示對應標籤與圖示。
-- **系統設定**: 提供後台專用入口，並可搭配獨立 Tabbar / layout 擴充更多管理功能。
+### 3.3 報名與同步
+- 會員端活動詳情按鈕會開啟 `google_form_url` 到外部表單
+- 後台報名頁可查看活動報名名單與完整原始欄位（`raw_data`）
+- 管理員可手動觸發 `sync-google-sheet`，把試算表資料 upsert 到 `event_registrations`
+- 同步流程會更新 `events.participants`（以 email 去重）
 
-### 📢 公告系統 (Announcements)
-- **首頁公告**: 顯示最新的社團消息與活動通知。
+### 3.4 點數
+- 會員端可看個人點數交易紀錄
+- 管理端可查全站點數交易（上限 1000 筆）與明細
+- 交易類型 UI 對照由 `app/config/pointTransactions.ts` 統一管理
 
----
+### 3.5 公告
+- 目前首頁有內建「最新公告」區塊（前端靜態資料）
+- 「查看全部」尚未開放獨立公告列表頁
 
-## 3. 資料庫架構 (Database Schema - Supabase)
+## 4. 路由、Layout、權限規則
 
-### 關鍵資料表 (Key Tables)
-- **`auth.users`**: 由 Supabase Auth 管理，儲存私密憑證。
-- **`public.profiles`**: 擴充使用者資訊，用於公開顯示與關聯查詢。
-  - `id`: UUID (與 auth.users 關聯)。
-  - `name`: 使用者全名。
-  - `avatar_url`: 大頭照公開連結。
-  - `role`: 角色權限 (`admin`, `member`)。
-  - `department`: 校友會或所屬單位。
-  - `points`: 成員點數。
-  - `bio`: 個人簡介。
-- **`events`**: 儲存行事曆活動詳情。
-  - `title`: 活動名稱。
-  - `start_at` / `end_at`: 起迄時間。
-  - `location`: 地點。
-  - `color`: 行事曆標記顏色。
-  - `google_sheet_id`: 連動的 Google 試算表 ID，用於同步外部報名資料。
-  - `google_form_url`: 活動報名用的 Google 表單連結，建立或更新活動時為必填欄位。
-  - `target_id`: 外部系統識別碼，用於跨系統資料比對與整合。
-  - `subdomain`: 活動專屬子網域代稱，預留給未來專屬頁面功能使用。
-  - `registration_bonus`: 報名活動可獲得的獎勵點數。
-  - `raffle_threshold`: 抽獎點數門檻，用於判定使用者是否具備該活動的抽獎資格。
-  - `checkin_bonus`: 活動簽到可獲得的獎勵點數。
+### 4.1 Layout
+- `default`: 一般會員頁
+- `admin`: 後台頁
+- `auth`: 登入/註冊/驗證流程
 
-### 架構優勢
-1. **關聯性**: 方便將使用者與活動進行關聯查詢。
-2. **類型安全**: 嚴格定義資料類型（如 DATE, INTEGER）。
-3. **性能**: 對常用查詢欄位（如 `points` 或 `department`）建立索引。
+### 4.2 Middleware
+- `auth`: 驗證登入狀態、密碼重設流程導向、確保 profile 存在
+- `admin`: 限制管理頁僅 `role === 'admin'`
 
----
+### 4.3 Tabbar 規則
+- 顯示與 active 狀態透過 `definePageMeta` 的 `showTabbar`、`tabbarKey` 控制
+- Tabbar 項目由 `app/config/tabbar.ts` 統一提供：
+  - 會員：首頁、QR Code、會員中心
+  - 管理員：首頁、管理設定
 
-## 4. 外部整合功能 (External Integrations)
+## 5. 資料模型重點
+主要表格以 `supabase/full_schema.sql` 為準，常用資料表如下：
 
-### Google 試算表同步
-系統支援透過 Google 表單收集報名資訊，並自動同步至本平台：
-- **報名入口**: 首頁活動詳情的報名按鈕會開啟 `google_form_url`，使用者需至 Google 表單完成報名。
-- **運作原理**: 後端 Edge Function 會定期讀取指定的 `google_sheet_id`。
-- **自動比對與關聯**: 
-  - 系統透過 Email 比對紀錄。若使用者尚未註冊，紀錄將處於待定狀態。
-  - **自動綁定與人數更新**: 當使用者完成註冊並建立 Profile 時，系統會透過資料庫觸發器自動將過往同步的紀錄關聯至該使用者 ID，**並同時更新活動的參與人數（participants 列表）**。
-- **獎勵派發機制**: 
-  - 帳號綁定完成後，報名獎勵點數將維持原本的**定期結算或手動派發**制度。系統不會在註冊瞬間立即發放點數，需等待例行性任務處理。
-- **設定方式**: 建立活動時需填入 **Google 表單連結**，並填入 **Google 試算表 ID** 供同步使用（確保該試算表已授權給系統服務帳戶讀取）。
+- `profiles`: 會員資料（name、role、department、points、avatar_url...）
+- `events`: 活動主檔（時間、狀態、外部整合欄位、點數規則）
+- `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data...）
+- `point_transactions`: 點數異動紀錄
 
-### 其他識別參數
-- **Target ID**:
-  - **跨系統對接**: 用於生成報名紀錄的唯一識別碼，方便與外部系統或舊有資料對接。
-- **活動子網域 (Subdomain)**:
-  - **預留擴充**: 目前為預留欄位，未來將用於自動生成活動專屬網頁（如 `youth-camp.domain.com`）。目前不填寫不影響功能。
+## 6. Edge Functions
 
-### 抽獎資格設定
-- **抽獎門檻 (`raffle_threshold`)**:
-- **資格控管**: 可為活動設定最低點數門檻，作為後續抽獎名單篩選或人工核對的依據。
-- **使用情境**: 適合需要保留點數門檻規則，但不再提供排行榜功能的活動。
+### 6.1 `check-user-registration`
+- 用途：註冊時判斷 Email 是否已存在、是否為社群帳號
+- 使用情境：`app/pages/auth/register.vue`
+- 需要環境變數：
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
 
----
+### 6.2 `merge-duplicate-account`
+- 用途：同 Email 多帳號時，整併 profile 與關聯資料後刪除重複 auth user
+- 使用情境：`app/pages/auth/confirm.vue`
+- 需要環境變數：
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `SUPABASE_ANON_KEY`（程式亦支援 `SUPABASE_ANON_KEYS`）
 
-## 5. UI/UX 標準 (UI/UX Standards)
-- **行動優先 (Mobile-First)**: 針對移動端設備進行優化，提供流暢的觸控體驗。
-- **視覺風格**: 以「天空藍」(`sky-500`) 為主色調，結合毛玻璃效果 (`backdrop-blur`) 與現代化圓角。
-- **全域元件**:
-  - `AppPageHeader`: 一般頁面的返回導覽與標題。
-  - `AppHeroHeader`: 首頁與會員中心的視覺化頁首。
-  - `Tabbar`: 依角色與 route meta 顯示的底部導覽。
-  - `Toast`: 全域訊息通知系統。
+### 6.3 `sync-google-sheet`
+- 用途：讀取 Google Sheet 報名資料，寫入 `event_registrations`
+- 支援：
+  - 指定單一活動同步（傳入 `eventId` + `sheetId`）
+  - 同步所有有 `google_sheet_id` 的活動
+- 驗證：要求 `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
+- 需要環境變數：
+  - `SUPABASE_URL`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `GCP_SERVICE_ACCOUNT`（JSON 字串，需具試算表唯讀權限）
 
----
+### 6.4 `supabase/config.toml` 狀態
+目前設定檔已啟用：
+- `sync-google-sheet`
+- `merge-duplicate-account`
 
-## 6. 開發指南 (Development Guide)
+`check-user-registration` 雖有程式碼，但尚未出現在 `supabase/config.toml` 區段；部署時請確認已手動 deploy 或補入設定。
 
-### 目錄結構 (Folder Structure)
-- `app/components`: 可複用的 Vue 元件。
-- `app/composables`: 共享的邏輯與狀態管理，負責整合 UI 狀態與資料流程。
-- `app/config`: 共用設定資料，例如 Tabbar 與點數交易對照表。
-- `app/pages`: 基於路由的頁面視圖，已依 `admin` / `member` / `auth` 分區。
-- `app/services`: 與 Supabase 互動的 API 服務與資料層邏輯。
-- `app/types`: TypeScript 介面與資料庫型別定義，包含共用 page meta 型別擴充。
-- `supabase/full_schema.sql`: 完整的資料庫定義文件。
+## 7. 本機開發與檢查
 
-### 開發流程
-1. 於 `supabase/full_schema.sql` 定義資料表。
-2. 於 `app/services` 實作後端互動邏輯。
-3. 建立 Composables 管理狀態。
-4. 在 `app/pages` 中建構 UI。
-5. 若頁面屬於特定角色，使用 `definePageMeta` 宣告 `layout`、`middleware`、`showTabbar` 與 `tabbarKey`。
+### 7.1 必要環境變數（Nuxt 前端）
+建立 `.env`：
 
-### 路由與版型慣例
-- **一般使用者頁面**: 使用 `layout: 'default'`，必要時搭配 `showTabbar: true` 與對應 `tabbarKey`。
-- **管理後台頁面**: 使用 `layout: 'admin'`，並搭配 `middleware: ['auth', 'admin']`。
-- **登入註冊頁面**: 使用 `layout: 'auth'`，避免顯示 tabbar 與一般頁面殼。
-- **Tabbar 顯示規則**: 由 `route.meta.showTabbar` 控制，避免用路徑字串手動維護隱藏清單。
-- **Tabbar active 規則**: 由 `route.meta.tabbarKey` 控制，減少不同路徑對應邏輯散落在 layout 與 composable 中。
+```env
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_KEY=your_supabase_anon_key
+```
 
-### 已抽出的共用設定
-- **`app/config/tabbar.ts`**: 依角色回傳 Tabbar 項目，作為底部導覽資料來源。
-- **`app/config/pointTransactions.ts`**: 統一管理點數交易類型的標籤、圖示與顏色。
+### 7.2 常用指令
+```bash
+pnpm install
+pnpm dev
+pnpm typecheck
+pnpm build
+pnpm preview
+```
+
+## 8. 專案結構（摘要）
+- `app/pages`: 路由頁面（admin/auth/member）
+- `app/services`: 與 Supabase 互動的資料層
+- `app/composables`: 狀態與業務流程（calendar、user、editor...）
+- `app/config`: Tabbar 與點數交易型別對照
+- `app/types`: 型別定義與資料模型
+- `supabase/functions`: Edge Functions
+- `supabase/full_schema.sql`: DB schema 主文件
+- `supabase/fixes`: 既有修補 SQL
+
+## 9. 維護建議
+- 新增或調整功能時，同步更新：
+  - `README.md`（快速啟動與環境變數）
+  - 本文件（功能現況與資料流）
+  - `supabase/config.toml`（若新增/調整 Edge Function）
