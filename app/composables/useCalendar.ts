@@ -13,8 +13,8 @@ import {
 } from 'date-fns'
 import type { Event } from '@/types'
 import type { Role } from '@/types/user'
-import type { Database } from '@/types/database.types'
 import { eventService } from '@/services/eventService'
+import { userService } from '@/services/userService'
 
 export function useCalendar() {
   const { userProfile, loadUserData } = useUser()
@@ -36,23 +36,18 @@ export function useCalendar() {
 
     if (userProfile.value) {
       currentUserId.value = userProfile.value.id
-      currentRole.value = userProfile.value.role as Role
+      currentRole.value = userProfile.value.role
       return
     }
 
-    const supabase = useSupabaseClient<Database>()
-    const { data: authData } = await supabase.auth.getUser()
-
-    if (!authData.user) return
-    currentUserId.value = authData.user.id
-
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', authData.user.id)
-      .maybeSingle()
-
-    currentRole.value = (profile?.role || 'member') as Role
+    try {
+      const profile = await userService.fetchUserProfile()
+      currentUserId.value = profile.id
+      currentRole.value = profile.role
+    } catch {
+      currentUserId.value = null
+      currentRole.value = null
+    }
   }
 
   const isAdmin = computed(() => currentRole.value === 'admin')
