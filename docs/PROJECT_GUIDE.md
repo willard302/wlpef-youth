@@ -10,6 +10,12 @@
 - **後端與認證**: Supabase (PostgreSQL + Auth + Storage)
 - **語言**: 繁體中文 (zh-TW)
 
+### 目前架構重點 (Current Architecture Notes)
+- **角色分區**: 依 `admin` / `member` 分流頁面路由，管理頁面集中在 `app/pages/admin`，一般使用者頁面維持在 `home`、`user-center`、`points-history` 等區塊。
+- **版型分流**: `default` layout 用於一般使用者，`admin` layout 用於後台，`auth` layout 用於登入 / 註冊流程。
+- **導覽控制**: Tabbar 顯示與 active 狀態由 `route meta` 驅動，不再依賴路徑字串推斷。
+- **共用設定**: 點數交易類型、Tabbar 配置等可共用的 UI 對照資料已抽到 `app/config`。
+
 ---
 
 ## 2. 主要功能 (Main Features)
@@ -34,7 +40,13 @@
 - **個人資料管理**: 支援姓名、校友會/單位、性別及個人簡介的編輯。
 - **大頭照上傳**: 整合 Supabase Storage 進行頭像存取。
 - **安全設定**: 支援密碼修改。
-- **註冊補完**: 針對 Google 登入等外部驗證，提供專用的資料完善頁面 (`google-signup.vue`)。
+- **註冊補完**: 針對 Google 登入等外部驗證，提供專用的資料完善頁面 (`social-signup.vue`)。
+
+### 🛠️ 管理後台 (Admin Console)
+- **活動管理**: 建立、編輯與刪除活動，並支援活動編輯器獨立頁面。
+- **報名管理**: 檢視活動報名名單、同步 Google 試算表資料、查看報名明細。
+- **點數管理**: 查閱全站點數交易紀錄，並依交易類型顯示對應標籤與圖示。
+- **系統設定**: 提供後台專用入口，並可搭配獨立 Tabbar / layout 擴充更多管理功能。
 
 ### 📢 公告系統 (Announcements)
 - **首頁公告**: 顯示最新的社團消息與活動通知。
@@ -108,8 +120,9 @@
 - **行動優先 (Mobile-First)**: 針對移動端設備進行優化，提供流暢的觸控體驗。
 - **視覺風格**: 以「天空藍」(`sky-500`) 為主色調，結合毛玻璃效果 (`backdrop-blur`) 與現代化圓角。
 - **全域元件**:
-  - `AppHeader`: 統一的頁面導覽與標題。
-  - `Tabbar`: 簡約的底部導覽（首頁、個人中心）。
+  - `AppPageHeader`: 一般頁面的返回導覽與標題。
+  - `AppHeroHeader`: 首頁與會員中心的視覺化頁首。
+  - `Tabbar`: 依角色與 route meta 顯示的底部導覽。
   - `Toast`: 全域訊息通知系統。
 
 ---
@@ -118,10 +131,11 @@
 
 ### 目錄結構 (Folder Structure)
 - `app/components`: 可複用的 Vue 元件。
-- `app/composables`: 共享的邏輯與狀態管理。
-- `app/pages`: 基於路由的頁面視圖。
-- `app/services`: 與 Supabase 互動的 API 服務。
-- `app/types`: TypeScript 介面與資料庫型別定義。
+- `app/composables`: 共享的邏輯與狀態管理，負責整合 UI 狀態與資料流程。
+- `app/config`: 共用設定資料，例如 Tabbar 與點數交易對照表。
+- `app/pages`: 基於路由的頁面視圖，已依 `admin` / `member` / `auth` 分區。
+- `app/services`: 與 Supabase 互動的 API 服務與資料層邏輯。
+- `app/types`: TypeScript 介面與資料庫型別定義，包含共用 page meta 型別擴充。
 - `supabase/full_schema.sql`: 完整的資料庫定義文件。
 
 ### 開發流程
@@ -129,3 +143,15 @@
 2. 於 `app/services` 實作後端互動邏輯。
 3. 建立 Composables 管理狀態。
 4. 在 `app/pages` 中建構 UI。
+5. 若頁面屬於特定角色，使用 `definePageMeta` 宣告 `layout`、`middleware`、`showTabbar` 與 `tabbarKey`。
+
+### 路由與版型慣例
+- **一般使用者頁面**: 使用 `layout: 'default'`，必要時搭配 `showTabbar: true` 與對應 `tabbarKey`。
+- **管理後台頁面**: 使用 `layout: 'admin'`，並搭配 `middleware: ['auth', 'admin']`。
+- **登入註冊頁面**: 使用 `layout: 'auth'`，避免顯示 tabbar 與一般頁面殼。
+- **Tabbar 顯示規則**: 由 `route.meta.showTabbar` 控制，避免用路徑字串手動維護隱藏清單。
+- **Tabbar active 規則**: 由 `route.meta.tabbarKey` 控制，減少不同路徑對應邏輯散落在 layout 與 composable 中。
+
+### 已抽出的共用設定
+- **`app/config/tabbar.ts`**: 依角色回傳 Tabbar 項目，作為底部導覽資料來源。
+- **`app/config/pointTransactions.ts`**: 統一管理點數交易類型的標籤、圖示與顏色。
