@@ -8,7 +8,7 @@ export const useSideMenu = () => {
   const toggleMenu = () => { menuVisible.value = !menuVisible.value }
   const navigateToEditor = (date?: string) => {
     router.push({
-      path: '/admin/events/editor',
+      path: '/admin/event-editor',
       query: date ? { date } : undefined
     })
   }

@@ -7,8 +7,6 @@ definePageMeta({
   showTabbar: false,
 })
 
-const router = useRouter()
-
 const {
   formData,
   isSaving,
