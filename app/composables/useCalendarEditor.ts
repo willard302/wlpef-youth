@@ -44,7 +44,6 @@ export function useCalendarEditor() {
     subdomain: '',
     registrationBonus: 0,
     checkinBonus: 0,
-    socialLeaderboard: false,
     raffleThreshold: 0,
   })
 
@@ -81,7 +80,6 @@ export function useCalendarEditor() {
     formData.value.subdomain = event.subdomain || ''
     formData.value.registrationBonus = event.registrationBonus
     formData.value.checkinBonus = event.checkinBonus
-    formData.value.socialLeaderboard = event.socialLeaderboard
     formData.value.raffleThreshold = event.raffleThreshold
     savedStartTime = formData.value.startTime
     savedEndTime = formData.value.endTime
@@ -185,7 +183,6 @@ export function useCalendarEditor() {
         subdomain: formData.value.subdomain.trim() || undefined,
         registration_bonus: Number(formData.value.registrationBonus) || 0,
         checkin_bonus: Number(formData.value.checkinBonus) || 0,
-        social_leaderboard: formData.value.socialLeaderboard,
         raffle_threshold: Number(formData.value.raffleThreshold) || 0,
       }
 

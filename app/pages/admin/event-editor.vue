@@ -259,16 +259,7 @@ const getTimeColumns = (timeStr: string) => {
         </div>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-center gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400">social_leaderboard</span>
-          <label class="text-sm font-medium text-slate-700 flex-1">社群排行榜</label>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input v-model="formData.socialLeaderboard" type="checkbox" class="sr-only peer" />
-            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2b9dee]"></div>
-          </label>
-        </div>
-        <div class="h-[1px] bg-white/30 mx-3"></div>
-        <div class="flex items-center gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400">social_leaderboard</span>
+          <span class="material-symbols-outlined text-slate-400">trophy</span>
           <label class="text-sm font-medium text-slate-700 flex-1">抽獎門檻 (點數)</label>
           <input
             v-model.number="formData.raffleThreshold"

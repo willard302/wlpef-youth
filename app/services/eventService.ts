@@ -47,7 +47,6 @@ function mapToEvent(row: EventRow): Event {
     subdomain: row.subdomain ?? undefined,
     registrationBonus: row.registration_bonus ?? 0,
     checkinBonus: row.checkin_bonus ?? 0,
-    socialLeaderboard: row.social_leaderboard ?? false,
     raffleThreshold: row.raffle_threshold ?? 0,
     date: startAt,
     time: row.all_day ? '全天' : format(startAt, 'HH:mm'),
