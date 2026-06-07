@@ -12,6 +12,8 @@ const router = useRouter()
 const transactions = ref<PointTransaction[]>([])
 const isLoading = ref(true)
 const searchQuery = ref('')
+const detailsDialogOpen = ref(false)
+const selectedTransaction = ref<PointTransaction | null>(null)
 
 const fetchTransactions = async () => {
   try {
@@ -64,6 +66,16 @@ const getTypeColor = (type: string) => {
   }
 }
 
+const openDetails = (tx: PointTransaction) => {
+  selectedTransaction.value = tx
+  detailsDialogOpen.value = true
+}
+
+const closeDetails = () => {
+  detailsDialogOpen.value = false
+  selectedTransaction.value = null
+}
+
 onMounted(() => {
   fetchTransactions()
 })
@@ -99,7 +111,8 @@ onMounted(() => {
         <div 
           v-for="tx in filteredTransactions" 
           :key="tx.id"
-          class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4"
+          class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4 cursor-pointer active:scale-[0.99] transition-transform"
+          @click="openDetails(tx)"
         >
           <!-- User Info Header -->
           <div class="flex items-center justify-between pb-3 border-b border-slate-50">
@@ -120,20 +133,56 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Transaction Info -->
-          <div class="flex items-center gap-4">
-            <div :class="['size-10 rounded-xl flex items-center justify-center shrink-0', getTypeColor(tx.type)]">
-              <span class="material-symbols-outlined text-xl">{{ getTypeIcon(tx.type) }}</span>
+          <p class="text-[11px] text-slate-400">點擊查看交易明細</p>
+        </div>
+      </div>
+
+      <div
+        v-if="detailsDialogOpen && selectedTransaction"
+        class="fixed inset-0 z-50 bg-slate-900/45 p-4 flex items-end sm:items-center justify-center"
+        @click.self="closeDetails"
+      >
+        <div class="w-full max-w-md bg-white rounded-3xl p-5 shadow-xl space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-black text-slate-900">交易明細</h3>
+            <button
+              type="button"
+              class="size-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"
+              @click="closeDetails"
+            >
+              <span class="material-symbols-outlined text-lg">close</span>
+            </button>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50">
+            <div :class="['size-10 rounded-xl flex items-center justify-center shrink-0', getTypeColor(selectedTransaction.type)]">
+              <span class="material-symbols-outlined text-xl">{{ getTypeIcon(selectedTransaction.type) }}</span>
             </div>
-            
-            <div class="flex-1 min-w-0">
-              <h4 class="text-sm font-bold text-slate-800 truncate">{{ tx.eventTitle || getTypeName(tx.type) }}</h4>
-              <p class="text-[11px] text-slate-400 mt-0.5">{{ fnsFormat(new Date(tx.createdAt), 'yyyy/MM/dd HH:mm') }}</p>
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-slate-900 truncate">{{ selectedTransaction.eventTitle || getTypeName(selectedTransaction.type) }}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">{{ fnsFormat(new Date(selectedTransaction.createdAt), 'yyyy/MM/dd HH:mm') }}</p>
             </div>
           </div>
 
-          <div v-if="tx.description" class="bg-slate-50 p-3 rounded-xl">
-            <p class="text-[11px] text-slate-600 leading-relaxed">{{ tx.description }}</p>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between text-slate-600">
+              <span>姓名</span>
+              <span class="font-semibold text-slate-900">{{ selectedTransaction.userName || '未知用戶' }}</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-600 gap-3">
+              <span>Email</span>
+              <span class="font-semibold text-slate-900 truncate">{{ selectedTransaction.userEmail || '-' }}</span>
+            </div>
+            <div class="flex items-center justify-between text-slate-600">
+              <span>點數</span>
+              <span :class="['font-black', selectedTransaction.points >= 0 ? 'text-emerald-500' : 'text-red-500']">
+                {{ selectedTransaction.points >= 0 ? '+' : '' }}{{ selectedTransaction.points }}
+              </span>
+            </div>
+          </div>
+
+          <div v-if="selectedTransaction.description" class="bg-slate-50 p-3 rounded-xl">
+            <p class="text-[12px] text-slate-700 leading-relaxed">{{ selectedTransaction.description }}</p>
           </div>
         </div>
       </div>
