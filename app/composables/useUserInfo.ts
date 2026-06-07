@@ -1,11 +1,10 @@
-import { userService } from '@/services/userService'
 import type { UserInfoFormData } from '@/types'
 
 /**
  * 管理用戶信息編輯頁面的狀態與邏輯
  */
 export function useUserInfo() {
-  const supabase = useSupabaseClient()
+  const { userProfile, loadUserData, updateUserProfile, isUpdatingProfile } = useUser()
 
   // 表單狀態
   const formData = ref<UserInfoFormData>({
@@ -17,7 +16,7 @@ export function useUserInfo() {
   })
 
   const isLoading = ref(false)
-  const isSaving = ref(false)
+  const isSaving = computed(() => isUpdatingProfile.value)
   const error = ref<string | null>(null)
   const success = ref(false)
 
@@ -27,7 +26,12 @@ export function useUserInfo() {
     error.value = null
 
     try {
-      const profile = await userService.fetchUserProfile()
+      await loadUserData()
+      const profile = userProfile.value
+
+      if (!profile) {
+        throw new Error('載入用戶信息失敗')
+      }
 
       formData.value = {
         name: profile.name || '',
@@ -46,19 +50,19 @@ export function useUserInfo() {
 
   // 更新用戶信息
   const updateUserInfo = async () => {
-    isSaving.value = true
     error.value = null
     success.value = false
 
     try {
-      // 使用統一的 updateUserProfile 方法更新所有字段
-      await userService.updateUserProfile(supabase, {
+      await updateUserProfile({
         name: formData.value.name,
         department: formData.value.department,
         phoneNumber: formData.value.phoneNumber,
         gender: formData.value.gender,
         bio: formData.value.bio
       })
+
+      await loadUserInfo()
 
       success.value = true
       // 3 秒後清除成功提示
@@ -69,15 +73,8 @@ export function useUserInfo() {
       error.value = err.message || '保存失敗'
       console.error(err)
       throw err
-    } finally {
-      isSaving.value = false
     }
   }
-
-  // 初始化時載入用戶信息
-  onMounted(() => {
-    loadUserInfo()
-  })
 
   return {
     formData,

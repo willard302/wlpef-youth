@@ -13,7 +13,7 @@ definePageMeta({
 const { userProfile, uploadAvatar, isUploadingAvatar, loadUserData } = useUser()
 
 // 使用 useUserInfo 管理表單狀態
-const { formData, isLoading, isSaving, error, success, updateUserInfo } = useUserInfo()
+const { formData, isLoading, isSaving, error, success, loadUserInfo, updateUserInfo } = useUserInfo()
 
 // 使用 Toast
 const { success: showSuccessToast, error: showErrorToast } = useToast()
@@ -78,8 +78,6 @@ const handleAvatarUpload = async (event: Event) => {
 const handleSave = async () => {
   try {
     await updateUserInfo()
-    // 重新載入用戶資料確保同步
-    await loadUserData()
     showSuccessToast('個人資料已更新')
   } catch (err: any) {
     showErrorToast(err.message || '保存修改失敗')
@@ -92,14 +90,8 @@ const getAvatarUrl = () => {
 }
 
 // 初始化時載入用戶資料
-onMounted(() => {
-  loadUserData()
-})
-
-// 在離開頁面前同步數據
-onBeforeUnmount(async () => {
-  // 確保返回時數據是最新的
-  await loadUserData()
+onMounted(async () => {
+  await Promise.all([loadUserData(), loadUserInfo()])
 })
 </script>
 
