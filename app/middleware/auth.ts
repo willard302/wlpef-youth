@@ -1,5 +1,8 @@
+import type { UserProfile } from '@/types'
+
 export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient()
+  const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
 
   // Check if user is in password recovery mode
   const isPasswordRecovery = useCookie('is_password_recovery')
@@ -34,12 +37,18 @@ export default defineNuxtRouteMiddleware(async (to) => {
     '/auth/social-signup'
   ]
   if (!excludedPaths.includes(to.path)) {
-    // 這裡可以考慮將 profile 快取在全域狀態中，減少 middleware 阻塞
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
+    const hasCachedProfile = cachedUserProfile.value?.id === user.id
+    let profile = hasCachedProfile ? { id: user.id } : null
+
+    if (!profile) {
+      const { data } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      profile = data
+    }
 
     if (!user.email || !profile) {
       return navigateTo('/auth/social-signup')

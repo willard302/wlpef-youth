@@ -216,7 +216,6 @@ const viewAllAnnouncements = () => {
 }
 
 onMounted(async () => {
-  await loadUserData()
   await loadCurrentUserRole()
   await Promise.all([loadEvents(), loadUpcomingEvent()])
 })

@@ -17,6 +17,8 @@ import type { Database } from '@/types/database.types'
 import { eventService } from '@/services/eventService'
 
 export function useCalendar() {
+  const { userProfile, loadUserData } = useUser()
+
   const isCalendarLoading = ref(false)
   const allEvents = ref<Event[]>([])
 
@@ -28,6 +30,16 @@ export function useCalendar() {
   const currentRole = ref<Role | null>(null)
 
   const loadCurrentUserRole = async () => {
+    if (!userProfile.value) {
+      await loadUserData()
+    }
+
+    if (userProfile.value) {
+      currentUserId.value = userProfile.value.id
+      currentRole.value = userProfile.value.role as Role
+      return
+    }
+
     const supabase = useSupabaseClient<Database>()
     const { data: authData } = await supabase.auth.getUser()
 

@@ -17,10 +17,22 @@ export function useUser() {
   const isChangingPassword = useState('user-password-changing', () => false)
   const error = useState<string | null>('user-error', () => null)
 
+  const waitUntilUserLoadFinished = async () => {
+    while (isLoading.value) {
+      await new Promise(resolve => setTimeout(resolve, 20))
+    }
+  }
+
   // 動作 (Actions)
   const loadUserData = async (force = false) => {
     // 如果已經有資料且不是強制更新，則跳過
     if (userProfile.value && !force) return
+
+    // 若已有進行中的請求，等待既有請求完成，避免重複打 API
+    if (isLoading.value && !force) {
+      await waitUntilUserLoadFinished()
+      return
+    }
 
     isLoading.value = true
     error.value = null
