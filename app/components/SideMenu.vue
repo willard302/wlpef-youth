@@ -1,4 +1,17 @@
 <script setup lang="ts">
+type MenuAction = () => void
+
+type MenuItem = {
+  id: string
+  label: string
+  icon: string
+  bgClass: string
+  textClass: string
+  hoverClass: string
+  visible: boolean
+  action: MenuAction
+}
+
 const props = defineProps<{
   show: boolean
   isAdmin: boolean
@@ -17,72 +30,113 @@ const menuVisible = computed({
   set: (value) => emit('update:show', value),
 })
 
-const menuItems = computed(() => [
-  {
-    id: 'add-event',
-    label: '新增活動',
-    icon: 'add_circle',
-    bgClass: 'bg-sky-50',
-    textClass: 'text-sky-600',
-    hoverClass: 'hover:bg-sky-100',
-    show: props.isAdmin,
-    action: () => emit('navigate-to-editor'),
-  },
-  {
-    id: 'registrations',
-    label: '報名狀況',
-    icon: 'group',
-    bgClass: 'bg-indigo-50',
-    textClass: 'text-indigo-600',
-    hoverClass: 'hover:bg-indigo-100',
-    show: props.isAdmin,
-    action: () => router.push('/home/registrations'),
-  },
-  {
-    id: 'qr-code',
-    label: '報到碼',
-    icon: 'qr_code',
-    bgClass: 'bg-green-50',
-    textClass: 'text-green-600',
-    hoverClass: 'hover:bg-green-100',
-    show: !props.isAdmin,
-    action: () => router.push('/user-center/qr-code'),
-  },
-  {
-    id: 'user-center',
-    label: '會員中心',
-    icon: 'account_circle',
-    bgClass: 'bg-slate-50',
-    textClass: 'text-slate-600',
-    hoverClass: 'hover:bg-slate-100',
-    show: !props.isAdmin,
-    action: () => router.push('/user-center'),
-  },
-  {
-    id: 'logout',
-    label: '登出帳號',
-    icon: 'logout',
-    bgClass: 'bg-red-50',
-    textClass: 'text-red-600',
-    hoverClass: 'hover:bg-red-100',
-    show: true,
-    action: handleLogout,
-  },
-])
+const menuItems = computed<MenuItem[]>(() => {
+  const adminItems: MenuItem[] = [
+    {
+      id: 'add-event',
+      label: '新增活動',
+      icon: 'add_circle',
+      bgClass: 'bg-sky-50',
+      textClass: 'text-sky-600',
+      hoverClass: 'hover:bg-sky-100',
+      visible: true,
+      action: () => emit('navigate-to-editor'),
+    },
+    {
+      id: 'registrations',
+      label: '報名狀況',
+      icon: 'group',
+      bgClass: 'bg-indigo-50',
+      textClass: 'text-indigo-600',
+      hoverClass: 'hover:bg-indigo-100',
+      visible: true,
+      action: () => {
+        void router.push('/home/registrations')
+      },
+    },
+    {
+      id: 'points-history-admin',
+      label: '點數紀錄',
+      icon: 'history',
+      bgClass: 'bg-amber-50',
+      textClass: 'text-amber-600',
+      hoverClass: 'hover:bg-amber-100',
+      visible: true,
+      action: () => {
+        void router.push('/points-history/admin')
+      },
+    },
+  ]
 
-const handleItemClick = (action: () => void) => {
+  const memberItems: MenuItem[] = [
+    {
+      id: 'points-history',
+      label: '點數紀錄',
+      icon: 'history',
+      bgClass: 'bg-amber-50',
+      textClass: 'text-amber-600',
+      hoverClass: 'hover:bg-amber-100',
+      visible: true,
+      action: () => {
+        void router.push('/points-history')
+      },
+    },
+    {
+      id: 'qr-code',
+      label: '報到碼',
+      icon: 'qr_code',
+      bgClass: 'bg-green-50',
+      textClass: 'text-green-600',
+      hoverClass: 'hover:bg-green-100',
+      visible: true,
+      action: () => {
+        void router.push('/user-center/qr-code')
+      },
+    },
+    {
+      id: 'user-center',
+      label: '會員中心',
+      icon: 'account_circle',
+      bgClass: 'bg-slate-50',
+      textClass: 'text-slate-600',
+      hoverClass: 'hover:bg-slate-100',
+      visible: true,
+      action: () => {
+        void router.push('/user-center')
+      },
+    },
+  ]
+
+  return [
+    ...(props.isAdmin ? adminItems : memberItems),
+    {
+      id: 'logout',
+      label: '登出帳號',
+      icon: 'logout',
+      bgClass: 'bg-red-50',
+      textClass: 'text-red-600',
+      hoverClass: 'hover:bg-red-100',
+      visible: true,
+      action: () => {
+        void handleLogout()
+      },
+    },
+  ]
+})
+
+const handleItemClick = (action: MenuAction) => {
   menuVisible.value = false
-  action()
+  void action()
 }
 </script>
 
 <template>
   <van-action-sheet v-model:show="menuVisible" class="rounded-t-[2.5rem] overflow-hidden">
     <template #default>
-      <!-- Custom Header to replace the default one which has layout issues on some mobile devices -->
       <div class="px-6 py-5 flex items-center justify-between border-b border-slate-50">
         <h3 class="text-lg font-black text-slate-900">選單</h3>
-        <button 
+        <button
+          type="button"
           @click="menuVisible = false"
           class="size-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 active:bg-slate-200 transition-colors"
         >
@@ -91,19 +145,19 @@ const handleItemClick = (action: () => void) => {
       </div>
 
       <div class="px-6 pb-12 pt-6 space-y-3 menu-content">
-        <template v-for="item in menuItems" :key="item.id">
-          <button
-            v-if="item.show"
-            @click="handleItemClick(item.action)"
-            class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all"
-            :class="[item.bgClass, item.textClass, item.hoverClass]"
-          >
-            <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-              <span class="material-symbols-outlined">{{ item.icon }}</span>
-            </div>
-            <span>{{ item.label }}</span>
-          </button>
-        </template>
+        <button
+          v-for="item in menuItems"
+          :key="item.id"
+          type="button"
+          class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all"
+          :class="[item.bgClass, item.textClass, item.hoverClass]"
+          @click="handleItemClick(item.action)"
+        >
+          <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+            <span class="material-symbols-outlined">{{ item.icon }}</span>
+          </div>
+          <span>{{ item.label }}</span>
+        </button>
       </div>
     </template>
   </van-action-sheet>
