@@ -421,11 +421,11 @@ onMounted(async () => {
     </main>
 
     <!-- Side Menu -->
-    <!-- <SideMenu
+    <SideMenu
       v-model:show="menuVisible"
       :is-admin="isAdmin"
       @navigate-to-editor="navigateToEditor"
-    /> -->
+    />
     <van-action-sheet
       v-model:show="menuVisible"
       class="rounded-t-[2.5rem] overflow-hidden"
