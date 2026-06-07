@@ -4,7 +4,9 @@ import type { FormFieldDefinition } from '@/types'
 const router = useRouter()
 
 definePageMeta({
-  layout: 'default'
+  layout: 'default',
+  middleware: ['auth'],
+  showTabbar: false,
 })
 
 // 使用 useUser 獲取用戶信息（用於大頭照）
@@ -104,7 +106,7 @@ onBeforeUnmount(async () => {
 <template>
   <div class="relative flex min-h-screen w-full flex-col bg-[#f0f9ff] overflow-x-hidden pb-16">
     <!-- Header -->
-    <AppPageHeader title="編輯個人資料" @back="router.back" />
+    <AppHeaderPage title="編輯個人資料" @back="router.back" />
 
     <main class="flex-1 w-full px-4 py-6 space-y-8">
       <!-- Profile Picture Section -->

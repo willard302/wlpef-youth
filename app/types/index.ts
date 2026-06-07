@@ -1,7 +1,10 @@
 /**
  * Tabbar Items
  */
+export type TabbarKey = 'home' | 'qr-code' | 'user-center' | 'settings'
+
 export interface TabbarItem {
+  key: TabbarKey
   label: string
   icon: string
   path: string

@@ -4,8 +4,9 @@ import { format as fnsFormat } from 'date-fns'
 import type { PointTransaction } from '@/types'
 
 definePageMeta({
-  layout: 'default',
-  middleware: ['auth', 'admin']
+  layout: 'admin',
+  middleware: ['auth', 'admin'],
+  showTabbar: false,
 })
 
 const router = useRouter()
@@ -83,7 +84,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-slate-50 pb-20">
-    <AppPageHeader title="點數紀錄" @back="router.back()" />
+    <AppHeaderPage title="點數紀錄" @back="router.back()" />
 
     <main class="px-4 py-6 max-w-md mx-auto space-y-6">
       <!-- Search Bar -->

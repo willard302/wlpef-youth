@@ -6,14 +6,8 @@ const route = useRoute()
 const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()
 
-// 檢查當前路由是否隱藏 tabbar
-const hideTabbarRoutes = ['/user-center/change-password', '/user-center/user-info']
 const showTabbar = computed(() => {
-  const path = route.path
-  if (hideTabbarRoutes.includes(path)) {
-    return false
-  }
-  return true
+  return route.meta.showTabbar !== false
 })
 </script>
 

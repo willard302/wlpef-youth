@@ -5,7 +5,9 @@ import type { PointTransaction } from '@/types'
 
 definePageMeta({
   layout: 'default',
-  middleware: ['auth']
+  middleware: ['auth'],
+  showTabbar: true,
+  tabbarKey: 'user-center',
 })
 
 const router = useRouter()
@@ -59,7 +61,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-slate-50">
-    <AppPageHeader title="點數紀錄" @back="router.back()" />
+    <AppHeaderPage title="點數紀錄" @back="router.back()" />
 
     <main class="px-4 py-6 max-w-md mx-auto space-y-4">
       <div v-if="isLoading" class="flex flex-col items-center py-20 text-slate-400">

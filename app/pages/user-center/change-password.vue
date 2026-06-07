@@ -8,7 +8,8 @@ const { success: showSuccessToast, error: showErrorToast } = useToast()
 
 definePageMeta({
   layout: 'default',
-  hideTabbar: true
+  middleware: ['auth'],
+  showTabbar: false,
 })
 
 // 表單狀態
@@ -122,7 +123,7 @@ const handleInput = () => {
 <template>
   <div class="relative flex min-h-screen w-full flex-col bg-[#f0f9ff] overflow-x-hidden pb-16">
     <!-- Header -->
-    <AppPageHeader title="修改密碼" @back="router.back" />
+    <AppHeaderPage title="修改密碼" @back="router.back" />
 
     <!-- Main Content -->
     <main class="flex-1 w-full px-4 py-6 space-y-6">

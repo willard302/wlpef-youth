@@ -51,7 +51,7 @@ const menuItems = computed<MenuItem[]>(() => {
       hoverClass: 'hover:bg-indigo-100',
       visible: true,
       action: () => {
-        void router.push('/home/registrations')
+        void router.push('/admin/registrations')
       },
     },
     {
@@ -63,7 +63,7 @@ const menuItems = computed<MenuItem[]>(() => {
       hoverClass: 'hover:bg-amber-100',
       visible: true,
       action: () => {
-        void router.push('/points-history/admin')
+        void router.push('/admin/points-history')
       },
     },
   ]

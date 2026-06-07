@@ -2,8 +2,9 @@
 import { COLOR_OPTIONS } from '@/composables/useCalendarEditor'
 
 definePageMeta({
-  layout: 'default',
-  middleware: ['auth'],
+  layout: 'admin',
+  middleware: ['auth', 'admin'],
+  showTabbar: false,
 })
 
 const router = useRouter()
@@ -63,7 +64,7 @@ const getTimeColumns = (timeStr: string) => {
 
 <template>
   <div class="min-h-screen editor-bg">
-    <AppPageHeader :title="isEditMode ? '編輯活動' : '新增活動'" @back="router.back()">
+    <AppHeaderPage :title="isEditMode ? '編輯活動' : '新增活動'" @back="router.back()">
       <template #right-actions>
         <button
           @click="saveEvent"
@@ -73,7 +74,7 @@ const getTimeColumns = (timeStr: string) => {
           {{ isSaving ? '儲存中...' : (isEditMode ? '更新' : '儲存') }}
         </button>
       </template>
-    </AppPageHeader>
+    </AppHeaderPage>
 
     <main v-if="!isInitializing" class="px-4 pt-4 pb-24 space-y-5 max-w-md mx-auto">
       <div class="relative h-32 w-full rounded-2xl overflow-hidden shadow-sm">

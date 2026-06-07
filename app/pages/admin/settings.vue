@@ -3,10 +3,10 @@
 import type { MenuItem } from '@/types';
 
 definePageMeta({
-  layout: 'default',
-  middleware: ['auth'],
+  layout: 'admin',
+  middleware: ['auth', 'admin'],
   showTabbar: true,
-  tabbarKey: 'user-center'
+  tabbarKey: 'settings'
 })
 
 // 使用 useUser composable
@@ -65,22 +65,20 @@ const getAvatarUrl = () => {
 // 統計數據
 const menuItems = computed<MenuItem[]>(() => {
   return [
-    { icon: 'qr_code_2', label: '我的報到碼', path: '/user-center/qr-code' },
-    { icon: 'history', label: '點數交易紀錄', path: '/points-history' },
-    { icon: 'person_edit', label: '編輯個人資料', path: '/user-center/user-info' },
+    { icon: 'database', label: '點數交易紀錄', path: '/admin/points-history' },
     { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
   ]
 })
 
 const getRoleName = (role?: string) => {
   if (role === 'guest') return '訪客'
-  return '會員'
+  return '管理員'
 }
 </script>
 
 <template>
   <div class="user-center-page">
-    <AppHeaderHero title="會員中心" height-class="h-40" />
+    <AppHeaderHero title="管理設定" height-class="h-40" />
 
     <!-- Main Content -->
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
@@ -130,22 +128,11 @@ const getRoleName = (role?: string) => {
             </span>
           </div>
         </div>
-
-        <div class="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-          <div class="text-left">
-            <p class="text-xs text-slate-500 uppercase tracking-wider">校友會</p>
-            <p class="font-semibold text-slate-800">{{ userProfile?.department ?? '載入中...' }}</p>
-          </div>
-          <div class="text-right">
-            <p class="text-xs text-slate-500 uppercase tracking-wider">點數</p>
-            <p class="font-semibold text-slate-800">{{ userProfile?.points ?? '載入中...' }}</p>
-          </div>
-        </div>
       </div>
 
       <!-- Action Items List -->
       <div class="space-y-3 mb-8">
-        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ '帳戶設定' }}</h3>
+        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ '帳號管理' }}</h3>
         <div class="bg-white/80 rounded-2xl overflow-hidden shadow-sm">
           <NuxtLink
             v-for="(item, index) in menuItems"

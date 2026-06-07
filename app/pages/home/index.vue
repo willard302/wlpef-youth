@@ -7,6 +7,8 @@ import type { Event } from '@/types'
 definePageMeta({
   layout: 'default',
   middleware: ['auth'],
+  showTabbar: true,
+  tabbarKey: 'home'
 })
 
 const router = useRouter()
@@ -140,11 +142,11 @@ const loadUpcomingEvent = async () => {
 }
 
 const navigateToEditor = () => {
-  router.push({ path: '/home/calendar-editor', query: { date: fnsFormat(selectedDate.value, 'yyyy-MM-dd') } })
+  router.push({ path: '/admin/events/editor', query: { date: fnsFormat(selectedDate.value, 'yyyy-MM-dd') } })
 }
 
 const navigateToEditEvent = (eventId: string) => {
-  router.push({ path: '/home/calendar-editor', query: { id: eventId } })
+  router.push({ path: '/admin/events/editor', query: { id: eventId } })
 }
 
 const handleDeleteEvent = async (eventId: string) => {
@@ -217,7 +219,7 @@ onMounted(async () => {
 
 <template>
   <div class="dashboard-page pb-24">
-    <AppHeroHeader
+    <AppHeaderHero
       eyebrow="領袖會社青團"
       :title="`哈囉，${userProfile?.name ?? '使用者'}`"
       height-class="h-56"
@@ -260,7 +262,7 @@ onMounted(async () => {
         </div>
         <p class="text-sky-50 text-sm font-medium opacity-90">{{ upcomingEventDisplay.meta }}</p>
       </button>
-    </AppHeroHeader>
+    </AppHeaderHero>
 
     <main class="px-4 -mt-8 relative z-20 space-y-6">
       <section class="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 shadow-xl border border-white">

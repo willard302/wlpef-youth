@@ -1,24 +1,32 @@
-import type { TabbarItem } from '@/types'
+import type { TabbarItem, TabbarKey } from '@/types'
 import { getTabbarItems } from '@/config/tabbar'
 
 export const useTabbarConfig = () => {
   const route = useRoute()
   const { userProfile } = useUser()
 
-  const activeIndex = computed(() => {
-    const role = userProfile.value?.role
-    if (role === 'admin') {
-      if (route.path.startsWith('/user-center')) return 1
-      return 0
-    } else {
-      if (route.path === '/user-center/qr-code') return 1
-      if (route.path.startsWith('/user-center')) return 2
-      return 0
-    }
+  const activeTabbarKey = computed<TabbarKey>(() => {
+    const metaKey = route.meta.tabbarKey as TabbarKey | undefined
+    if (metaKey) return metaKey
+
+    const path = route.path
+    if (path === '/' || path === '/home') return 'home'
+    if (path === '/user-center/qr-code') return 'qr-code'
+    if (path.startsWith('/user-center') || path === '/points-history') return 'user-center'
+    return 'home'
   })
 
   const tabbarItems = computed<TabbarItem[]>(() => {
-    return getTabbarItems(route.path, userProfile.value?.role)
+    return getTabbarItems(userProfile.value?.role).map(item => ({
+      ...item,
+      fill: item.key === activeTabbarKey.value,
+    }))
+  })
+
+
+  const activeIndex = computed(() => {
+    const index = tabbarItems.value.findIndex(item => item.key === activeTabbarKey.value)
+    return index >= 0 ? index : 0
   })
 
   return {

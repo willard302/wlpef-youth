@@ -106,7 +106,7 @@ onMounted(async () => {
 
 <template>
   <div class="registrations-page pb-24 min-h-screen bg-slate-50">
-    <AppPageHeader title="活動報名狀況" @back="router.back()" />
+    <AppHeaderPage title="活動報名狀況" @back="router.back()" />
 
     <main class="px-4 -mt-6 relative z-20 space-y-6">
       <!-- Event Selector -->

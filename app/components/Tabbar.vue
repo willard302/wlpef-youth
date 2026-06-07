@@ -1,10 +1,5 @@
 <script setup lang="ts">
-interface TabbarItem {
-  label: string
-  icon: string
-  path: string
-  fill?: boolean
-}
+import type { TabbarItem } from '@/types'
 
 interface Props {
   items: TabbarItem[]
@@ -21,7 +16,7 @@ withDefaults(defineProps<Props>(), {
     <div class="flex justify-around items-center">
       <NuxtLink
         v-for="(item, index) in items"
-        :key="index"
+        :key="item.key"
         :to="item.path"
         class="flex flex-col items-center gap-1 transition-colors"
         :class="[
