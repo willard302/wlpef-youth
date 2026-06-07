@@ -88,10 +88,6 @@ const eventPickerActions = computed(() => {
   }))
 })
 
-const getSyncStatus = (reg: EventRegistration) => {
-  return reg.googleSheetRowId ? 'Google 同步' : '站內報名'
-}
-
 const getPointsStatus = (reg: EventRegistration) => {
   return reg.registrationPointsGrantedAt ? '點數已發放' : '處理中'
 }
@@ -109,17 +105,11 @@ onMounted(async () => {
 
 <template>
   <div class="registrations-page pb-24 min-h-screen bg-slate-50">
-    <AppHeroHeader
-      eyebrow="管理後台"
-      title="活動報名狀況"
-      height-class="h-48"
-      show-back
-    >
-    </AppHeroHeader>
+    <AppPageHeader title="活動報名狀況" @back="router.back()" />
 
     <main class="px-4 -mt-6 relative z-20 space-y-6">
       <!-- Event Selector -->
-      <section class="bg-white/95 backdrop-blur-xl rounded-3xl p-5 shadow-xl border border-white">
+      <section class="bg-white/95 backdrop-blur-xl rounded-3xl p-5 mt-8 shadow-xl border border-white">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目前檢視活動</p>
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
@@ -201,12 +191,6 @@ onMounted(async () => {
             <div class="flex flex-wrap gap-2">
               <span
                 class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
-                :class="reg.googleSheetRowId ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-sky-50 text-sky-600 border border-sky-100'"
-              >
-                {{ getSyncStatus(reg) }}
-              </span>
-              <span
-                class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
                 :class="reg.registrationPointsGrantedAt ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
               >
                 {{ getPointsStatus(reg) }}
@@ -241,16 +225,10 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Sync & Points Info -->
-        <div class="grid grid-cols-2 gap-3">
-          <div class="bg-slate-50 rounded-2xl p-4">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">來源</p>
-            <p class="text-sm font-bold text-slate-700">{{ getSyncStatus(selectedRegistration) }}</p>
-          </div>
-          <div class="bg-slate-50 rounded-2xl p-4">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">點數狀態</p>
-            <p class="text-sm font-bold text-slate-700">{{ getPointsStatus(selectedRegistration) }}</p>
-          </div>
+        <!-- Points Info -->
+        <div class="bg-slate-50 rounded-2xl p-4">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">點數狀態</p>
+          <p class="text-sm font-bold text-slate-700">{{ getPointsStatus(selectedRegistration) }}</p>
         </div>
 
         <!-- Raw Data (Google Form Fields) -->
