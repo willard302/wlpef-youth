@@ -114,7 +114,6 @@ CREATE TABLE IF NOT EXISTS public.events (
   subdomain    TEXT,
   registration_bonus INTEGER DEFAULT 0,
   checkin_bonus INTEGER DEFAULT 0,
-  social_leaderboard BOOLEAN DEFAULT false,
   raffle_threshold INTEGER DEFAULT 0,
   participants TEXT[],
   created_by   UUID         REFERENCES auth.users(id) ON DELETE SET NULL,
@@ -129,7 +128,6 @@ ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS subdomain TEXT,
   ADD COLUMN IF NOT EXISTS registration_bonus INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS checkin_bonus INTEGER DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS social_leaderboard BOOLEAN DEFAULT false,
   ADD COLUMN IF NOT EXISTS raffle_threshold INTEGER DEFAULT 0;
 
 ALTER TABLE public.profiles
@@ -370,41 +368,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- 7. Social leaderboard view
-CREATE OR REPLACE VIEW public.social_leaderboard AS
-SELECT
-  e.id AS event_id,
-  e.title AS event_title,
-  e.target_id,
-  e.raffle_threshold,
-  er.matched_user_id AS user_id,
-  p.name,
-  p.email,
-  p.department,
-  COALESCE(SUM(pt.points), 0)::INTEGER AS event_points,
-  COALESCE(p.points, 0)::INTEGER AS total_points,
-  CASE
-    WHEN e.raffle_threshold > 0 THEN COALESCE(p.points, 0) >= e.raffle_threshold
-    ELSE true
-  END AS raffle_eligible,
-  MIN(er.form_submitted_at) AS first_registered_at
-FROM public.events e
-JOIN public.event_registrations er ON er.event_id = e.id
-JOIN public.profiles p ON p.id = er.matched_user_id
-LEFT JOIN public.point_transactions pt ON pt.event_id = e.id AND pt.user_id = p.id
-WHERE e.social_leaderboard = true
-GROUP BY
-  e.id,
-  e.title,
-  e.target_id,
-  e.raffle_threshold,
-  er.matched_user_id,
-  p.name,
-  p.email,
-  p.department,
-  p.points;
-
--- 8. Scheduled Google Sheet sync
+-- 7. Scheduled Google Sheet sync
 -- Add Supabase Vault secrets named:
 --   supabase_project_url      = https://<project-ref>.supabase.co
 --   supabase_service_role_key = <service-role-key>
@@ -455,7 +419,7 @@ BEGIN
   );
 END $$;
 
--- 9. Realtime Enablement
+-- 8. Realtime Enablement
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_publication WHERE pubname = 'supabase_realtime') THEN
