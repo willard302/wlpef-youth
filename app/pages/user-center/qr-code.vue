@@ -22,17 +22,15 @@ const qrValue = computed(() => userProfile.value?.id || '')
 
 <template>
   <div class="qr-code-page pb-24 min-h-screen bg-slate-50">
-    <AppHeaderPage title="我的報到碼" show-back />
+    <AppHeaderPage title="我的QR Code" show-back />
 
     <main class="px-6 pt-8">
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">
         <div class="size-12 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-slate-500 font-medium">載入報到碼中...</p>
+        <p class="text-slate-500 font-medium">載入QR Code中...</p>
       </div>
 
       <div v-else-if="userProfile" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-        <!-- User Info Card -->
-         
         <!-- QR Code Section -->
         <div class="p-4 bg-white rounded-2xl shadow-md border border-slate-200 text-center qr-code-card">
           <qrcode-vue

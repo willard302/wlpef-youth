@@ -83,7 +83,7 @@ const menuItems = computed<MenuItem[]>(() => {
     },
     {
       id: 'qr-code',
-      label: '報到碼',
+      label: 'QR Code',
       icon: 'qr_code',
       bgClass: 'bg-green-50',
       textClass: 'text-green-600',

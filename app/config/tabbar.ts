@@ -9,7 +9,7 @@ export const getTabbarItems = (role?: Role): Omit<TabbarItem, 'fill'>[] => {
     items.push({ key: 'settings', label: '管理設定', icon: 'settings', path: '/admin/settings' })
   } else {
     items.push(
-      { key: 'qr-code', label: '報到碼', icon: 'qr_code_2', path: '/user-center/qr-code' },
+      { key: 'qr-code', label: 'QR Code', icon: 'qr_code_2', path: '/user-center/qr-code' },
       { key: 'user-center', label: '會員中心', icon: 'person', path: '/user-center' }
     )
   }
