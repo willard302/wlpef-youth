@@ -240,14 +240,14 @@ onMounted(async () => {
       </div>
       <button
         v-else
-        class="space-y-1 text-left disabled:cursor-default"
+        class="space-y-1 px-1 text-left disabled:cursor-default"
         :disabled="!upcomingEventData"
         @click="upcomingEventData && openEventDetail(upcomingEventData)"
       >
-        <div class="flex flex-wrap items-center gap-2">
-          <div class="flex items-center gap-2 min-w-0">
+        <div class="flex flex-wrap items-center gap-2 min-w-0 w-full">
+          <div class="flex items-center gap-2 min-w-0 flex-1 pr-1">
             <span v-if="isOngoing" class="flex-shrink-0 size-2 rounded-full bg-rose-400 animate-pulse shadow-[0_0_8px_rgba(251,113,133,0.8)]"></span>
-            <h1 class="min-w-0 text-2xl font-extrabold leading-tight text-white drop-shadow-sm truncate">{{ upcomingEventDisplay.title }}</h1>
+            <h1 class="min-w-0 w-full truncate text-2xl font-extrabold leading-tight text-white drop-shadow-sm">{{ upcomingEventDisplay.title }}</h1>
           </div>
           <span
             v-if="upcomingEventData"
