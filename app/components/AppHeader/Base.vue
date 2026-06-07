@@ -52,9 +52,9 @@ const handleBack = () => {
     </div>
   </header>
 
-  <section
+  <header
     v-else
-    :class="['relative overflow-hidden rounded-b-[3rem] shadow-2xl transition-all', heightClass]"
+    :class="['relative overflow-hidden rounded-b-[3rem] shadow-2xl transition-all']"
   >
     <div class="absolute inset-0 z-0">
       <div class="h-full w-full bg-gradient-to-br from-sky-600 via-sky-500 to-indigo-400"></div>
@@ -95,7 +95,7 @@ const handleBack = () => {
         <slot />
       </div>
     </div>
-  </section>
+  </header>
 </template>
 
 <style scoped>
