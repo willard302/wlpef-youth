@@ -53,9 +53,20 @@ Deno.serve(async (req) => {
 
     // Fallback to listing users if not found in profiles (e.g. newly registered but no profile yet)
     if (!user) {
-      const { data: { users }, error } = await supabaseAdmin.auth.admin.listUsers()
-      if (error) throw error
-      user = users.find(u => u.email?.toLowerCase() === email.toLowerCase())
+      const perPage = 100
+      let page = 1
+      const normalizedEmail = email.toLowerCase()
+
+      while (!user) {
+        const { data, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage })
+        if (error) throw error
+
+        const users = data?.users || []
+        user = users.find(u => u.email?.toLowerCase() === normalizedEmail) || null
+
+        if (users.length < perPage || user) break
+        page += 1
+      }
     }
 
     if (!user) {

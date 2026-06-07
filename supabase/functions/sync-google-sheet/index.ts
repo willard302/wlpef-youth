@@ -349,10 +349,32 @@ Deno.serve(async (req) => {
   }
 
   try {
+    if (req.method !== "POST") {
+      return Response.json(
+        { error: "Method Not Allowed" },
+        { status: 405, headers: corsHeaders },
+      )
+    }
+
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    if (!serviceRoleKey) {
+      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable")
+    }
+
+    const authHeader = req.headers.get("Authorization") || ""
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim()
+
+    if (token !== serviceRoleKey) {
+      return Response.json(
+        { error: "Unauthorized" },
+        { status: 401, headers: corsHeaders },
+      )
+    }
+
     // 2. 自動抓取內建的環境變數，直接建立純淨的高權限管理端客戶端
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      serviceRoleKey,
       {
         auth: {
           persistSession: false,

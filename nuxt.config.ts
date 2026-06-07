@@ -1,10 +1,4 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-const sanitizedSupabaseUrl = process.env.SUPABASE_URL
-  ?.replace(/\/rest\/v1\/?$/, '')
-  .replace(/\/$/, '')
-
-const supabasePublishableKey = process.env.SUPABASE_KEY
-
 export default defineNuxtConfig({
   srcDir: './app',
   compatibilityDate: '2025-07-15',

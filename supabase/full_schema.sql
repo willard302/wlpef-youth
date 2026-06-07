@@ -28,9 +28,18 @@ CREATE TABLE IF NOT EXISTS public.profiles (
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
 
 -- Profiles RLS
-CREATE POLICY "Public profiles are viewable by everyone"
+DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+CREATE POLICY "Users can view own profile or admins can view all"
   ON public.profiles FOR SELECT
-  USING (true);
+  USING (
+    auth.uid() = id
+    OR EXISTS (
+      SELECT 1
+      FROM public.profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+        AND admin_profile.role = 'admin'
+    )
+  );
 
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
@@ -133,14 +142,57 @@ END $$;
 
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "everyone can view events"
+DROP POLICY IF EXISTS "everyone can view events" ON public.events;
+CREATE POLICY "Users can view published events, own events, or admin events"
   ON public.events FOR SELECT
-  USING (true);
+  USING (
+    status = 'published'
+    OR created_by = auth.uid()
+    OR EXISTS (
+      SELECT 1
+      FROM public.profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+        AND admin_profile.role = 'admin'
+    )
+  );
 
-CREATE POLICY "authenticated users can manage events"
-  ON public.events FOR ALL
-  USING (auth.role() = 'authenticated')
-  WITH CHECK (auth.role() = 'authenticated');
+DROP POLICY IF EXISTS "authenticated users can manage events" ON public.events;
+CREATE POLICY "Authenticated users can create own events"
+  ON public.events FOR INSERT
+  WITH CHECK (auth.role() = 'authenticated' AND created_by = auth.uid());
+
+CREATE POLICY "Admins and creators can update events"
+  ON public.events FOR UPDATE
+  USING (
+    created_by = auth.uid()
+    OR EXISTS (
+      SELECT 1
+      FROM public.profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+        AND admin_profile.role = 'admin'
+    )
+  )
+  WITH CHECK (
+    created_by = auth.uid()
+    OR EXISTS (
+      SELECT 1
+      FROM public.profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+        AND admin_profile.role = 'admin'
+    )
+  );
+
+CREATE POLICY "Admins and creators can delete events"
+  ON public.events FOR DELETE
+  USING (
+    created_by = auth.uid()
+    OR EXISTS (
+      SELECT 1
+      FROM public.profiles admin_profile
+      WHERE admin_profile.id = auth.uid()
+        AND admin_profile.role = 'admin'
+    )
+  );
 
 CREATE INDEX IF NOT EXISTS idx_events_start_at ON public.events (start_at);
 CREATE INDEX IF NOT EXISTS idx_events_google_sheet_id ON public.events (google_sheet_id) WHERE google_sheet_id IS NOT NULL;
@@ -194,6 +246,37 @@ CREATE POLICY "Users can view own registrations"
 CREATE POLICY "Users can register for events"
   ON public.event_registrations FOR INSERT
   WITH CHECK (auth.uid() = matched_user_id);
+
+CREATE OR REPLACE FUNCTION public.sync_event_participants_from_registrations()
+RETURNS TRIGGER AS $$
+DECLARE
+  target_event_id UUID;
+BEGIN
+  target_event_id := COALESCE(NEW.event_id, OLD.event_id);
+
+  IF target_event_id IS NULL THEN
+    RETURN COALESCE(NEW, OLD);
+  END IF;
+
+  UPDATE public.events e
+  SET participants = (
+    SELECT COALESCE(array_agg(DISTINCT lower(trim(er.email))), ARRAY[]::TEXT[])
+    FROM public.event_registrations er
+    WHERE er.event_id = target_event_id
+      AND er.email IS NOT NULL
+      AND trim(er.email) <> ''
+  )
+  WHERE e.id = target_event_id;
+
+  RETURN COALESCE(NEW, OLD);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS tr_sync_event_participants_from_registrations ON public.event_registrations;
+CREATE TRIGGER tr_sync_event_participants_from_registrations
+  AFTER INSERT OR UPDATE OR DELETE ON public.event_registrations
+  FOR EACH ROW
+  EXECUTE FUNCTION public.sync_event_participants_from_registrations();
 
 -- Checkins RLS
 CREATE POLICY "Users can view own checkins"

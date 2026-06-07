@@ -245,26 +245,6 @@ export const eventService = {
       console.error('Registration insert error:', regError)
       throw new Error('報名資料建立失敗')
     }
-
-    // 2. 同時更新 events 表的 participants 欄位 (用於快速統計人數)
-    // 獲取目前的 participants (儲存的是 Email)
-    const { data: eventData } = await supabase
-      .from('events')
-      .select('participants')
-      .eq('id', eventId)
-      .single()
-
-    const currentParticipants = eventData?.participants || []
-    const userEmail = user.email!
-    
-    if (!currentParticipants.includes(userEmail)) {
-      await supabase
-        .from('events')
-        .update({
-          participants: [...currentParticipants, userEmail]
-        })
-        .eq('id', eventId)
-    }
   },
 
   /**
