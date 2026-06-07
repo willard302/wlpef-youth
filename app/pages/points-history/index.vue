@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { userService } from '@/services/userService'
 import { format as fnsFormat } from 'date-fns'
+import { getPointTransactionMeta } from '@/config/pointTransactions'
 import type { PointTransaction } from '@/types'
 
 definePageMeta({
@@ -22,35 +23,6 @@ const fetchTransactions = async () => {
     console.error('Failed to fetch transactions', error)
   } finally {
     isLoading.value = false
-  }
-}
-
-const getTypeName = (type: string) => {
-  switch (type) {
-    case 'registration': return '活動報名'
-    case 'checkin': return '現場簽到'
-    case 'bonus': return '額外獎勵'
-    case 'manual': return '手動調整'
-    default: return '點數異動'
-  }
-}
-
-const getTypeIcon = (type: string) => {
-  switch (type) {
-    case 'registration': return 'how_to_reg'
-    case 'checkin': return 'fact_check'
-    case 'bonus': return 'redeem'
-    case 'manual': return 'edit_note'
-    default: return 'stars'
-  }
-}
-
-const getTypeColor = (type: string) => {
-  switch (type) {
-    case 'registration': return 'text-sky-500 bg-sky-50'
-    case 'checkin': return 'text-emerald-500 bg-emerald-50'
-    case 'bonus': return 'text-amber-500 bg-amber-50'
-    default: return 'text-slate-500 bg-slate-50'
   }
 }
 
@@ -80,12 +52,12 @@ onMounted(() => {
           :key="tx.id"
           class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex items-center gap-4"
         >
-          <div :class="['size-12 rounded-2xl flex items-center justify-center', getTypeColor(tx.type)]">
-            <span class="material-symbols-outlined">{{ getTypeIcon(tx.type) }}</span>
+          <div :class="['size-12 rounded-2xl flex items-center justify-center', getPointTransactionMeta(tx.type).colorClass]">
+            <span class="material-symbols-outlined">{{ getPointTransactionMeta(tx.type).icon }}</span>
           </div>
           
           <div class="flex-1 min-w-0">
-            <h4 class="font-bold text-slate-900 truncate">{{ tx.eventTitle || getTypeName(tx.type) }}</h4>
+            <h4 class="font-bold text-slate-900 truncate">{{ tx.eventTitle || getPointTransactionMeta(tx.type).label }}</h4>
             <p class="text-xs text-slate-400 mt-1">{{ fnsFormat(new Date(tx.createdAt), 'yyyy/MM/dd HH:mm') }}</p>
             <p v-if="tx.description" class="text-[11px] text-slate-500 mt-1 line-clamp-1">{{ tx.description }}</p>
           </div>

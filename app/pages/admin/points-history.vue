@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { getPointTransactionMeta } from '@/config/pointTransactions'
 import { userService } from '@/services/userService'
 import { format as fnsFormat } from 'date-fns'
 import type { PointTransaction } from '@/types'
@@ -37,35 +38,6 @@ const filteredTransactions = computed(() => {
     tx.description?.toLowerCase().includes(query)
   )
 })
-
-const getTypeName = (type: string) => {
-  switch (type) {
-    case 'registration': return '活動報名'
-    case 'checkin': return '現場簽到'
-    case 'bonus': return '額外獎勵'
-    case 'manual': return '手動調整'
-    default: return '點數異動'
-  }
-}
-
-const getTypeIcon = (type: string) => {
-  switch (type) {
-    case 'registration': return 'how_to_reg'
-    case 'checkin': return 'fact_check'
-    case 'bonus': return 'redeem'
-    case 'manual': return 'edit_note'
-    default: return 'stars'
-  }
-}
-
-const getTypeColor = (type: string) => {
-  switch (type) {
-    case 'registration': return 'text-sky-500 bg-sky-50'
-    case 'checkin': return 'text-emerald-500 bg-emerald-50'
-    case 'bonus': return 'text-amber-500 bg-amber-50'
-    default: return 'text-slate-500 bg-slate-50'
-  }
-}
 
 const openDetails = (tx: PointTransaction) => {
   selectedTransaction.value = tx
@@ -156,11 +128,11 @@ onMounted(() => {
           </div>
 
           <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50">
-            <div :class="['size-10 rounded-xl flex items-center justify-center shrink-0', getTypeColor(selectedTransaction.type)]">
-              <span class="material-symbols-outlined text-xl">{{ getTypeIcon(selectedTransaction.type) }}</span>
+            <div :class="['size-10 rounded-xl flex items-center justify-center shrink-0', getPointTransactionMeta(selectedTransaction.type).colorClass]">
+              <span class="material-symbols-outlined text-xl">{{ getPointTransactionMeta(selectedTransaction.type).icon }}</span>
             </div>
             <div class="min-w-0">
-              <p class="text-sm font-bold text-slate-900 truncate">{{ selectedTransaction.eventTitle || getTypeName(selectedTransaction.type) }}</p>
+              <p class="text-sm font-bold text-slate-900 truncate">{{ selectedTransaction.eventTitle || getPointTransactionMeta(selectedTransaction.type).label }}</p>
               <p class="text-[11px] text-slate-500 mt-0.5">{{ fnsFormat(new Date(selectedTransaction.createdAt), 'yyyy/MM/dd HH:mm') }}</p>
             </div>
           </div>
