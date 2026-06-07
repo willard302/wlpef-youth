@@ -1,8 +1,7 @@
 import type { UserProfile, Activity, Role, PointTransaction } from '@/types'
 import type { Database } from '@/types/database.types'
-import type { SupabaseClient } from '@supabase/supabase-js'
 
-type TypedSupabaseClient = SupabaseClient<Database>
+type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
 
 /**
  * 使用者相關的 API 服務，負責網路請求 (Data Layer)
