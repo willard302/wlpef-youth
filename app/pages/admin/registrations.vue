@@ -4,8 +4,8 @@ import { eventService } from '@/services/eventService'
 import type { Event, EventRegistration } from '@/types'
 
 definePageMeta({
-  layout: 'default',
-  middleware: ['auth'],
+  layout: 'admin',
+  middleware: ['auth', 'admin'],
   showTabbar: false,
 })
 
