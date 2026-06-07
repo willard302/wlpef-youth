@@ -16,6 +16,49 @@ const formData = ref({
   bio: ''
 })
 
+type SocialSignupField = {
+  key: keyof typeof formData.value
+  label: string
+  icon: string
+  type: string
+  placeholder: string
+  rows?: number
+  helperText?: string
+}
+
+const formFields: SocialSignupField[] = [
+  {
+    key: 'email',
+    label: 'Email',
+    icon: 'mail',
+    type: 'email',
+    placeholder: '請輸入 Email',
+    helperText: '請確認您的Email為您報名活動所使用的Email'
+  },
+  {
+    key: 'fullName',
+    label: '全名',
+    icon: 'badge',
+    type: 'text',
+    placeholder: '輸入您的真實姓名'
+  },
+  {
+    key: 'department',
+    label: '校友會 / 單位',
+    icon: 'account_balance',
+    type: 'text',
+    placeholder: '例如：台北校友會'
+  },
+  {
+    key: 'bio',
+    label: '個人簡介',
+    icon: 'description',
+    type: 'textarea',
+    placeholder: '分享您的背景或習禪心得',
+    rows: 3
+  }
+]
+
 // Fetch existing user data if any
 const fetchUserData = async () => {
   try {
@@ -126,60 +169,20 @@ onMounted(() => {
 
         <!-- Form Section -->
         <div v-else class="flex flex-col gap-5">
-          <!-- Email -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">Email</label>
-            <div class="bg-slate-100 rounded-2xl border border-slate-100 p-1 flex items-center">
-              <span class="material-symbols-outlined text-slate-400 ml-3">mail</span>
-              <input
-                v-model="formData.email"
-                type="email"
-                class="w-full bg-transparent border-none text-slate-700 focus:ring-0 text-base py-3 px-3 outline-none"
-              />
-            </div>
-            <p class="text-red-600 text-sm font-medium text-left">請確認您的Email為您報名活動所使用的Email</p>
-          </div>
-
-          <!-- Full Name -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">全名</label>
-            <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-center transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
-              <span class="material-symbols-outlined text-slate-400 ml-3">badge</span>
-              <input
-                v-model="formData.fullName"
-                type="text"
-                placeholder="輸入您的真實姓名"
-                class="w-full bg-transparent border-none text-slate-900 placeholder:text-slate-300 focus:ring-0 text-base py-3 px-3 outline-none"
-              />
-            </div>
-          </div>
-
-          <!-- Department -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">校友會 / 單位</label>
-            <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-center transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
-              <span class="material-symbols-outlined text-slate-400 ml-3">account_balance</span>
-              <input
-                v-model="formData.department"
-                type="text"
-                placeholder="例如：台北校友會"
-                class="w-full bg-transparent border-none text-slate-900 placeholder:text-slate-300 focus:ring-0 text-base py-3 px-3 outline-none"
-              />
-            </div>
-          </div>
-
-          <!-- Bio -->
-          <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-400 uppercase tracking-widest ml-1">個人簡介</label>
-            <div class="bg-slate-50 rounded-2xl border border-slate-100 p-1 flex items-start transition-all focus-within:border-sky-300 focus-within:bg-white focus-within:shadow-sm">
-              <span class="material-symbols-outlined text-slate-400 ml-3 mt-3">description</span>
-              <textarea
-                v-model="formData.bio"
-                rows="3"
-                placeholder="分享您的背景或習禪心得"
-                class="w-full bg-transparent border-none text-slate-900 placeholder:text-slate-300 focus:ring-0 text-base py-3 px-3 outline-none resize-none"
-              ></textarea>
-            </div>
+          <div
+            v-for="field in formFields"
+            :key="field.key"
+            class="space-y-1.5"
+          >
+            <FormField
+              v-model="formData[field.key]"
+              :label="field.label"
+              :icon="field.icon"
+              :type="field.type"
+              :placeholder="field.placeholder"
+              :rows="field.rows"
+            />
+            <p v-if="field.helperText" class="text-red-600 text-xs font-medium text-left pl-2 pr-2">{{ field.helperText }}</p>
           </div>
 
           <!-- Error Message -->
@@ -252,6 +255,7 @@ input::-webkit-inner-spin-button {
 
 /* Firefox */
 input[type=number] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 </style>
