@@ -1,11 +1,14 @@
 <script setup lang="ts">
+import type { Database } from '@/types/database.types'
+import { userService } from '@/services/userService'
+
 definePageMeta({
   layout: 'auth'
 })
 
 const router = useRouter()
 const route = useRoute()
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
 
 const loading = ref(true)
 const errorMessage = ref('')
@@ -91,27 +94,7 @@ onMounted(async () => {
       console.warn('Auto merge skipped:', mergeError.message)
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (!profile) {
-      // Initialize profile if it doesn't exist
-      const metadata = user.user_metadata || {}
-      const { error: insertProfileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          name: metadata.name || metadata.full_name || user.email?.split('@')[0] || 'User',
-          avatar_url: metadata.avatar_url || null,
-          points: 0
-        })
-
-      if (insertProfileError) throw insertProfileError
-    }
+    await userService.ensureProfileExists(supabase)
 
     redirectWithSuccess(
       mergeData?.merged

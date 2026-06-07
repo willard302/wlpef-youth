@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { LoginFormData } from '@/types'
+import type { Database } from '@/types/database.types'
+import { userService } from '@/services/userService'
 
 definePageMeta({
   layout: 'auth'
@@ -17,7 +19,7 @@ const fields: { key: FieldKey; icon: string; placeholder: string; type?: 'email'
   { key: 'password', icon: 'lock', placeholder: '輸入你的密碼',   type: 'password', autocomplete: 'current-password' },
 ]
 
-const supabase = useSupabaseClient()
+const supabase = useSupabaseClient<Database>()
 const loading = ref(false)
 const errorMessage = ref('')
 
@@ -50,37 +52,11 @@ const handleLogin = async () => {
     
     if (error) throw error
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user?.id) {
-      throw new Error('User not authenticated')
-    }
-
-    const { data: existingProfile, error: profileQueryError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (profileQueryError) {
-      throw profileQueryError
-    }
-
-    if (!existingProfile) {
-      const metadata = user.user_metadata || {}
-      const { error: createProfileError } = await supabase
-        .from('profiles')
-        .insert({
-          id: user.id,
-          email: user.email,
-          name: metadata.name || metadata.display_name || user.email?.split('@')[0] || 'User',
-          avatar_url: metadata.avatar_url || null,
-          points: 0
-        })
-
-      if (createProfileError) {
-        await supabase.auth.signOut()
-        throw new Error('首次登入初始化失敗，請聯絡管理員確認 profiles 權限設定')
-      }
+    try {
+      await userService.ensureProfileExists(supabase)
+    } catch {
+      await supabase.auth.signOut()
+      throw new Error('首次登入初始化失敗，請聯絡管理員確認 profiles 權限設定')
     }
     
     router.push('/home')

@@ -8,6 +8,42 @@ type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
  */
 export const userService = {
   /**
+   * 確保當前登入使用者在 profiles 表中有對應資料
+   */
+  async ensureProfileExists(supabase: TypedSupabaseClient): Promise<void> {
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError) throw userError
+    if (!user?.id) throw new Error('User not authenticated')
+
+    const { data: existingProfile, error: profileQueryError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    if (profileQueryError) throw profileQueryError
+    if (existingProfile) return
+
+    const metadata = user.user_metadata || {}
+    const profileName = metadata.name || metadata.display_name || metadata.full_name || user.email?.split('@')[0] || 'User'
+
+    const { error: createProfileError } = await supabase
+      .from('profiles')
+      .insert({
+        id: user.id,
+        email: user.email,
+        name: profileName,
+        avatar_url: metadata.avatar_url || null,
+        points: 0
+      })
+
+    if (createProfileError && createProfileError.code !== '23505') {
+      throw createProfileError
+    }
+  },
+
+  /**
    * 取得使用者詳細資料
    */
   async fetchUserProfile(): Promise<UserProfile> {

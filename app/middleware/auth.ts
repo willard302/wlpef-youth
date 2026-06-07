@@ -1,7 +1,9 @@
 import type { UserProfile } from '@/types'
+import type { Database } from '@/types/database.types'
+import { userService } from '@/services/userService'
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
   const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
 
   // Check if user is in password recovery mode
@@ -37,21 +39,18 @@ export default defineNuxtRouteMiddleware(async (to) => {
     '/auth/social-signup'
   ]
   if (!excludedPaths.includes(to.path)) {
-    const hasCachedProfile = cachedUserProfile.value?.id === user.id
-    let profile = hasCachedProfile ? { id: user.id } : null
-
-    if (!profile) {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle()
-
-      profile = data
+    if (!user.email) {
+      return navigateTo('/auth/social-signup')
     }
 
-    if (!user.email || !profile) {
-      return navigateTo('/auth/social-signup')
+    const hasCachedProfile = cachedUserProfile.value?.id === user.id
+    if (!hasCachedProfile) {
+      try {
+        await userService.ensureProfileExists(supabase)
+      } catch (error) {
+        console.warn('auth middleware ensureProfileExists error:', error)
+        return navigateTo('/auth/social-signup')
+      }
     }
   }
 
