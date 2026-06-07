@@ -1,12 +1,13 @@
 import { userService } from '@/services/userService'
-import type { UserProfile, Activity, Role } from '@/types'
+import type { UserProfile, Activity } from '@/types'
+import type { Database } from '@/types/database.types'
 
 /**
  * Logic Layer: 使用者的業務邏輯與狀態管理
  */
 export function useUser() {
   const router = useRouter()
-  const supabase = useSupabaseClient()
+  const supabase = useSupabaseClient<Database>()
 
   // 全域狀態 (Global State)
   const userProfile = useState<UserProfile | null>('user-profile', () => null)
@@ -16,12 +17,7 @@ export function useUser() {
   const isUpdatingProfile = useState('user-updating', () => false)
   const isChangingPassword = useState('user-password-changing', () => false)
   const error = useState<string | null>('user-error', () => null)
-
-  const waitUntilUserLoadFinished = async () => {
-    while (isLoading.value) {
-      await new Promise(resolve => setTimeout(resolve, 20))
-    }
-  }
+  const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
 
   // 動作 (Actions)
   const loadUserData = async (force = false) => {
@@ -29,31 +25,40 @@ export function useUser() {
     if (userProfile.value && !force) return
 
     // 若已有進行中的請求，等待既有請求完成，避免重複打 API
-    if (isLoading.value && !force) {
-      await waitUntilUserLoadFinished()
+    if (loadingPromise.value && !force) {
+      await loadingPromise.value
       return
     }
 
-    isLoading.value = true
-    error.value = null
-    try {
-      // 呼叫 Data Layer
-      const [profileData, activitiesData] = await Promise.all([
-        userService.fetchUserProfile(),
-        userService.fetchRecentActivities()
-      ])
+    const request = (async () => {
+      isLoading.value = true
+      error.value = null
+      try {
+        // 呼叫 Data Layer
+        const [profileData, activitiesData] = await Promise.all([
+          userService.fetchUserProfile(),
+          userService.fetchRecentActivities()
+        ])
 
-      userProfile.value = profileData
-      recentActivities.value = activitiesData
-    } catch (err: any) {
-      error.value = err.message || '載入用戶資料失敗'
-      console.error(err)
-      // 只有在真的沒權限時才跳轉
-      if (err.message === 'User not authenticated') {
-        router.push('/auth/login')
+        userProfile.value = profileData
+        recentActivities.value = activitiesData
+      } catch (err: any) {
+        error.value = err.message || '載入用戶資料失敗'
+        console.error(err)
+        // 只有在真的沒權限時才跳轉
+        if (err.message === 'User not authenticated') {
+          router.push('/auth/login')
+        }
+      } finally {
+        isLoading.value = false
       }
+    })()
+
+    loadingPromise.value = request
+    try {
+      await request
     } finally {
-      isLoading.value = false
+      loadingPromise.value = null
     }
   }
 
@@ -71,7 +76,7 @@ export function useUser() {
       userProfile.value.avatar = avatarUrl
 
       // 重新載入用戶資料確保資料一致性
-      await loadUserData()
+      await loadUserData(true)
     } catch (err: any) {
       error.value = err.message || '上傳大頭照失敗'
       console.error(err)
@@ -105,7 +110,7 @@ export function useUser() {
       await userService.updateUserProfile(supabase, profileData)
 
       // 重新載入用戶資料確保資料一致性
-      await loadUserData()
+      await loadUserData(true)
     } catch (err: any) {
       error.value = err.message || '更新個人資料失敗'
       console.error(err)
@@ -204,7 +209,7 @@ export function useUser() {
       })
 
       // 重新載入用戶資料
-      await loadUserData()
+      await loadUserData(true)
     } catch (err: any) {
       error.value = err.message || '完成註冊失敗'
       console.error(err)

@@ -1,5 +1,8 @@
 import type { UserProfile, Activity, Role, PointTransaction } from '@/types'
 import type { Database } from '@/types/database.types'
+import type { SupabaseClient } from '@supabase/supabase-js'
+
+type TypedSupabaseClient = SupabaseClient<Database>
 
 /**
  * 使用者相關的 API 服務，負責網路請求 (Data Layer)
@@ -53,7 +56,7 @@ export const userService = {
   /**
    * 上傳大頭照
    */
-  async uploadAvatar(file: File, supabase: any): Promise<string> {
+  async uploadAvatar(file: File, supabase: TypedSupabaseClient): Promise<string> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
 
@@ -112,7 +115,7 @@ export const userService = {
   /**
    * 刪除舊的大頭照檔案
    */
-  async deleteOldAvatar(avatarPath: string, supabase: any): Promise<void> {
+  async deleteOldAvatar(avatarPath: string, supabase: TypedSupabaseClient): Promise<void> {
     try {
       if (avatarPath) {
         await supabase.storage
@@ -148,7 +151,7 @@ export const userService = {
    * 初始化使用者 metadata（於註冊時調用）
    */
   async initializeUserMetadata(
-    supabase: any,
+    supabase: TypedSupabaseClient,
     displayName: string
   ): Promise<void> {
     try {
@@ -182,7 +185,7 @@ export const userService = {
    * @param profileData 用戶資料物件
    */
   async updateUserProfile(
-    supabase: any,
+    supabase: TypedSupabaseClient,
     profileData: {
       name?: string
       points?: number
@@ -199,10 +202,10 @@ export const userService = {
       if (!user) throw new Error('User not authenticated')
 
       // 1. 更新 profiles 表
-      const dbUpdate: Record<string, any> = {}
+      const dbUpdate: Database['public']['Tables']['profiles']['Update'] = {}
       if (profileData.name !== undefined) dbUpdate.name = profileData.name
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
-      if (profileData.role !== undefined) dbUpdate.role = profileData.role
+      if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
       if (profileData.department !== undefined) dbUpdate.department = profileData.department
       if (profileData.phoneNumber !== undefined) dbUpdate.phone_number = profileData.phoneNumber
       if (profileData.gender !== undefined) dbUpdate.gender = profileData.gender
