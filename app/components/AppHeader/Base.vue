@@ -54,7 +54,7 @@ const handleBack = () => {
 
   <header
     v-else
-    :class="['relative overflow-hidden rounded-b-[3rem] shadow-2xl transition-all']"
+    :class="['relative overflow-hidden rounded-b-[3rem] shadow-2xl transition-all', heightClass]"
   >
     <div class="absolute inset-0 z-0">
       <div class="h-full w-full bg-gradient-to-br from-sky-600 via-sky-500 to-indigo-400"></div>

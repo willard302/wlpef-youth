@@ -11,7 +11,6 @@ definePageMeta({
   tabbarKey: 'user-center',
 })
 
-const router = useRouter()
 const transactions = ref<PointTransaction[]>([])
 const isLoading = ref(true)
 
