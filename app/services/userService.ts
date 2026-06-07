@@ -1,21 +1,6 @@
 import type { UserProfile, Activity, Role, PointTransaction } from '@/types'
 import type { Database } from '@/types/database.types'
 
-async function fetchProfilePoints(userId: string, profilePoints: number | null | undefined): Promise<number> {
-  const supabase = useSupabaseClient<Database>()
-  const { data, error } = await supabase
-    .from('point_transactions')
-    .select('points')
-    .eq('user_id', userId)
-
-  if (error) throw error
-  if (data && data.length > 0) {
-    return data.reduce((total, transaction) => total + transaction.points, 0)
-  }
-
-  return profilePoints ?? 0
-}
-
 /**
  * 使用者相關的 API 服務，負責網路請求 (Data Layer)
  */
@@ -26,19 +11,23 @@ export const userService = {
   async fetchUserProfile(): Promise<UserProfile> {
     try {
       const supabase = useSupabaseClient<Database>()
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+      if (userError) throw userError
 
       if (!user) throw new Error('User not authenticated')
 
       // 優先從 profiles 表獲取最新的詳細資料
-      const { data: profile } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .maybeSingle()
 
+      if (profileError) throw profileError
+
       const metadata = user.user_metadata || {}
-      const points = await fetchProfilePoints(user.id, profile?.points)
+      const points = profile?.points ?? 0
 
       return {
         id: user.id,
@@ -52,8 +41,12 @@ export const userService = {
         gender: profile?.gender || metadata.gender || '',
         bio: profile?.bio || metadata.bio || ''
       }
-    } catch (error) {
-      throw new Error('User not authenticated')
+    } catch (error: any) {
+      console.error('Error fetching user profile:', error)
+      if (error?.message === 'User not authenticated') {
+        throw error
+      }
+      throw new Error(error?.message || '載入用戶資料失敗')
     }
   },
 
