@@ -4,7 +4,7 @@ import QrcodeVue from 'qrcode.vue'
 definePageMeta({
   layout: 'default',
   middleware: ['auth'],
-  showTabbar: true,
+  showTabbar: false,
   tabbarKey: 'qr-code',
 })
 
