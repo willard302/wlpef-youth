@@ -11,8 +11,6 @@ withDefaults(defineProps<Props>(), {
   heightClass: 'h-56',
   showBack: false
 })
-
-const router = useRouter()
 </script>
 
 <template>
@@ -22,7 +20,6 @@ const router = useRouter()
     :eyebrow="eyebrow"
     :show-back="showBack"
     :height-class="heightClass"
-    @back="router.back()"
   >
     <template #actions>
       <slot name="actions" />

@@ -15,12 +15,10 @@ const props = withDefaults(defineProps<Props>(), {
   heightClass: 'h-56',
 })
 
-const emit = defineEmits<{
-  back: []
-}>()
+const router = useRouter()
 
 const handleBack = () => {
-  emit('back')
+  router.back()
 }
 </script>
 

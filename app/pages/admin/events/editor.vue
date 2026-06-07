@@ -64,8 +64,8 @@ const getTimeColumns = (timeStr: string) => {
 
 <template>
   <div class="min-h-screen editor-bg">
-    <AppHeaderPage :title="isEditMode ? '編輯活動' : '新增活動'" @back="router.back()">
-      <template #right-actions>
+    <AppHeaderPage :title="isEditMode ? '編輯活動' : '新增活動'">
+      <template #actions>
         <button
           @click="saveEvent"
           :disabled="isSaving || isDeleting || isInitializing"

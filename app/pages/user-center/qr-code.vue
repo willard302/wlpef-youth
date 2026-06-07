@@ -22,7 +22,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
 
 <template>
   <div class="qr-code-page pb-24 min-h-screen bg-slate-50">
-    <AppHeaderPage title="我的報到碼" show-back @back="router.back()" />
+    <AppHeaderPage title="我的報到碼" show-back />
 
     <main class="px-6 pt-8">
       <div v-if="isLoading" class="flex flex-col items-center justify-center py-20">

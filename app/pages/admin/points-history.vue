@@ -56,7 +56,7 @@ onMounted(() => {
 
 <template>
   <div class="min-h-screen bg-slate-50 pb-20">
-    <AppHeaderPage title="點數紀錄" @back="router.back()" />
+    <AppHeaderPage title="點數紀錄" />
 
     <main class="px-4 py-6 max-w-md mx-auto space-y-6">
       <!-- Search Bar -->
