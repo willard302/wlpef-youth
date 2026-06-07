@@ -17,6 +17,7 @@ const isLoading = ref(false)
 const isEventsLoading = ref(false)
 const events = ref<Event[]>([])
 const registrations = ref<EventRegistration[]>([])
+const searchQuery = ref('')
 const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const isSyncing = ref(false)
@@ -93,6 +94,25 @@ const getPointsStatus = (reg: EventRegistration) => {
   return reg.registrationPointsGrantedAt ? '點數已發放' : '處理中'
 }
 
+const filteredRegistrations = computed(() => {
+  const keyword = searchQuery.value.trim().toLowerCase()
+
+  if (!keyword) {
+    return registrations.value
+  }
+
+  return registrations.value.filter((reg) => {
+    const searchableValues = [
+      reg.name,
+      reg.email,
+      reg.googleSheetRowId,
+      ...Object.entries(reg.rawData ?? {}).flatMap(([key, value]) => [key, String(value ?? '')]),
+    ]
+
+    return searchableValues.some(value => value?.toLowerCase().includes(keyword))
+  })
+})
+
 onMounted(async () => {
   await loadUserData()
   if (userProfile.value?.role !== 'admin') {
@@ -158,7 +178,22 @@ onMounted(async () => {
       <section class="space-y-4">
         <div class="flex items-center justify-between px-2">
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">報名名單</h4>
-          <span v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
+          <div class="flex items-center gap-3 text-[11px] font-bold text-slate-400">
+            <span v-if="!isLoading && registrations.length > 0">
+              {{ filteredRegistrations.length }} / {{ registrations.length }}
+            </span>
+            <span v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
+          </div>
+        </div>
+
+        <div class="relative">
+          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <input
+            v-model="searchQuery"
+            type="text"
+            placeholder="搜尋姓名、Email、表單欄位..."
+            class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
+          />
         </div>
 
         <div v-if="isLoading" class="flex flex-col items-center py-12 text-slate-400">
@@ -170,9 +205,14 @@ onMounted(async () => {
           <p class="text-slate-400 text-sm font-medium">尚無報名資料</p>
         </div>
 
+        <div v-else-if="filteredRegistrations.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
+          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">search_off</span>
+          <p class="text-slate-400 text-sm font-medium">查無符合條件的報名資料</p>
+        </div>
+
         <div v-else class="space-y-3">
           <div
-            v-for="reg in registrations"
+            v-for="reg in filteredRegistrations"
             :key="reg.id"
             @click="openRegistrationDetail(reg)"
             class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
