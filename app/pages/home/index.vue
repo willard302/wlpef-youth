@@ -425,23 +425,6 @@ onMounted(async () => {
       :is-admin="isAdmin"
       @navigate-to-editor="navigateToEditor"
     />
-    <van-action-sheet
-      v-model:show="menuVisible"
-      class="rounded-t-[2.5rem] overflow-hidden"
-    >
-      <template #default>
-        <div class="px-6 py-5 flex items-center justify-between border-b border-slate-50">
-          <h3 class="text-lg font-black text-slate-900">選單</h3>
-          <button
-            type="button"
-            @click="menuVisible = false"
-            class="size-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 active:bg-slate-200 transition-colors"
-          >
-            <span class="material-symbols-outlined text-xl">close</span>
-          </button>
-        </div>
-      </template>
-    </van-action-sheet>
 
     <!-- Event Detail Modal -->
     <van-action-sheet v-model:show="eventDetailVisible" title="活動詳情" class="rounded-t-[2.5rem] overflow-hidden">
