@@ -1,10 +1,6 @@
 {
   "name": "wlpef-youth",
   "version": "0.1.0",
-  "engines": {
-    "node": "22.22.0",
-    "pnpm": "10.33.0"
-  },
   "type": "module",
   "private": true,
   "scripts": {
