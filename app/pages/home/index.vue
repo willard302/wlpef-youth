@@ -13,7 +13,6 @@ definePageMeta({
 
 const router = useRouter()
 const { addToast } = useToast()
-const menuVisible = ref(false)
 
 const { userProfile, loadUserData, isLoading: isUserLoading } = useUser()
 const {
@@ -38,6 +37,16 @@ const {
   canDeleteEvent,
   canViewAllEventStatus,
 } = useCalendar()
+
+const { 
+  menuVisible, 
+  openMenu,
+  navigateToEditor
+} = useSideMenu()
+
+const navigateToEditorWithSelectedDate = () => {
+  navigateToEditor(fnsFormat(selectedDate.value, 'yyyy-MM-dd'))
+}
 
 const isEventLoading = ref(true)
 const upcomingEventData = ref<Event | null>(null)
@@ -141,10 +150,6 @@ const loadUpcomingEvent = async () => {
   }
 }
 
-const navigateToEditor = () => {
-  router.push({ path: '/admin/events/editor', query: { date: fnsFormat(selectedDate.value, 'yyyy-MM-dd') } })
-}
-
 const navigateToEditEvent = (eventId: string) => {
   router.push({ path: '/admin/events/editor', query: { id: eventId } })
 }
@@ -226,7 +231,7 @@ onMounted(async () => {
     >
       <template #actions>
         <button
-          @click="menuVisible = true"
+          @click="openMenu"
           class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all"
         >
           <span class="material-symbols-outlined text-2xl">menu</span>
@@ -320,7 +325,7 @@ onMounted(async () => {
           </h4>
           <button
             v-if="isAdmin"
-            @click="navigateToEditor"
+            @click="navigateToEditorWithSelectedDate"
             class="flex items-center gap-1.5 text-[11px] font-bold text-sky-500 bg-sky-50 px-3 py-1.5 rounded-full hover:bg-sky-100 transition-all"
           >
             <span class="material-symbols-outlined text-sm">add_circle</span>
@@ -416,11 +421,28 @@ onMounted(async () => {
     </main>
 
     <!-- Side Menu -->
-    <SideMenu
+    <!-- <SideMenu
       v-model:show="menuVisible"
       :is-admin="isAdmin"
       @navigate-to-editor="navigateToEditor"
-    />
+    /> -->
+    <van-action-sheet
+      v-model:show="menuVisible"
+      class="rounded-t-[2.5rem] overflow-hidden"
+    >
+      <template #default>
+        <div class="px-6 py-5 flex items-center justify-between border-b border-slate-50">
+          <h3 class="text-lg font-black text-slate-900">選單</h3>
+          <button
+            type="button"
+            @click="menuVisible = false"
+            class="size-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 active:bg-slate-200 transition-colors"
+          >
+            <span class="material-symbols-outlined text-xl">close</span>
+          </button>
+        </div>
+      </template>
+    </van-action-sheet>
 
     <!-- Event Detail Modal -->
     <van-action-sheet v-model:show="eventDetailVisible" title="活動詳情" class="rounded-t-[2.5rem] overflow-hidden">

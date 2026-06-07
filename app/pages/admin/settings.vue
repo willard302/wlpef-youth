@@ -14,7 +14,6 @@ const {
   userProfile,
   isUploadingAvatar,
   loadUserData,
-  uploadAvatar,
   handleLogout,
 } = useUser()
 
@@ -24,6 +23,12 @@ const {
   handleFileSelect,
   getAvatarUrl
 } = useProfileAvatarUpload()
+
+const {
+  menuVisible,
+  openMenu,
+  navigateToEditor,
+} = useSideMenu()
 
 // 載入用戶資料
 onMounted(() => {
@@ -46,7 +51,16 @@ const getRoleName = (role?: string) => {
 
 <template>
   <div class="user-center-page">
-    <AppHeaderHero title="管理設定" height-class="h-40" />
+    <AppHeaderHero title="管理設定" height-class="h-40">
+      <template #actions>
+        <button
+          @click="openMenu"
+          class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all"
+        >
+          <span class="material-symbols-outlined text-2xl">menu</span>
+        </button>
+      </template>
+    </AppHeaderHero>
 
     <!-- Main Content -->
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
@@ -127,5 +141,11 @@ const getRoleName = (role?: string) => {
         </div>
       </div>
     </main>
+
+    <SideMenu
+      v-model:show="menuVisible"
+      :is-admin="true"
+      @navigate-to-editor="navigateToEditor"
+    />
   </div>
 </template>
