@@ -54,6 +54,6 @@ export default defineNuxtConfig({
   },
 
   vant: {
-    defaultLocale: 'zh-TW',
+    defaultLocale: 'zh-TW'
   }
 })
