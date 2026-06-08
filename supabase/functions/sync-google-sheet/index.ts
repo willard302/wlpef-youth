@@ -244,6 +244,13 @@ function toRegistrations(
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
     
+    // 💡 重新加入漏掉的 raw_data 收集邏輯
+    const raw_data: Record<string, any> = {}
+    headers.forEach((header, i) => {
+      const key = (header || `column_${i}`).trim()
+      raw_data[key] = row[i] || ""
+    })
+
     // 💡【修正】改為物件動態賦值，如果試算表沒這欄位，就不會出現在 payload 中，避免蓋掉手動設定
     const registration: any = {
       event_id: event.id,
