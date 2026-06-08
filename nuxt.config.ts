@@ -52,4 +52,8 @@ export default defineNuxtConfig({
     },
     types: '~/types/database.types.ts'
   },
+
+  vant: {
+    defaultLocale: 'zh-TW',
+  }
 })
