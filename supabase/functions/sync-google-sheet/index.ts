@@ -244,21 +244,8 @@ function toRegistrations(
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
     
-    // 如果有 demo 欄位，檢查其值是否表示為 true (例如 "TRUE", "yes", "1")
-    let demo_user = false
-    if (demoUserIndex >= 0) {
-      const demoVal = (row[demoUserIndex] || "").trim().toLowerCase()
-      demo_user = demoVal === "true" || demoVal === "yes" || demoVal === "1" || demoVal === "是"
-    }
-
-    // 💡【新功能】將整列資料轉為物件，Key 是表頭名稱，Value 是儲存格內容
-    const raw_data: Record<string, any> = {}
-    headers.forEach((header, i) => {
-      const key = (header || `column_${i}`).trim()
-      raw_data[key] = row[i] || ""
-    })
-
-    return [{
+    // 💡【修正】改為物件動態賦值，如果試算表沒這欄位，就不會出現在 payload 中，避免蓋掉手動設定
+    const registration: any = {
       event_id: event.id,
       matched_user_id: matchedProfile?.id || null,
       email,
@@ -266,9 +253,15 @@ function toRegistrations(
       google_sheet_row_id: `${event.target_id || event.id}:row_${index + 2}`,
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
-      demo_user,
       raw_data,
-    }]
+    }
+
+    if (demoUserIndex >= 0) {
+      const demoVal = (row[demoUserIndex] || "").trim().toLowerCase()
+      registration.demo_user = demoVal === "true" || demoVal === "yes" || demoVal === "1" || demoVal === "是"
+    }
+
+    return [registration] as SheetRegistration[]
   })
 
   return { registrations, skippedCount, duplicateCount }
