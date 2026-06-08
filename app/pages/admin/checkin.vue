@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode'
-import { showConfirmDialog } from 'vant'
 import { eventService } from '@/services/eventService'
 import type { Event } from '@/types'
 
@@ -27,7 +26,7 @@ const loadEvents = async () => {
     const upcoming = await eventService.fetchUpcomingEvents(10)
     
     // 合併並去重
-    const combined = [...ongoing]
+    const combined: Event[] = [...ongoing]
     upcoming.forEach(u => {
       if (!combined.find(c => c.id === u.id)) {
         combined.push(u)
@@ -35,7 +34,7 @@ const loadEvents = async () => {
     })
     
     events.value = combined
-    if (combined.length > 0) {
+    if (combined[0] && combined.length > 0) {
       selectedEventId.value = combined[0].id
     }
   } catch (err: any) {
