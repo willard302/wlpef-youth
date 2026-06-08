@@ -22,34 +22,65 @@ const handleItemClick = (item: TabbarItem, event: Event) => {
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/95 backdrop-blur-md px-4 pb-4 pt-4 z-50 border-t border-sky-50">
-    <div class="flex justify-around items-center">
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/95 backdrop-blur-md p-2 z-50 border-t border-sky-50 h-[64px]">
+    <div class="flex justify-around items-end h-full">
       <NuxtLink
         v-for="(item, index) in items"
         :key="item.key"
         :to="item.path"
         @click="handleItemClick(item, $event)"
-        class="flex flex-col items-center gap-1 transition-colors"
+        class="flex flex-col items-center gap-1 transition-all duration-300 relative"
         :class="[
-          index === activeIndex
-            ? 'text-sky-600'
-            : 'text-slate-300 hover:text-sky-400'
+          item.key === 'qr-code' 
+            ? 'qr-code-tab-item' 
+            : (index === activeIndex ? 'text-sky-600' : 'text-slate-300 hover:text-sky-400')
         ]"
       >
-        <span
-          class="material-symbols-outlined text-2xl"
-          :style="{ fontVariationSettings: item.fill ? `'FILL' 1` : `'FILL' 0` }"
+        <button
+          v-if="item.key === 'qr-code'"
+          class="sphere-btn relative flex items-center justify-center transition-all duration-200 active:scale-95 active:shadow-inner"
+          :style="{ width: '80px', height: '80px' }"
         >
-          {{ item.icon }}
-        </span>
-        <span class="text-[9px] font-bold uppercase tracking-tighter">{{ item.label }}</span>
+          <span class="z-10 font-bold text-white">
+            <slot>報到</slot>
+          </span>
+        </button>
+        <template v-else>
+          <span
+            class="material-symbols-outlined text-2xl"
+            :style="{ fontVariationSettings: item.fill ? `'FILL' 1` : `'FILL' 0` }"
+          >
+            {{ item.icon }}
+          </span>
+          <span class="text-[9px] font-bold uppercase tracking-tighter">{{ item.label }}</span>
+        </template>
       </NuxtLink>
     </div>
   </nav>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
 nav {
   box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+.sphere-btn {
+  background-color: #7DD3FC;
+  
+  /* 核心：使用多層背景疊加光影 */
+  background-image: 
+    radial-gradient(circle at 30% 30%, rgba(21, 171, 225, 0.4) 0%, transparent 40%),
+    radial-gradient(circle at 70% 70%, rgba(76, 174, 235, 0.2) 0%, transparent 60%);
+  
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 10px 15px -3px rgba(0, 0, 0, 0.3), 
+    inset 0 -5px 5px rgba(0, 0, 0, 0.2);
+}
+
+.sphere-btn:active {
+  box-shadow: 
+    0 2px 5px rgba(0, 0, 0, 0.3), 
+    inset 0 2px 5px rgba(0, 0, 0, 0.4);
 }
 </style>
