@@ -41,10 +41,10 @@ body {
 }
 .page-enter-from {
   opacity: 0;
-  transform: translateY(8px);
+  transform: translateX(8px);
 }
 .page-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  transform: translateX(-8px);
 }
 
