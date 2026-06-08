@@ -38,10 +38,11 @@ const handleItemClick = (item: TabbarItem, event: Event) => {
       >
         <button
           v-if="item.key === 'qr-code'"
-          class="sphere-btn relative flex items-center justify-center transition-all duration-200 active:scale-95 active:shadow-inner"
-          :style="{ width: '80px', height: '80px' }"
+          class="sphere-btn relative flex items-center justify-center overflow-hidden transition-all duration-200 active:scale-95"
+          :class="['w-20 h-20']"
         >
-          <span class="z-10 font-bold text-white">
+          <span class="ripple"></span>
+          <span class="z-10 text-white drop-shadow-md">
             <slot>報到</slot>
           </span>
         </button>
@@ -65,22 +66,43 @@ nav {
 }
 .sphere-btn {
   background-color: #7DD3FC;
+  // background-color: currentColor;
   
   /* 核心：使用多層背景疊加光影 */
   background-image: 
-    radial-gradient(circle at 30% 30%, rgba(21, 171, 225, 0.4) 0%, transparent 40%),
-    radial-gradient(circle at 70% 70%, rgba(76, 174, 235, 0.2) 0%, transparent 60%);
+    radial-gradient(circle at 30% 30%, rgba(255,255,255,0.5) 0%, transparent 40%),
+    radial-gradient(circle at 70% 70%, rgba(0,0,0,0.15) 0%, transparent 60%);
   
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   box-shadow: 
-    0 10px 15px -3px rgba(0, 0, 0, 0.3), 
-    inset 0 -5px 5px rgba(0, 0, 0, 0.2);
+    0 10px 15px -3px rgba(125, 211, 252, 0.4), 
+    inset 0 -5px 5px rgba(0, 0, 0, 0.1);
+  
+  position: relative;
+  cursor: pointer;
 }
 
-.sphere-btn:active {
-  box-shadow: 
-    0 2px 5px rgba(0, 0, 0, 0.3), 
-    inset 0 2px 5px rgba(0, 0, 0, 0.4);
+/* 漣漪效果的初始狀態 */
+.ripple {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+}
+
+/* 點擊時觸發動畫 */
+.sphere-btn:active .ripple {
+  animation: ripple-effect 0.6s linear;
+}
+
+@keyframes ripple-effect {
+  0% { width: 0; height: 0; opacity: 0.5; }
+  100% { width: 200%; height: 200%; opacity: 0; }
 }
 </style>
