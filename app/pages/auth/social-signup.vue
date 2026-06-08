@@ -37,25 +37,10 @@ const formFields: SocialSignupField[] = [
   },
   {
     key: 'fullName',
-    label: '全名',
+    label: '姓名',
     icon: 'badge',
     type: 'text',
     placeholder: '輸入您的真實姓名'
-  },
-  {
-    key: 'department',
-    label: '校友會 / 單位',
-    icon: 'account_balance',
-    type: 'text',
-    placeholder: '例如：台北校友會'
-  },
-  {
-    key: 'bio',
-    label: '個人簡介',
-    icon: 'description',
-    type: 'textarea',
-    placeholder: '分享您的背景或習禪心得',
-    rows: 3
   }
 ]
 
