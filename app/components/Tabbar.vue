@@ -9,6 +9,16 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   activeIndex: 0
 })
+const emit = defineEmits<{
+  'qr-click': []
+}>()
+
+const handleItemClick = (item: TabbarItem, event: Event) => {
+  if (item.key === 'qr-code') {
+    event.preventDefault()
+    emit('qr-click')
+  }
+}
 </script>
 
 <template>
@@ -18,6 +28,7 @@ withDefaults(defineProps<Props>(), {
         v-for="(item, index) in items"
         :key="item.key"
         :to="item.path"
+        @click="handleItemClick(item, $event)"
         class="flex flex-col items-center gap-1 transition-colors"
         :class="[
           index === activeIndex

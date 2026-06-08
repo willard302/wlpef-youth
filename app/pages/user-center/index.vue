@@ -30,22 +30,29 @@ const {
   navigateToEditor,
 } = useSideMenu()
 
+const qrPopupVisible = ref(false)
+
 // 載入用戶資料
 onMounted(() => {
   loadUserData()
 })
 
-
-
 // 統計數據
-const menuItems = computed<MenuItem[]>(() => {
+const menuItems = computed(() => {
   return [
-    { icon: 'qr_code_2', label: '我的QR Code', path: '/user-center/qr-code' },
+    { icon: 'qr_code_2', label: '我的QR Code', path: '', action: 'qr-code' },
     { icon: 'history', label: '點數紀錄', path: '/points-history' },
     { icon: 'person_edit', label: '編輯個人資料', path: '/user-center/user-info' },
     { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
   ]
 })
+
+const handleItemClick = (item: any, event: Event) => {
+  if (item.action === 'qr-code') {
+    event.preventDefault()
+    qrPopupVisible.value = true
+  }
+}
 
 const getRoleName = (role?: string) => {
   if (role === 'guest') return '訪客'
@@ -135,6 +142,7 @@ const getRoleName = (role?: string) => {
             v-for="(item, index) in menuItems"
             :key="item.label"
             :to="item.path || '#'"
+            @click="handleItemClick(item, $event)"
             class="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors border-b border-slate-50"
           >
             <div class="flex items-center gap-3">
@@ -162,5 +170,7 @@ const getRoleName = (role?: string) => {
       :is-admin="userProfile?.role === 'admin'"
       @navigate-to-editor="navigateToEditor"
     />
+
+    <QRCode v-model:show="qrPopupVisible" />
   </div>
 </template>

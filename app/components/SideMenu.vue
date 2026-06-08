@@ -82,18 +82,6 @@ const menuItems = computed<MenuItem[]>(() => {
       },
     },
     {
-      id: 'qr-code',
-      label: 'QR Code',
-      icon: 'qr_code',
-      bgClass: 'bg-green-50',
-      textClass: 'text-green-600',
-      hoverClass: 'hover:bg-green-100',
-      visible: true,
-      action: () => {
-        void router.push('/user-center/qr-code')
-      },
-    },
-    {
       id: 'user-center',
       label: '會員中心',
       icon: 'account_circle',

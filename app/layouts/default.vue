@@ -9,6 +9,8 @@ const { toasts, removeToast } = useToast()
 const showTabbar = computed(() => {
   return route.meta.showTabbar !== false
 })
+
+const qrPopupVisible = ref(false)
 </script>
 
 <template>
@@ -32,7 +34,15 @@ const showTabbar = computed(() => {
     </div>
 
     <!-- Tabbar -->
-    <Tabbar v-if="showTabbar" :items="tabbarItems" :active-index="activeIndex" />
+    <Tabbar 
+      v-if="showTabbar" 
+      :items="tabbarItems" 
+      :active-index="activeIndex" 
+      @qr-click="qrPopupVisible = true"
+    />
+
+    <!-- QR Code Popup -->
+    <QRCode v-model:show="qrPopupVisible" />
   </div>
 </template>
 
