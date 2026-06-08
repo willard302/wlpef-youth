@@ -38,7 +38,7 @@ onMounted(() => {
 // 統計數據
 const menuItems = computed<MenuItem[]>(() => {
   return [
-    { icon: 'database', label: '點數交易紀錄', path: '/admin/points-history' },
+    { icon: 'database', label: '點數紀錄', path: '/admin/points-history' },
     { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
   ]
 })

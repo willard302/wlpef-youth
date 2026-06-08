@@ -352,7 +352,7 @@ export const userService = {
   },
 
   /**
-   * 取得點數交易紀錄
+   * 取得點數紀錄
    */
   async fetchPointTransactions(): Promise<PointTransaction[]> {
     try {

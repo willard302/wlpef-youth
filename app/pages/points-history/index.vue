@@ -42,7 +42,7 @@ onMounted(() => {
 
       <div v-else-if="transactions.length === 0" class="flex flex-col items-center py-20 text-slate-400 text-center">
         <span class="material-symbols-outlined text-6xl opacity-20 mb-4">history_toggle_off</span>
-        <p class="font-medium">尚無點數交易紀錄</p>
+        <p class="font-medium">尚無點數紀錄</p>
       </div>
 
       <div v-else class="space-y-3">

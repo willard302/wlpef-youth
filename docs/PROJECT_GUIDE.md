@@ -47,7 +47,7 @@
 - 同步流程會更新 `events.participants`（以 email 去重）
 
 ### 3.4 點數
-- 會員端可看個人點數交易紀錄
+- 會員端可看個人點數紀錄
 - 管理端可查全站點數交易（上限 1000 筆）與明細
 - 交易類型 UI 對照由 `app/config/pointTransactions.ts` 統一管理
 
