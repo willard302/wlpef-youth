@@ -66,6 +66,18 @@ const menuItems = computed<MenuItem[]>(() => {
         void router.push('/admin/points-history')
       },
     },
+    {
+      id: 'checkin-admin',
+      label: '活動簽到',
+      icon: 'qr_code_scanner',
+      bgClass: 'bg-emerald-50',
+      textClass: 'text-emerald-600',
+      hoverClass: 'hover:bg-emerald-100',
+      visible: true,
+      action: () => {
+        void router.push('/admin/checkin')
+      },
+    },
   ]
 
   const memberItems: MenuItem[] = [

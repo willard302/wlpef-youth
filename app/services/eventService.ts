@@ -302,5 +302,66 @@ export const eventService = {
 
     if (error) throw error
     return data
+  },
+
+  /**
+   * 管理員為會員進行簽到
+   * @param eventId 活動 ID
+   * @param memberId 會員 ID (來自 QR Code)
+   */
+  async checkInMember(eventId: string, memberId: string): Promise<void> {
+    const supabase = useSupabaseClient<Database>()
+    const { data: { user: adminUser } } = await supabase.auth.getUser()
+    
+    if (!adminUser) throw new Error('管理員未登入')
+
+    // 1. 取得會員資料
+    const { data: memberProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email')
+      .eq('id', memberId)
+      .maybeSingle()
+
+    if (profileError) throw profileError
+    if (!memberProfile) throw new Error('找不到該會員資料')
+
+    // 2. 檢查是否已經簽到過
+    const { data: existingCheckin } = await supabase
+      .from('checkin_records')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('user_id', memberId)
+      .maybeSingle()
+
+    if (existingCheckin) throw new Error('該會員已經完成簽到')
+
+    // 3. 嘗試找對應的報名紀錄
+    const { data: registration } = await supabase
+      .from('event_registrations')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('matched_user_id', memberId)
+      .maybeSingle()
+
+    // 4. 執行簽到
+    const { error: checkinError } = await supabase
+      .from('checkin_records')
+      .insert({
+        event_id: eventId,
+        user_id: memberId,
+        registration_id: registration?.id || null,
+        email: memberProfile.email || '',
+        checkin_method: 'qr_code',
+        checked_in_by: adminUser.id
+      })
+
+    if (checkinError) throw checkinError
+
+    // 5. 立即觸發點數結算 (選用)
+    try {
+      await supabase.rpc('process_pending_points')
+    } catch (err) {
+      console.warn('Point processing skipped or failed:', err)
+    }
   }
 }

@@ -38,6 +38,7 @@ onMounted(() => {
 // 統計數據
 const menuItems = computed<MenuItem[]>(() => {
   return [
+    { icon: 'qr_code_scanner', label: '活動簽到', path: '/admin/checkin' },
     { icon: 'database', label: '點數紀錄', path: '/admin/points-history' },
     { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
   ]
