@@ -22,7 +22,7 @@ type SheetRegistration = {
   google_sheet_row_id: string
   form_submitted_at: string
   synced_at: string
-  demo_user: boolean
+  demo_user?: boolean
   raw_data?: Record<string, any>
 }
 
@@ -33,12 +33,12 @@ type SyncResult = {
   importedCount: number
   matchedCount: number
   skippedCount: number
+  error?: string
 }
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
 
-// 💡 確保跨網域請求順暢，所有的 Response 都會帶上它
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
@@ -230,29 +230,24 @@ function toRegistrations(
       return []
     }
 
-    // 💡【核心改動】如果這個 Email 在這份試算表前面已經出現過了，直接跳過它！
-    //    這樣可以確保傳給隨後 .upsert() 的陣列中，(event_id, email) 絕對唯一
     if (seenEmails.has(email)) {
       duplicateCount += 1
       return []
     }
 
-    // 記錄這個 Email，表示後面再遇到就要過濾掉
     seenEmails.add(email)
 
     const matchedProfile = profilesByEmail.get(email)
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
     
-    // 💡 重新加入漏掉的 raw_data 收集邏輯
-    const raw_data: Record<string, any> = {}
+    const rawData: Record<string, any> = {}
     headers.forEach((header, i) => {
       const key = (header || `column_${i}`).trim()
-      raw_data[key] = row[i] || ""
+      rawData[key] = row[i] || ""
     })
 
-    // 💡【修正】改為物件動態賦值，如果試算表沒這欄位，就不會出現在 payload 中，避免蓋掉手動設定
-    const registration: any = {
+    const registration: SheetRegistration = {
       event_id: event.id,
       matched_user_id: matchedProfile?.id || null,
       email,
@@ -260,12 +255,13 @@ function toRegistrations(
       google_sheet_row_id: `${event.target_id || event.id}:row_${index + 2}`,
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
-      raw_data,
+      raw_data: rawData,
     }
 
+    // 💡 只有當試算表真的有這欄時，才加入此屬性，避免蓋掉資料庫手動修改的值
     if (demoUserIndex >= 0) {
       const demoVal = (row[demoUserIndex] || "").trim().toLowerCase()
-      registration.demo_user = demoVal === "true" || demoVal === "yes" || demoVal === "1" || demoVal === "是"
+      registration.demo_user = ["true", "yes", "1", "是", "y"].includes(demoVal)
     }
 
     return [registration] as SheetRegistration[]
@@ -280,56 +276,59 @@ async function syncEvent(
   googleToken: string,
   profilesByEmail: Map<string, ProfileRow>,
 ): Promise<SyncResult> {
-  if (!event.google_sheet_id) {
-    throw new Error(`Event ${event.id} is missing google_sheet_id`)
-  }
+  try {
+    if (!event.google_sheet_id) {
+      throw new Error(`Event ${event.id} is missing google_sheet_id`)
+    }
 
-  const rows = await fetchSheetRows(event.google_sheet_id, googleToken)
-  const { registrations, skippedCount } = toRegistrations(event, rows, profilesByEmail)
+    const rows = await fetchSheetRows(event.google_sheet_id, googleToken)
+    const { registrations, skippedCount } = toRegistrations(event, rows, profilesByEmail)
 
-  if (registrations.length > 0) {
-    const { error } = await supabaseAdmin
-      .from("event_registrations")
-      .upsert(registrations, {
-        onConflict: "event_id,email",
-        ignoreDuplicates: false,
-      })
+    if (registrations.length > 0) {
+      const { error } = await supabaseAdmin
+        .from("event_registrations")
+        .upsert(registrations, {
+          onConflict: "event_id,email",
+          ignoreDuplicates: false,
+        })
 
-    if (error) throw new Error(`Failed to upsert registrations for ${event.id}: ${error.message}`)
-  }
+      if (error) throw new Error(`Upsert failed: ${error.message}`)
+    }
 
-  const allEmails = [...new Set(registrations
-    .map((registration) => registration.email)
-    .filter((email): email is string => !!email))]
+    const allEmails = [...new Set(registrations.map(r => r.email).filter(Boolean))]
 
-  if (allEmails.length > 0) {
-    const { data: eventData, error: eventError } = await supabaseAdmin
-      .from("events")
-      .select("participants")
-      .eq("id", event.id)
-      .single()
+    if (allEmails.length > 0) {
+      const { data: eventData, error: eventError } = await supabaseAdmin
+        .from("events")
+        .select("participants")
+        .eq("id", event.id)
+        .single()
 
-    if (eventError) throw new Error(`Failed to load event participants: ${eventError.message}`)
+      if (!eventError) {
+        const currentParticipants = eventData?.participants || []
+        const participants = [...new Set([...currentParticipants, ...allEmails])]
+        await supabaseAdmin.from("events").update({ participants }).eq("id", event.id)
+      }
+    }
 
-    const currentParticipants = eventData?.participants || []
-    // Merge and ensure unique emails
-    const participants = [...new Set([...currentParticipants, ...allEmails])]
-
-    const { error: updateError } = await supabaseAdmin
-      .from("events")
-      .update({ participants })
-      .eq("id", event.id)
-
-    if (updateError) throw new Error(`Failed to update participants: ${updateError.message}`)
-  }
-
-  return {
-    eventId: event.id,
-    sheetId: event.google_sheet_id,
-    targetId: event.target_id,
-    importedCount: registrations.length,
-    matchedCount: allEmails.length,
-    skippedCount,
+    return {
+      eventId: event.id,
+      sheetId: event.google_sheet_id,
+      targetId: event.target_id,
+      importedCount: registrations.length,
+      matchedCount: allEmails.length,
+      skippedCount,
+    }
+  } catch (err: any) {
+    return {
+      eventId: event.id,
+      sheetId: event.google_sheet_id || "",
+      targetId: event.target_id,
+      importedCount: 0,
+      matchedCount: 0,
+      skippedCount: 0,
+      error: err.message,
+    }
   }
 }
 
@@ -354,54 +353,28 @@ async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]>
 }
 
 Deno.serve(async (req) => {
-  // 1. 處理前端 Nuxt 的 CORS 預檢請求 (OPTIONS)
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders })
-  }
+  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
   try {
-    if (req.method !== "POST") {
-      return Response.json(
-        { error: "Method Not Allowed" },
-        { status: 405, headers: corsHeaders },
-      )
-    }
-
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
-    if (!serviceRoleKey) {
-      throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY environment variable")
-    }
+    if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY")
 
     const authHeader = req.headers.get("Authorization") || ""
-    const token = authHeader.replace(/^Bearer\s+/i, "").trim()
-
-    if (token !== serviceRoleKey) {
-      return Response.json(
-        { error: "Unauthorized" },
-        { status: 401, headers: corsHeaders },
-      )
+    if (authHeader.replace(/^Bearer\s+/i, "").trim() !== serviceRoleKey) {
+      return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders })
     }
 
-    // 2. 自動抓取內建的環境變數，直接建立純淨的高權限管理端客戶端
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       serviceRoleKey,
-      {
-        auth: {
-          persistSession: false,
-          autoRefreshToken: false,
-        },
-      }
+      { auth: { persistSession: false, autoRefreshToken: false } }
     )
 
     const body = await req.json().catch(() => ({}))
     const events = await resolveEvents(supabaseAdmin, body)
 
     if (events.length === 0) {
-      return Response.json(
-        { message: "No events with google_sheet_id to sync", results: [] }, 
-        { status: 200, headers: corsHeaders }
-      )
+      return Response.json({ message: "No events to sync", results: [] }, { headers: corsHeaders })
     }
 
     const [googleToken, profilesByEmail] = await Promise.all([
@@ -414,36 +387,30 @@ Deno.serve(async (req) => {
       results.push(await syncEvent(supabaseAdmin, event, googleToken, profilesByEmail))
     }
 
+    // 觸發點數結算
     const { error: pointsError } = await supabaseAdmin.rpc("process_pending_points")
-    if (pointsError) throw new Error(`Failed to process points: ${pointsError.message}`)
+    if (pointsError) {
+      console.error("RPC Error:", pointsError)
+    }
 
-    // 💡【新功能】同步完成後，觸發邀請信件發送 (非同步，不等待結果)
-    const functionUrl = Deno.env.get("SUPABASE_URL") + "/functions/v1/send-invitations"
-    fetch(functionUrl, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${serviceRoleKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ source: "sync-google-sheet" })
-    }).catch(err => console.error("Failed to trigger send-invitations:", err))
+    // 觸發邀請信件發送 (非同步，不等待)
+    supabaseAdmin.functions.invoke("send-invitations", {
+      body: { source: "sync-google-sheet", timestamp: new Date().toISOString() }
+    }).catch(err => console.error("Invoke Error:", err))
+
+    const hasErrors = results.some(r => !!r.error)
 
     return Response.json({
-      message: "Google Sheet data synced successfully",
+      message: hasErrors ? "Sync completed with some errors" : "Google Sheet data synced successfully",
       eventCount: results.length,
-      importedCount: results.reduce((sum, result) => sum + result.importedCount, 0),
-      matchedCount: results.reduce((sum, result) => sum + result.matchedCount, 0),
-      skippedCount: results.reduce((sum, result) => sum + result.skippedCount, 0),
+      success: !hasErrors,
       results,
     }, { headers: corsHeaders })
 
   } catch (error: any) {
     console.error("sync-google-sheet error:", error)
     return Response.json(
-      { 
-        error: "Internal Server Error", 
-        message: error?.message || "未知錯誤" 
-      },
+      { error: "Internal Server Error", message: error?.message || "未知錯誤" },
       { status: 500, headers: corsHeaders },
     )
   }
