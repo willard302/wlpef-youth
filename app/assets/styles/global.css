@@ -34,14 +34,6 @@ body {
   font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Constrain Vant overlays (action sheet, popup, etc.) to match the app max-width */
-.van-action-sheet,
-.van-popup--bottom {
-  max-width: 430px !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
-}
-
 /* Page Transitions */
 .page-enter-active,
 .page-leave-active {

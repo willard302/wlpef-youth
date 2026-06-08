@@ -131,35 +131,22 @@ const handleItemClick = (action: MenuAction) => {
 </script>
 
 <template>
-  <van-action-sheet v-model:show="menuVisible" class="rounded-t-[2.5rem] overflow-hidden">
-    <template #default>
-      <div class="px-6 py-5 flex items-center justify-between border-b border-slate-50">
-        <h3 class="text-lg font-black text-slate-900">選單</h3>
-        <button
-          type="button"
-          @click="menuVisible = false"
-          class="size-8 flex items-center justify-center rounded-full bg-slate-100 text-slate-400 active:bg-slate-200 transition-colors"
-        >
-          <span class="material-symbols-outlined text-xl">close</span>
-        </button>
-      </div>
-
-      <div class="px-6 pb-12 pt-6 space-y-3 menu-content">
-        <button
-          v-for="item in menuItems"
-          :key="item.id"
-          type="button"
-          class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all"
-          :class="[item.bgClass, item.textClass, item.hoverClass]"
-          @click="handleItemClick(item.action)"
-        >
-          <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-            <span class="material-symbols-outlined">{{ item.icon }}</span>
-          </div>
-          <span>{{ item.label }}</span>
-        </button>
-      </div>
-    </template>
+  <van-action-sheet v-model:show="menuVisible" title="選單">
+    <div class="px-6 pb-12 pt-6 space-y-3 menu-content">
+      <button
+        v-for="item in menuItems"
+        :key="item.id"
+        type="button"
+        class="w-full flex items-center gap-4 p-4 rounded-2xl font-bold transition-all"
+        :class="[item.bgClass, item.textClass, item.hoverClass]"
+        @click="handleItemClick(item.action)"
+      >
+        <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
+          <span class="material-symbols-outlined">{{ item.icon }}</span>
+        </div>
+        <span>{{ item.label }}</span>
+      </button>
+    </div>
   </van-action-sheet>
 </template>
 
