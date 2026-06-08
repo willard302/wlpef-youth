@@ -43,7 +43,7 @@ const handleItemClick = (item: TabbarItem, event: Event) => {
         >
           <span class="ripple"></span>
           <span class="z-10 text-white drop-shadow-md">
-            <slot>報到</slot>
+            <slot>點我</slot>
           </span>
         </button>
         <template v-else>
