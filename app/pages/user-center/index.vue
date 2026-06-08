@@ -12,6 +12,7 @@ definePageMeta({
 // 使用 useUser composable
 const {
   userProfile,
+  isLoading: isUserLoading,
   isUploadingAvatar,
   loadUserData,
   handleLogout,
@@ -34,7 +35,7 @@ const qrPopupVisible = ref(false)
 
 // 載入用戶資料
 onMounted(() => {
-  loadUserData()
+  loadUserData(true)
 })
 
 // 統計數據
@@ -129,7 +130,14 @@ const getRoleName = (role?: string) => {
           </div>
           <div class="text-right">
             <p class="text-xs text-slate-500 uppercase tracking-wider">點數</p>
-            <p class="font-semibold text-slate-800">{{ userProfile?.points ?? '載入中...' }}</p>
+            <p class="font-semibold text-slate-800 flex items-center justify-end min-h-[24px]">
+              <span
+                v-if="isUserLoading"
+                class="inline-block w-4 h-4 border-2 border-slate-300 border-t-sky-500 rounded-full animate-spin"
+                aria-label="點數載入中"
+              ></span>
+              <span v-else>{{ userProfile?.points ?? 0 }}</span>
+            </p>
           </div>
         </div>
       </div>
