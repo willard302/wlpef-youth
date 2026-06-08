@@ -6,7 +6,10 @@ export const getTabbarItems = (role?: Role): Omit<TabbarItem, 'fill'>[] => {
   ]
 
   if (role === 'admin') {
-    items.push({ key: 'settings', label: '管理設定', icon: 'settings', path: '/admin/settings' })
+    items.push(
+      { key: 'scan', label: '簽到掃描', icon: 'qr_code_scanner', path: '/admin/checkin' },
+      { key: 'settings', label: '管理設定', icon: 'settings', path: '/admin/settings' }
+    )
   } else {
     items.push(
       { key: 'qr-code', label: 'QR Code', icon: 'qr_code_2', path: '' },

@@ -9,6 +9,7 @@ interface Props {
 withDefaults(defineProps<Props>(), {
   activeIndex: 0
 })
+
 const emit = defineEmits<{
   'qr-click': []
 }>()
@@ -22,7 +23,7 @@ const handleItemClick = (item: TabbarItem, event: Event) => {
 </script>
 
 <template>
-  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/95 backdrop-blur-md p-2 z-50 border-t border-sky-50 h-[64px]">
+  <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] bg-white/95 backdrop-blur-md px-4 pb-4 pt-4 z-50 border-t border-sky-50 h-[84px]">
     <div class="flex justify-around items-end h-full">
       <NuxtLink
         v-for="(item, index) in items"
@@ -31,19 +32,19 @@ const handleItemClick = (item: TabbarItem, event: Event) => {
         @click="handleItemClick(item, $event)"
         class="flex flex-col items-center gap-1 transition-all duration-300 relative"
         :class="[
-          item.key === 'qr-code' 
+          (item.key === 'qr-code' || item.key === 'scan') 
             ? 'qr-code-tab-item' 
             : (index === activeIndex ? 'text-sky-600' : 'text-slate-300 hover:text-sky-400')
         ]"
       >
         <button
-          v-if="item.key === 'qr-code'"
+          v-if="['qr-code', 'scan'].includes(item.key)"
           class="sphere-btn relative flex items-center justify-center overflow-hidden transition-all duration-200 active:scale-95"
           :class="['w-20 h-20']"
         >
           <span class="ripple"></span>
           <span class="z-10 text-white drop-shadow-md">
-            <slot>點我</slot>
+            <slot>Scan</slot>
           </span>
         </button>
         <template v-else>
