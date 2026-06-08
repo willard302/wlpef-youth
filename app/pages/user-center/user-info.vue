@@ -142,18 +142,6 @@ onMounted(async () => {
 
       <!-- Form Section -->
       <div class="bg-white/60 backdrop-blur-sm p-6 rounded-3xl shadow-sm space-y-5 border border-white">
-        <!-- Error Message -->
-        <div v-if="error" class="p-3 bg-red-100 text-red-700 rounded-xl text-sm border border-red-200 flex items-center gap-2">
-          <span class="material-symbols-outlined text-base">error</span>
-          {{ error }}
-        </div>
-
-        <!-- Success Message -->
-        <div v-if="success" class="p-3 bg-green-100 text-green-700 rounded-xl text-sm border border-green-200 flex items-center gap-2">
-          <span class="material-symbols-outlined text-base">check_circle</span>
-          個人資料已更新
-        </div>
-
         <!-- 使用 v-for 渲染所有欄位 (包括 Select 與 Textarea) -->
         <FormField
           v-for="field in formFields"
