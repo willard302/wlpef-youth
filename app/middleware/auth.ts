@@ -45,6 +45,17 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
     const hasCachedProfile = cachedUserProfile.value?.id === user.id
     if (!hasCachedProfile) {
+      // 檢查 profiles 是否已有資料 (比對 email)
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', user.email)
+        .maybeSingle()
+
+      if (!existingProfile) {
+        return navigateTo('/auth/social-signup')
+      }
+
       try {
         await userService.ensureProfileExists(supabase)
       } catch (error) {

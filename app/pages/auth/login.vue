@@ -52,12 +52,8 @@ const handleLogin = async () => {
     
     if (error) throw error
 
-    try {
-      await userService.ensureProfileExists(supabase)
-    } catch {
-      await supabase.auth.signOut()
-      throw new Error('首次登入初始化失敗，請聯絡管理員確認 profiles 權限設定')
-    }
+    // Removed explicit ensureProfileExists call; the auth middleware will now 
+    // handle the profile check and redirect to social-signup if needed.
     
     router.push('/home')
   } catch (error: any) {

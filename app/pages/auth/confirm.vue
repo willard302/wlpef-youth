@@ -94,7 +94,8 @@ onMounted(async () => {
       console.warn('Auto merge skipped:', mergeError.message)
     }
 
-    await userService.ensureProfileExists(supabase)
+    // Removed explicit ensureProfileExists call; the auth middleware will now 
+    // handle the profile check and redirect to social-signup if needed.
 
     redirectWithSuccess(
       mergeData?.merged
