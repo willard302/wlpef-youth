@@ -42,6 +42,8 @@ Deno.serve(async (req) => {
       .eq("email", email)
       .maybeSingle()
 
+    if (profileError) throw Error(`Error querying profiles: ${profileError.message}`)
+
     let user = null
 
     if (profile) {
