@@ -22,6 +22,7 @@ type SheetRegistration = {
   google_sheet_row_id: string
   form_submitted_at: string
   synced_at: string
+  demo_user: boolean
   raw_data?: Record<string, any>
 }
 
@@ -50,6 +51,7 @@ const HEADER_ALIASES = {
   timestamp: ["timestamp", "time", "submittedat", "submittedtime", "時間戳記", "提交時間", "報名時間"],
   email: ["email", "mail", "e-mail", "電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
   name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"],
+  demo_user: ["demouser", "demo", "測試帳號", "測試用戶", "演示用戶"],
 }
 
 const normalizeEmail = (value?: string | null) => (value || "").trim().toLowerCase()
@@ -214,6 +216,7 @@ function toRegistrations(
   const timestampIndex = findHeaderIndex(headers, HEADER_ALIASES.timestamp, 0)
   const emailIndex = findHeaderIndex(headers, HEADER_ALIASES.email, 1)
   const nameIndex = findHeaderIndex(headers, HEADER_ALIASES.name, 2)
+  const demoUserIndex = findHeaderIndex(headers, HEADER_ALIASES.demo_user, -1)
   const syncedAt = new Date().toISOString()
   let skippedCount = 0
   let duplicateCount = 0
@@ -240,6 +243,13 @@ function toRegistrations(
     const matchedProfile = profilesByEmail.get(email)
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
+    
+    // 如果有 demo 欄位，檢查其值是否表示為 true (例如 "TRUE", "yes", "1")
+    let demo_user = false
+    if (demoUserIndex >= 0) {
+      const demoVal = (row[demoUserIndex] || "").trim().toLowerCase()
+      demo_user = demoVal === "true" || demoVal === "yes" || demoVal === "1" || demoVal === "是"
+    }
 
     // 💡【新功能】將整列資料轉為物件，Key 是表頭名稱，Value 是儲存格內容
     const raw_data: Record<string, any> = {}
@@ -256,6 +266,7 @@ function toRegistrations(
       google_sheet_row_id: `${event.target_id || event.id}:row_${index + 2}`,
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
+      demo_user,
       raw_data,
     }]
   })
@@ -405,6 +416,17 @@ Deno.serve(async (req) => {
 
     const { error: pointsError } = await supabaseAdmin.rpc("process_pending_points")
     if (pointsError) throw new Error(`Failed to process points: ${pointsError.message}`)
+
+    // 💡【新功能】同步完成後，觸發邀請信件發送 (非同步，不等待結果)
+    const functionUrl = Deno.env.get("SUPABASE_URL") + "/functions/v1/send-invitations"
+    fetch(functionUrl, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${serviceRoleKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ source: "sync-google-sheet" })
+    }).catch(err => console.error("Failed to trigger send-invitations:", err))
 
     return Response.json({
       message: "Google Sheet data synced successfully",
