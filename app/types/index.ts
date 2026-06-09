@@ -32,14 +32,6 @@ export interface LoginFormData {
   password: string
 }
 
-export interface RegisterFormData {
-  email: string
-  fullName: string
-  department: string
-  password: string
-  confirmPassword: string
-}
-
 export interface GoogleSignupFormData {
   fullName: string
   points: number

@@ -14,16 +14,6 @@ const loading = ref(true)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const isPasswordRecoveryCookie = useCookie('is_password_recovery')
-
-const resolveAuthMode = () => {
-  const hashParams = new URLSearchParams(route.hash.substring(1))
-  const queryType = route.query.type as string | undefined
-  const hashType = hashParams.get('type') || undefined
-
-  return queryType || hashType || ''
-}
-
 const redirectWithSuccess = (message: string, path: '/home') => {
   successMessage.value = message
   loading.value = false
@@ -42,12 +32,17 @@ onMounted(async () => {
   const hash = route.hash
   const error = route.query.error as string
   const errorDescription = route.query.error_description as string
-  const authMode = resolveAuthMode()
 
-  // If we detect recovery mode, redirect to the dedicated page
-  if (authMode === 'recovery') {
-    isPasswordRecoveryCookie.value = 'true'
-    router.push('/auth/reset-password')
+  const hashParams = new URLSearchParams(hash.substring(1))
+  const queryType = route.query.type as string | undefined
+  const hashType = hashParams.get('type') || undefined
+
+  if (queryType === 'recovery' || hashType === 'recovery') {
+    errorMessage.value = '重設密碼功能已停用，請改用 Google 登入。'
+    loading.value = false
+    setTimeout(() => {
+      router.push('/auth/login')
+    }, 2000)
     return
   }
 
@@ -62,7 +57,6 @@ onMounted(async () => {
   }
 
   // Also check for error parameters in the hash (Supabase sometimes puts them there)
-  const hashParams = new URLSearchParams(hash.substring(1))
   const oauthError = hashParams.get('error_description')
   if (oauthError) {
     errorMessage.value = decodeURIComponent(oauthError)

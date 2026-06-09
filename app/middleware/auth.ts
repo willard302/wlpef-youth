@@ -3,17 +3,12 @@ import type { Database } from '@/types/database.types'
 import { userService } from '@/services/userService'
 
 export default defineNuxtRouteMiddleware(async (to) => {
+  if (to.path === '/auth/register') {
+    return navigateTo('/auth/login', { replace: true })
+  }
+
   const supabase = useSupabaseClient<Database>()
   const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
-
-  // Check if user is in password recovery mode
-  const isPasswordRecovery = useCookie('is_password_recovery')
-  if (isPasswordRecovery.value === 'true') {
-    if (to.path !== '/auth/reset-password') {
-      return navigateTo('/auth/reset-password')
-    }
-    return
-  }
 
   const { data: { user }, error: userError } = await supabase.auth.getUser()
   if (userError) {
@@ -27,7 +22,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  if (to.path === '/auth/login' || to.path === '/auth/register') {
+  if (to.path === '/auth/login') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -40,9 +35,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const excludedPaths = [
     '/auth/login', 
-    '/auth/register', 
     '/auth/confirm', 
-    '/auth/reset-password', 
     '/auth/social-signup'
   ]
   if (!excludedPaths.includes(to.path)) {
