@@ -146,32 +146,30 @@ const getRoleName = (role?: string) => {
           @change="handleFileSelect"
         />
 
-        <div class="mb-4">
-          <h2 class="text-2xl font-bold text-slate-900">
+        <div class="mb-6">
+          <h2 class="text-3xl font-black text-slate-900 tracking-tight">
             {{ userProfile?.name ?? '載入中...' }}
           </h2>
-          <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
-            <span class="text-sm font-semibold px-3 py-1 rounded-full border bg-primary/10 text-primary border-primary/20">
+          <div class="flex items-center justify-center gap-2 mt-2">
+            <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-widest">
               {{ getRoleName(userProfile?.role) }}
             </span>
           </div>
         </div>
 
-        <div class="w-full grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-          <div class="text-left">
-            <p class="text-xs text-slate-500 uppercase tracking-wider">校友會</p>
-            <p class="font-semibold text-slate-800">{{ userProfile?.department ?? '載入中...' }}</p>
+        <!-- Points Wallet Card -->
+        <div class="w-full bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
+          <div class="flex items-center gap-3">
+            <div class="size-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
+              <span class="material-symbols-outlined font-variation-settings-fill-1">database</span>
+            </div>
+            <div class="text-left">
+              <p class="font-black text-slate-800 leading-none mt-0.5">累積點數</p>
+            </div>
           </div>
           <div class="text-right">
-            <p class="text-xs text-slate-500 uppercase tracking-wider">點數</p>
-            <p class="font-semibold text-slate-800 flex items-center justify-end min-h-[24px]">
-              <span
-                v-if="isUserLoading"
-                class="inline-block w-4 h-4 border-2 border-slate-300 border-t-sky-500 rounded-full animate-spin"
-                aria-label="點數載入中"
-              ></span>
-              <span v-else>{{ userProfile?.points ?? 0 }}</span>
-            </p>
+            <p v-if="isUserLoading" class="size-5 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></p>
+            <p v-else class="text-xl font-black text-amber-600 tracking-tighter">{{ userProfile?.points ?? 0 }}</p>
           </div>
         </div>
       </div>
@@ -228,3 +226,9 @@ const getRoleName = (role?: string) => {
     <QRCode v-model:show="qrPopupVisible" />
   </div>
 </template>
+
+<style scoped>
+.font-variation-settings-fill-1 {
+  font-variation-settings: 'FILL' 1;
+}
+</style>
