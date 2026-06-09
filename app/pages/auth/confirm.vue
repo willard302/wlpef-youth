@@ -14,7 +14,17 @@ const loading = ref(true)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const redirectWithSuccess = (message: string, path: '/home') => {
+const resolveDestination = async (userId: string): Promise<'/admin' | '/home'> => {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
+
+  return profile?.role === 'admin' ? '/admin' : '/home'
+}
+
+const redirectWithSuccess = (message: string, path: '/admin' | '/home') => {
   successMessage.value = message
   loading.value = false
   setTimeout(() => {
@@ -91,18 +101,26 @@ onMounted(async () => {
     // Removed explicit ensureProfileExists call; the auth middleware will now 
     // handle the profile check and redirect to social-signup if needed.
 
+    const destination = await resolveDestination(user.id)
+
     redirectWithSuccess(
       mergeData?.merged
-        ? '帳號已整合完成！即將跳轉首頁...'
-        : '驗證成功！即將跳轉首頁...',
-      '/home'
+        ? '帳號已整合完成！即將跳轉中...'
+        : '驗證成功！即將跳轉中...',
+      destination
     )
   } catch (err: any) {
     console.error('Confirmation error:', err)
     // If there's an error but we're already logged in, just redirect to home
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
-      router.push('/home')
+      const { data: { user: sessionUser } } = await supabase.auth.getUser()
+      if (sessionUser?.id) {
+        const destination = await resolveDestination(sessionUser.id)
+        router.push(destination)
+      } else {
+        router.push('/home')
+      }
     } else {
       errorMessage.value = err.message || '電子郵件確認時發生錯誤'
       loading.value = false
