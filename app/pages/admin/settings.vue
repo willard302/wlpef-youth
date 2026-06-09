@@ -18,6 +18,7 @@ const {
 } = useUser()
 
 const {
+  fileInput,
   handleAvatarClick,
   handleFileSelect,
   getAvatarUrl
