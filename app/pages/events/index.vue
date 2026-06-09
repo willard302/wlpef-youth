@@ -487,8 +487,4 @@ onMounted(async () => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
 }
-
-.van-action-sheet {
-  max-height: 80%;
-}
 </style>

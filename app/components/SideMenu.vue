@@ -176,10 +176,6 @@ const handleItemClick = (action: MenuAction) => {
 </template>
 
 <style scoped>
-.van-action-sheet {
-  max-height: 80%;
-}
-
 .menu-content {
   /* Handle iPhone safe area (home indicator) */
   padding-bottom: calc(3rem + env(safe-area-inset-bottom));
