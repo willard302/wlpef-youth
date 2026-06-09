@@ -14,7 +14,7 @@ definePageMeta({
 const router = useRouter()
 const { addToast } = useToast()
 
-const { userProfile, loadUserData, isLoading: isUserLoading } = useUser()
+const { userProfile, isLoading: isUserLoading } = useUser()
 const {
   selectedDate,
   monthYear,
@@ -38,15 +38,7 @@ const {
   canViewAllEventStatus,
 } = useCalendar()
 
-const { 
-  menuVisible, 
-  openMenu,
-  navigateToEditor
-} = useSideMenu()
-
-const navigateToEditorWithSelectedDate = () => {
-  navigateToEditor(fnsFormat(selectedDate.value, 'yyyy-MM-dd'))
-}
+const { openMenu } = useSideMenu()
 
 const isEventLoading = ref(true)
 const upcomingEventData = ref<Event | null>(null)
@@ -322,14 +314,6 @@ onMounted(async () => {
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">
             {{ format(selectedDate, 'M/d') }} 活動
           </h4>
-          <button
-            v-if="isAdmin"
-            @click="navigateToEditorWithSelectedDate"
-            class="flex items-center gap-1.5 text-[11px] font-bold text-sky-500 bg-sky-50 px-3 py-1.5 rounded-full hover:bg-sky-100 transition-all"
-          >
-            <span class="material-symbols-outlined text-sm">add_circle</span>
-            新增活動
-          </button>
         </div>
 
         <div v-if="isCalendarLoading || isLoading" class="flex flex-col items-center py-12 text-slate-400">
@@ -418,13 +402,6 @@ onMounted(async () => {
         </div>
       </section>
     </main>
-
-    <!-- Side Menu -->
-    <SideMenu
-      v-model:show="menuVisible"
-      :is-admin="isAdmin"
-      @navigate-to-editor="navigateToEditor"
-    />
 
     <!-- Event Detail Modal -->
     <van-action-sheet v-model:show="eventDetailVisible" title="活動詳情" class="rounded-t-[2.5rem] overflow-hidden">

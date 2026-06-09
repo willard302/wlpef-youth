@@ -26,11 +26,7 @@ const {
   getAvatarUrl
 } = useProfileAvatarUpload()
 
-const {
-  menuVisible,
-  openMenu,
-  navigateToEditor,
-} = useSideMenu()
+const { openMenu } = useSideMenu()
 
 const qrPopupVisible = ref(false)
 
@@ -216,12 +212,6 @@ const getRoleName = (role?: string) => {
         </div>
       </div>
     </main>
-
-    <SideMenu
-      v-model:show="menuVisible"
-      :is-admin="userProfile?.role === 'admin'"
-      @navigate-to-editor="navigateToEditor"
-    />
 
     <QRCode v-model:show="qrPopupVisible" />
   </div>

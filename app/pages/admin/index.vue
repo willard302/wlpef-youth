@@ -10,7 +10,6 @@ definePageMeta({
   tabbarKey: 'home'
 })
 
-const { userProfile } = useUser()
 const { openMenu } = useSideMenu()
 const { addToast } = useToast()
 

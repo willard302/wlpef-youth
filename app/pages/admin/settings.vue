@@ -24,11 +24,7 @@ const {
   getAvatarUrl
 } = useProfileAvatarUpload()
 
-const {
-  menuVisible,
-  openMenu,
-  navigateToEditor,
-} = useSideMenu()
+const { openMenu } = useSideMenu()
 
 // 載入用戶資料
 onMounted(() => {
@@ -143,11 +139,5 @@ const getRoleName = (role?: string) => {
         </div>
       </div>
     </main>
-
-    <SideMenu
-      v-model:show="menuVisible"
-      :is-admin="true"
-      @navigate-to-editor="navigateToEditor"
-    />
   </div>
 </template>

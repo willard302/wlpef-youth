@@ -5,6 +5,9 @@ import { useToast } from '@/composables/useToast'
 const route = useRoute()
 const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()
+const { menuVisible } = useSideMenu()
+const { isAdmin } = useCalendar()
+
 
 const showTabbar = computed(() => {
   return route.meta.showTabbar !== false
@@ -32,6 +35,11 @@ const qrPopupVisible = ref(false)
         @close="removeToast(toast.id)"
       />
     </div>
+
+    <SideMenu
+      v-model:show="menuVisible"
+      :is-admin="false"
+    />
 
     <!-- Tabbar -->
     <Tabbar 
