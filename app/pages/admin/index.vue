@@ -6,7 +6,7 @@ import type { Event } from '@/types'
 definePageMeta({
   layout: 'admin',
   middleware: ['auth', 'admin'],
-  showTabbar: true,
+  showTabbar: false,
   tabbarKey: 'home'
 })
 

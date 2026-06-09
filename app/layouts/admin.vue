@@ -1,13 +1,9 @@
 <script setup lang="ts">
-import { useTabbarConfig } from '@/composables/useTabbarConfig'
 import { useToast } from '@/composables/useToast'
 
-const route = useRoute()
-const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()
 const { menuVisible } = useSideMenu()
 
-const showTabbar = computed(() => route.meta.showTabbar !== false)
 </script>
 
 <template>
@@ -33,9 +29,6 @@ const showTabbar = computed(() => route.meta.showTabbar !== false)
       v-model:show="menuVisible"
       :is-admin="true"
     />
-
-    <Tabbar v-if="showTabbar" :items="tabbarItems" :active-index="activeIndex" />
-
   </div>
 </template>
 

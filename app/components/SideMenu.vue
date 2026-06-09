@@ -69,7 +69,7 @@ const menuItems = computed<MenuItem[]>(() => {
     },
     {
       id: 'scanner-permissions',
-      label: '掃描權限管理',
+      label: '權限管理',
       icon: 'admin_panel_settings',
       bgClass: 'bg-cyan-50',
       textClass: 'text-cyan-700',
@@ -79,6 +79,18 @@ const menuItems = computed<MenuItem[]>(() => {
         void router.push('/admin/scanner-permissions')
       },
     },
+    {
+      id: 'change-password',
+      label: '修改密碼',
+      icon: 'lock',
+      bgClass: 'bg-yellow-50',
+      textClass: 'text-yellow-600',
+      hoverClass: 'hover:bg-yellow-100',
+      visible: true,
+      action: () => {
+        void router.push('/change-password')
+      },
+    }
   ]
 
   const memberItems: MenuItem[] = [
