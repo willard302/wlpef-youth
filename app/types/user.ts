@@ -19,27 +19,6 @@ export interface UserProfile {
   bio?: string
 }
 
-export interface UserInfoFormData {
-  email: string
-  name: string
-  department: string
-  phoneNumber: string
-  gender: string
-  bio: string
-}
-
-export type UserInfoFormDataKey = keyof UserInfoFormData
-
-export interface FormFieldDefinition {
-  key: UserInfoFormDataKey
-  label: string
-  icon: string
-  placeholder: string
-  type: string
-  options?: { label: string; value: string }[]
-  rows?: number
-}
-
 export interface PointTransaction {
   id: string
   userId: string

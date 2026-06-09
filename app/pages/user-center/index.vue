@@ -43,7 +43,6 @@ const menuItems = computed(() => {
   return [
     { icon: 'qr_code_2', label: '我的QR Code', path: '', action: 'qr-code' },
     { icon: 'history', label: '點數紀錄', path: '/points-history' },
-    { icon: 'person_edit', label: '編輯個人資料', path: '/user-center/user-info' },
     { icon: 'lock_reset', label: '修改密碼', path: '/user-center/change-password' }
   ]
 })
