@@ -140,6 +140,24 @@ export function useUser() {
   }
 
   /**
+   * 重置帳號
+   */
+  const handleResetAccount = async () => {
+    try {
+      isLoading.value = true
+      await userService.resetUserAccount()
+      clearUserData()
+      router.push('/auth/login')
+    } catch (err: any) {
+      console.error('Reset account error:', err)
+      error.value = err.message || '重置帳號失敗'
+      throw err
+    } finally {
+      isLoading.value = false
+    }
+  }
+
+  /**
    * 修改密碼
    */
   const changePassword = async (
@@ -234,6 +252,7 @@ export function useUser() {
     updateUserProfile,
     changePassword,
     completeSocialSignup,
-    handleLogout
+    handleLogout,
+    handleResetAccount
   }
 }

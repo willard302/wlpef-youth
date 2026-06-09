@@ -14,7 +14,10 @@ const {
   isUploadingAvatar,
   loadUserData,
   handleLogout,
+  handleResetAccount
 } = useUser()
+
+const { addToast } = useToast()
 
 const {
   fileInput,
@@ -44,6 +47,27 @@ const menuItems = computed(() => {
     { icon: 'lock_reset', label: '修改密碼', path: '/home/change-password' }
   ]
 })
+
+const onResetAccount = async () => {
+  try {
+    await showDialog({
+      title: '重置帳號',
+      message: '確定要重置帳號嗎？這將會刪除您的個人資料、點數紀錄，並將您的報名狀態重置為測試帳號模式。此操作無法復原。',
+      showCancelButton: true,
+      confirmButtonText: '確定重置',
+      confirmButtonColor: '#ef4444',
+      cancelButtonText: '取消'
+    })
+    
+    await handleResetAccount()
+    addToast('帳號已成功重置', 'success')
+  } catch (err) {
+    // User cancelled or error occurred
+    if (err !== 'cancel' && err) {
+      addToast('重置帳號失敗，請稍後再試', 'error')
+    }
+  }
+}
 
 const handleItemClick = (item: any, event: Event) => {
   if (item.action === 'qr-code') {
@@ -159,14 +183,26 @@ const getRoleName = (role?: string) => {
             </div>
             <span class="material-symbols-outlined text-slate-300">chevron_right</span>
           </NuxtLink>
+          
           <!-- 登出按鈕：呼叫 handleLogout 正確清除 session -->
           <button
             @click="handleLogout"
-            class="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors"
+            class="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors border-b border-slate-50"
           >
             <div class="flex items-center gap-3 text-red-500">
               <span class="material-symbols-outlined">logout</span>
-              <span class="font-bold">登出</span>
+              <span class="font-bold">登出帳號</span>
+            </div>
+          </button>
+
+          <!-- 重置帳號按鈕 -->
+          <button
+            @click="onResetAccount"
+            class="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors"
+          >
+            <div class="flex items-center gap-3 text-red-600">
+              <span class="material-symbols-outlined">delete_forever</span>
+              <span class="font-bold">重置帳號資料(測試用)</span>
             </div>
           </button>
         </div>

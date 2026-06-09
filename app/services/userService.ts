@@ -423,5 +423,23 @@ export const userService = {
       console.error('Error fetching all point transactions:', error)
       throw error
     }
+  },
+
+  /**
+   * 重置使用者帳號 (透過 Edge Function)
+   */
+  async resetUserAccount(): Promise<void> {
+    try {
+      const supabase = useSupabaseClient()
+      const { data, error } = await supabase.functions.invoke('reset-user-account', {
+        method: 'POST'
+      })
+
+      if (error) throw error
+      if (!data?.success) throw new Error(data?.error || '重置帳號失敗')
+    } catch (error: any) {
+      console.error('Error resetting user account:', error)
+      throw error
+    }
   }
 }
