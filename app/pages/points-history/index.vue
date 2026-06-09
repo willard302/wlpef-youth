@@ -8,7 +8,7 @@ definePageMeta({
   layout: 'default',
   middleware: ['auth'],
   showTabbar: true,
-  tabbarKey: 'user-center',
+  tabbarKey: 'events',
 })
 
 const transactions = ref<PointTransaction[]>([])

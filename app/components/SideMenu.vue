@@ -82,6 +82,30 @@ const menuItems = computed<MenuItem[]>(() => {
 
   const memberItems: MenuItem[] = [
     {
+      id: 'home',
+      label: '首頁',
+      icon: 'home',
+      bgClass: 'bg-slate-50',
+      textClass: 'text-slate-600',
+      hoverClass: 'hover:bg-slate-100',
+      visible: true,
+      action: () => {
+        void router.push('/home')
+      },
+    },
+    {
+      id: 'events',
+      label: '活動中心',
+      icon: 'event',
+      bgClass: 'bg-sky-50',
+      textClass: 'text-sky-600',
+      hoverClass: 'hover:bg-sky-100',
+      visible: true,
+      action: () => {
+        void router.push('/events')
+      },
+    },
+    {
       id: 'points-history',
       label: '點數紀錄',
       icon: 'history',
@@ -91,18 +115,6 @@ const menuItems = computed<MenuItem[]>(() => {
       visible: true,
       action: () => {
         void router.push('/points-history')
-      },
-    },
-    {
-      id: 'user-center',
-      label: '會員中心',
-      icon: 'account_circle',
-      bgClass: 'bg-slate-50',
-      textClass: 'text-slate-600',
-      hoverClass: 'hover:bg-slate-100',
-      visible: true,
-      action: () => {
-        void router.push('/user-center')
       },
     },
   ]
@@ -131,7 +143,7 @@ const handleItemClick = (action: MenuAction) => {
 </script>
 
 <template>
-  <van-action-sheet v-model:show="menuVisible" title="選單">
+  <van-action-sheet v-model:show="menuVisible" title="選單" class="max-w-[430]">
     <div class="px-6 pb-12 pt-6 space-y-3 menu-content">
       <button
         v-for="item in menuItems"

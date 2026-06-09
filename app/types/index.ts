@@ -1,7 +1,7 @@
 /**
  * Tabbar Items
  */
-export type TabbarKey = 'home' | 'qr-code' | 'user-center' | 'settings' | 'scan'  
+export type TabbarKey = 'home' | 'qr-code' | 'events' | 'settings' | 'scan'  
 
 export interface TabbarItem {
   key: TabbarKey

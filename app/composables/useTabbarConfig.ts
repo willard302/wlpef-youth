@@ -11,7 +11,7 @@ export const useTabbarConfig = () => {
 
     const path = route.path
     if (path === '/' || path === '/home') return 'home'
-    if (path.startsWith('/user-center') || path === '/points-history') return 'user-center'
+    if (path.startsWith('/events') || path === '/points-history') return 'events'
     return 'home'
   })
 
