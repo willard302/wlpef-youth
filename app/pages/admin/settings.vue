@@ -38,6 +38,7 @@ onMounted(() => {
 const settingItems = computed<SettingItem[]>(() => {
   return [
     { icon: 'qr_code_scanner', label: '活動簽到', path: '/admin/checkin' },
+    { icon: 'admin_panel_settings', label: '權限管理', path: '/admin/scanner-permissions' },
     { icon: 'database', label: '點數紀錄', path: '/admin/points-history' },
     { icon: 'lock_reset', label: '修改密碼', path: '/home/change-password' }
   ]

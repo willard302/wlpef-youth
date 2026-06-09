@@ -72,6 +72,7 @@ export const userService = {
         email: profile?.email || user.email || '',
         name: profile?.name || metadata.name || user.email?.split('@')[0] || 'User',
         role: (profile?.role as Role) || 'member',
+        scanPermission: profile?.scan_permission ?? false,
         joinDate: profile?.created_at || metadata.join_date || 'Since 2024',
         department: profile?.department || metadata.department || '',
         points,
@@ -227,6 +228,7 @@ export const userService = {
       name?: string
       points?: number
       role?: string
+      scanPermission?: boolean
       department?: string
       phoneNumber?: string
       gender?: string
@@ -244,6 +246,7 @@ export const userService = {
       if (profileData.name !== undefined) dbUpdate.name = profileData.name
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
       if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
+      if (profileData.scanPermission !== undefined) dbUpdate.scan_permission = profileData.scanPermission
       if (profileData.department !== undefined) dbUpdate.department = profileData.department
       if (profileData.phoneNumber !== undefined) dbUpdate.phone_number = profileData.phoneNumber
       if (profileData.gender !== undefined) dbUpdate.gender = profileData.gender

@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   name         TEXT NOT NULL,
   avatar_url   TEXT,
   role         TEXT DEFAULT 'member', -- admin, member
+  scan_permission BOOLEAN DEFAULT FALSE,
   email        TEXT,
   department   TEXT,
   phone_number TEXT,
@@ -54,6 +55,11 @@ CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
+
+CREATE POLICY "Admins can update all profiles"
+  ON public.profiles FOR UPDATE
+  USING (public.is_admin(auth.uid()))
+  WITH CHECK (public.is_admin(auth.uid()));
 
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile"
@@ -278,6 +284,21 @@ CREATE POLICY "Admins can view all registrations"
 CREATE POLICY "Admins can view all checkins"
   ON public.checkin_records FOR SELECT
   USING (public.is_admin(auth.uid()));
+
+CREATE POLICY "Admins and authorized scanners can insert checkins"
+  ON public.checkin_records FOR INSERT
+  WITH CHECK (
+    auth.uid() = checked_in_by
+    AND EXISTS (
+      SELECT 1
+      FROM public.profiles p
+      WHERE p.id = auth.uid()
+        AND (
+          p.role = 'admin'
+          OR COALESCE(p.scan_permission, FALSE)
+        )
+    )
+  );
 
 -- 5. Point Transactions
 CREATE TABLE IF NOT EXISTS public.point_transactions (

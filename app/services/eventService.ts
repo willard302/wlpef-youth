@@ -311,9 +311,24 @@ export const eventService = {
    */
   async checkInMember(eventId: string, memberId: string): Promise<void> {
     const supabase = useSupabaseClient<Database>()
-    const { data: { user: adminUser } } = await supabase.auth.getUser()
+    const { data: { user: operatorUser } } = await supabase.auth.getUser()
     
-    if (!adminUser) throw new Error('管理員未登入')
+    if (!operatorUser) throw new Error('使用者未登入')
+
+    const { data: operatorProfile, error: operatorError } = await supabase
+      .from('profiles')
+      .select('role, scan_permission')
+      .eq('id', operatorUser.id)
+      .maybeSingle()
+
+    if (operatorError) throw operatorError
+
+    const canScan =
+      operatorProfile?.role === 'admin' || operatorProfile?.scan_permission === true
+
+    if (!canScan) {
+      throw new Error('您沒有簽到掃描權限')
+    }
 
     // 1. 取得會員資料
     const { data: memberProfile, error: profileError } = await supabase
@@ -352,7 +367,7 @@ export const eventService = {
         registration_id: registration?.id || null,
         email: memberProfile.email || '',
         checkin_method: 'qr_code',
-        checked_in_by: adminUser.id
+        checked_in_by: operatorUser.id
       })
 
     if (checkinError) throw checkinError

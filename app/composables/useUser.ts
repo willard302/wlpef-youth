@@ -95,6 +95,7 @@ export function useUser() {
       name?: string
       points?: number
       role?: string
+      scanPermission?: boolean
       department?: string
       phoneNumber?: string
       gender?: string

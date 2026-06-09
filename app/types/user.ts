@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string
   name: string
   role: Role
+  scanPermission: boolean
   joinDate: string
   department: string
   points: number

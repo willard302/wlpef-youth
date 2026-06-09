@@ -34,6 +34,10 @@ const {
 
 const qrPopupVisible = ref(false)
 
+const canUseScanner = computed(() => {
+  return userProfile.value?.role === 'admin' || userProfile.value?.scanPermission === true
+})
+
 // 載入用戶資料
 onMounted(() => {
   loadUserData(true)
@@ -41,11 +45,17 @@ onMounted(() => {
 
 // 統計數據
 const menuItems = computed(() => {
-  return [
+  const items = [
     { icon: 'qr_code_2', label: '我的QR Code', path: '', action: 'qr-code' },
     { icon: 'history', label: '點數紀錄', path: '/points-history' },
     { icon: 'lock_reset', label: '修改密碼', path: '/home/change-password' }
   ]
+
+  if (canUseScanner.value) {
+    items.unshift({ icon: 'qr_code_scanner', label: '簽到掃描', path: '/admin/checkin' })
+  }
+
+  return items
 })
 
 const onResetAccount = async () => {
