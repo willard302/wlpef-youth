@@ -57,7 +57,7 @@ const handleGoogleLogin = async () => {
         <div class="flex flex-col items-center gap-4 text-center">
           <LogoIcon size="lg" />
           <h1 class="text-white text-3xl font-bold tracking-widest drop-shadow-md">領袖會社青團</h1>
-          <p class="text-sm leading-relaxed text-white/80">使用 Google 帳號快速登入，進入活動與集點服務。</p>
+          <p class="text-sm leading-relaxed text-white/80">提醒您使用報名活動的Google帳號登入。</p>
         </div>
 
         <div class="mt-8 flex flex-col gap-4">
