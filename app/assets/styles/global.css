@@ -48,3 +48,11 @@ body {
   transform: translateX(-8px);
 }
 
+/* Vant ActionSheet & Popup global constraints */
+.van-popup--bottom,
+.van-action-sheet {
+  max-width: 430px !important;
+  left: 0 !important;
+  right: 0 !important;
+  margin: 0 auto !important;
+}

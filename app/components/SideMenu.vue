@@ -143,7 +143,7 @@ const handleItemClick = (action: MenuAction) => {
 </script>
 
 <template>
-  <van-action-sheet v-model:show="menuVisible" title="選單" class="max-w-[430]">
+  <van-action-sheet v-model:show="menuVisible" title="選單">
     <div class="px-6 pb-12 pt-6 space-y-3 menu-content">
       <button
         v-for="item in menuItems"
