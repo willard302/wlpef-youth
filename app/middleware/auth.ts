@@ -28,7 +28,14 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   if (to.path === '/auth/login' || to.path === '/auth/register') {
-    return navigateTo('/home')
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    
+    const dest = profile?.role === 'admin' ? '/admin' : '/home'
+    return navigateTo(dest)
   }
 
   const excludedPaths = [
@@ -48,7 +55,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
       // 檢查 profiles 是否已有資料 (比對 email)
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('id')
+        .select('id, role')
         .eq('email', user.email)
         .maybeSingle()
 
@@ -66,6 +73,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
   }
 
   if (to.path === '/') {
-    return navigateTo('/home', { replace: true })
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    
+    const dest = profile?.role === 'admin' ? '/admin' : '/home'
+    return navigateTo(dest, { replace: true })
   }
 })

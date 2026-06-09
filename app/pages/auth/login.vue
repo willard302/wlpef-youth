@@ -66,14 +66,25 @@ const handleLogin = async () => {
     loading.value = true
     errorMessage.value = ''
     
-    const { error } = await supabase.auth.signInWithPassword({
+    const {data, error } = await supabase.auth.signInWithPassword({
       email: formData.value.email,
       password: formData.value.password,
     })
     
     if (error) throw error
 
-    router.push('/home')
+    // Fetch user role to decide redirection
+    const { data: { user } } = await supabase.auth.getUser()
+    
+    if (!user) throw new Error('登入成功，但無法取得使用者資訊。')
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+
+    const dest = profile?.role === 'admin' ? '/admin' : '/home'
+    router.push(dest)
   } catch (error: any) {
     if (error?.message?.includes('Invalid login credentials')) {
       errorMessage.value = '登入資訊錯誤，請檢查帳號密碼。'
