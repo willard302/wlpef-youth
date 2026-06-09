@@ -78,18 +78,6 @@ const menuItems = computed<MenuItem[]>(() => {
       action: () => {
         void router.push('/admin/scanner-permissions')
       },
-    },
-    {
-      id: 'change-password',
-      label: '修改密碼',
-      icon: 'lock',
-      bgClass: 'bg-yellow-50',
-      textClass: 'text-yellow-600',
-      hoverClass: 'hover:bg-yellow-100',
-      visible: true,
-      action: () => {
-        void router.push('/change-password')
-      },
     }
   ]
 

@@ -15,7 +15,6 @@ export function useUser() {
   const isLoading = useState('user-loading', () => false)
   const isUploadingAvatar = useState('user-avatar-loading', () => false)
   const isUpdatingProfile = useState('user-updating', () => false)
-  const isChangingPassword = useState('user-password-changing', () => false)
   const error = useState<string | null>('user-error', () => null)
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
 
@@ -159,39 +158,6 @@ export function useUser() {
   }
 
   /**
-   * 修改密碼
-   */
-  const changePassword = async (
-    currentPassword: string,
-    newPassword: string,
-    confirmPassword: string
-  ) => {
-    error.value = null
-
-    if (newPassword !== confirmPassword) {
-      error.value = '新密碼和確認密碼不相符'
-      throw new Error(error.value)
-    }
-
-    if (currentPassword === newPassword) {
-      error.value = '新密碼不能與當前密碼相同'
-      throw new Error(error.value)
-    }
-
-    isChangingPassword.value = true
-
-    try {
-      await userService.changePassword(currentPassword, newPassword)
-    } catch (err: any) {
-      error.value = err.message || '修改密碼失敗'
-      console.error(err)
-      throw err
-    } finally {
-      isChangingPassword.value = false
-    }
-  }
-
-  /**
    * 完成社群 OAuth 用戶註冊
    */
   const completeSocialSignup = async (socialSignupData: {
@@ -245,13 +211,11 @@ export function useUser() {
     isLoading,
     isUploadingAvatar,
     isUpdatingProfile,
-    isChangingPassword,
     error,
     loadUserData,
     clearUserData,
     uploadAvatar,
     updateUserProfile,
-    changePassword,
     completeSocialSignup,
     handleLogout,
     handleResetAccount

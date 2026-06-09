@@ -268,54 +268,6 @@ export const userService = {
   },
 
   /**
-   * 修改使用者密碼
-   * @param currentPassword 當前密碼
-   * @param newPassword 新密碼
-   */
-  async changePassword(
-    currentPassword: string,
-    newPassword: string
-  ): Promise<void> {
-    try {
-      const supabase = useSupabaseClient()
-      const { data: { user } } = await supabase.auth.getUser()
-
-      if (!user) throw new Error('User not authenticated')
-
-      // 驗證密碼長度
-      if (!newPassword || newPassword.length < 6) {
-        throw new Error('新密碼至少需要6個字符')
-      }
-
-      if (currentPassword.length === 0) {
-        throw new Error('請輸入當前密碼')
-      }
-
-      // 首先使用舊密碼重新認證以驗證用戶身份
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email!,
-        password: currentPassword
-      })
-
-      if (signInError) {
-        throw new Error('當前密碼不正確')
-      }
-
-      // 然後更新密碼
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      })
-
-      if (updateError) {
-        throw new Error(updateError.message || '修改密碼失敗')
-      }
-    } catch (error: any) {
-      console.error('Error changing password:', error)
-      throw new Error(error.message || '修改密碼失敗')
-    }
-  },
-
-  /**
    * 完成社群登入後的基本資料設置
    */
   async completeSocialSignup(data: {

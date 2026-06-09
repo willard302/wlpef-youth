@@ -43,8 +43,7 @@ onMounted(() => {
 const menuItems = computed(() => {
   const items = [
     { icon: 'qr_code_2', label: '我的QR Code', path: '', action: 'qr-code' },
-    { icon: 'history', label: '點數紀錄', path: '/points-history' },
-    { icon: 'lock_reset', label: '修改密碼', path: '/home/change-password' }
+    { icon: 'history', label: '點數紀錄', path: '/points-history' }
   ]
 
   if (canUseScanner.value) {
