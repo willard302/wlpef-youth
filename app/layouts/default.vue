@@ -6,7 +6,6 @@ const route = useRoute()
 const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()
 const { menuVisible } = useSideMenu()
-const { isAdmin } = useCalendar()
 
 
 const showTabbar = computed(() => {
