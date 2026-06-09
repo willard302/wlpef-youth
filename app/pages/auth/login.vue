@@ -40,18 +40,18 @@ const loginMethods = [
     icon: 'google',
     action: () => handleOAuthLogin('google')
   },
-  { 
-    id: 'apple', 
-    label: '使用 Apple 登入', 
-    icon: 'apple',
-    action: () => handleOAuthLogin('apple')
-  },
-  { 
-    id: 'email', 
-    label: '一般 Email 登入', 
-    icon: 'mail', 
-    action: () => { showEmailForm.value = true }
-  }
+  // { 
+  //   id: 'apple', 
+  //   label: '使用 Apple 登入', 
+  //   icon: 'apple',
+  //   action: () => handleOAuthLogin('apple')
+  // },
+  // { 
+  //   id: 'email', 
+  //   label: '一般 Email 登入', 
+  //   icon: 'mail', 
+  //   action: () => { showEmailForm.value = true }
+  // }
 ]
 
 const handleLogin = async () => {
@@ -220,10 +220,10 @@ const handleOAuthLogin = async (provider: OAuthProvider) => {
         </transition>
 
         <!-- Common Register Link -->
-        <div class="flex items-center gap-2 mt-4">
+        <!-- <div class="flex items-center gap-2 mt-4">
           <span class="text-white/40 text-xs">還沒有帳號？</span>
           <NuxtLink to="/auth/register" class="text-white/90 text-xs font-bold hover:text-white transition-colors">立即註冊</NuxtLink>
-        </div>
+        </div> -->
       </div>
 
     </div>
