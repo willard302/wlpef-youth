@@ -1,9 +1,5 @@
-interface Toast {
-  id: string
-  message: string
-  type: 'success' | 'error' | 'info'
-  duration: number
-}
+import type { Toast } from "~/types"
+
 
 export function useToast() {
   // useState 確保 SSR 安全且跨組件共用同一份狀態

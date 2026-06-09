@@ -1,6 +1,6 @@
 
 <script setup lang="ts">
-import type { MenuItem } from '@/types';
+import type { SettingItem } from '@/types';
 
 definePageMeta({
   layout: 'admin',
@@ -36,7 +36,7 @@ onMounted(() => {
 })
 
 // 統計數據
-const menuItems = computed<MenuItem[]>(() => {
+const settingItems = computed<SettingItem[]>(() => {
   return [
     { icon: 'qr_code_scanner', label: '活動簽到', path: '/admin/checkin' },
     { icon: 'database', label: '點數紀錄', path: '/admin/points-history' },
@@ -118,7 +118,7 @@ const getRoleName = (role?: string) => {
         <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ '帳號管理' }}</h3>
         <div class="bg-white/80 rounded-2xl overflow-hidden shadow-sm">
           <NuxtLink
-            v-for="(item, index) in menuItems"
+            v-for="(item, index) in settingItems"
             :key="item.label"
             :to="item.path || '#'"
             class="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors border-b border-slate-50"

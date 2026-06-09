@@ -1,16 +1,5 @@
 <script setup lang="ts">
-type MenuAction = () => void
-
-type MenuItem = {
-  id: string
-  label: string
-  icon: string
-  bgClass: string
-  textClass: string
-  hoverClass: string
-  visible: boolean
-  action: MenuAction
-}
+import type { MenuAction, MenuItem } from '~/types';
 
 const props = defineProps<{
   show: boolean
