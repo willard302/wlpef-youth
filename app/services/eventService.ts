@@ -378,5 +378,70 @@ export const eventService = {
     } catch (err) {
       console.warn('Point processing skipped or failed:', err)
     }
+  },
+
+  /**
+   * 獲取管理後台統計數據
+   */
+  async fetchAdminDashboardStats(eventId?: string) {
+    const supabase = useSupabaseClient<Database>()
+    
+    // 1. 完成註冊人數 (profiles 總數)
+    const { count: totalProfiles, error: profileError } = await supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+    
+    if (profileError) throw profileError
+
+    if (!eventId) {
+      return {
+        totalProfiles: totalProfiles || 0,
+        eventRegistrations: 0,
+        eventCheckins: 0,
+        totalPoints: 0,
+        pointsBreakdown: { registration: 0, checkin: 0 }
+      }
+    }
+
+    // 2. 該活動報名人數
+    const { count: registrationCount, error: regError } = await supabase
+      .from('event_registrations')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+    
+    if (regError) throw regError
+
+    // 3. 該活動報到人數
+    const { count: checkinCount, error: checkinError } = await supabase
+      .from('checkin_records')
+      .select('*', { count: 'exact', head: true })
+      .eq('event_id', eventId)
+    
+    if (checkinError) throw checkinError
+
+    // 4. 點數發放統計 (該活動下)
+    const { data: pointData, error: pointError } = await supabase
+      .from('point_transactions')
+      .select('points, type')
+      .eq('event_id', eventId)
+    
+    if (pointError) throw pointError
+
+    const pointsBreakdown = (pointData || []).reduce(
+      (acc, curr) => {
+        if (curr.type === 'registration') acc.registration += curr.points
+        else if (curr.type === 'checkin') acc.checkin += curr.points
+        return acc
+      },
+      { registration: 0, checkin: 0 }
+    )
+
+    return {
+      totalProfiles: totalProfiles || 0,
+      eventRegistrations: registrationCount || 0,
+      eventCheckins: checkinCount || 0,
+      totalPoints: pointsBreakdown.registration + pointsBreakdown.checkin,
+      pointsBreakdown
+    }
   }
 }
