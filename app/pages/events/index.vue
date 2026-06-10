@@ -247,8 +247,14 @@ onMounted(async () => {
           </div>
           <span
             v-if="upcomingEventData"
-            class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold"
-            :class="canViewAllEventStatus ? STATUS_CLASS_MAP[upcomingEventData.status] : 'border-white/25 bg-white/15 text-white'"
+            class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors"
+            :class="[
+              canViewAllEventStatus 
+                ? STATUS_CLASS_MAP[upcomingEventData.status] 
+                : (isUpcomingCheckedIn 
+                  ? 'border-red-200 bg-red-500 text-white shadow-sm shadow-red-100' 
+                  : 'border-white/25 bg-white/15 text-white')
+            ]"
           >
             <span class="material-symbols-outlined text-[14px]">
               {{ canViewAllEventStatus ? 'sell' : (isUpcomingCheckedIn ? 'task_alt' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg')) }}
@@ -431,7 +437,7 @@ onMounted(async () => {
             class="w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
             :class="[
               isCheckedIn
-                ? 'bg-rose-500 text-white cursor-not-allowed shadow-rose-200'
+                ? 'bg-red-500 text-white cursor-not-allowed shadow-red-200'
                 : isRegistered 
                   ? 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200' 
                   : (selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
