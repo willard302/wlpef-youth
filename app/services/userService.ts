@@ -366,6 +366,41 @@ export const userService = {
   },
 
   /**
+   * (管理員) 更新指定會員的資料
+   */
+  async adminUpdateProfile(
+    userId: string,
+    profileData: {
+      name?: string
+      points?: number
+      role?: string
+      scanPermission?: boolean
+      department?: string
+    }
+  ): Promise<void> {
+    try {
+      const supabase = useSupabaseClient<Database>()
+      
+      const dbUpdate: Database['public']['Tables']['profiles']['Update'] = {}
+      if (profileData.name !== undefined) dbUpdate.name = profileData.name
+      if (profileData.points !== undefined) dbUpdate.points = profileData.points
+      if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
+      if (profileData.scanPermission !== undefined) dbUpdate.scan_permission = profileData.scanPermission
+      if (profileData.department !== undefined) dbUpdate.department = profileData.department
+
+      const { error } = await supabase
+        .from('profiles')
+        .update(dbUpdate)
+        .eq('id', userId)
+
+      if (error) throw error
+    } catch (error: any) {
+      console.error('Error in adminUpdateProfile:', error)
+      throw error
+    }
+  },
+
+  /**
    * 取得點數紀錄
    */
   async fetchPointTransactions(): Promise<PointTransaction[]> {

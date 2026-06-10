@@ -17,10 +17,22 @@ const isLoading = ref(true)
 const profiles = ref<UserProfile[]>([])
 const searchQuery = ref('')
 const isCreating = ref(false)
+const isUpdating = ref(false)
 
 const showAddModal = ref(false)
+const showEditModal = ref(false)
+const selectedProfile = ref<UserProfile | null>(null)
+
 const newMember = ref({
   email: '',
+  name: '',
+  role: 'member' as Role,
+  points: 0,
+  department: ''
+})
+
+const editMember = ref({
+  id: '',
   name: '',
   role: 'member' as Role,
   points: 0,
@@ -35,6 +47,39 @@ const loadProfiles = async () => {
     addToast(err.message || '載入會員列表失敗', 'error')
   } finally {
     isLoading.value = false
+  }
+}
+
+const openEditModal = (profile: UserProfile) => {
+  selectedProfile.value = profile
+  editMember.value = {
+    id: profile.id,
+    name: profile.name,
+    role: profile.role,
+    points: profile.points,
+    department: profile.department || ''
+  }
+  showEditModal.value = true
+}
+
+const handleUpdateMember = async () => {
+  if (!editMember.value.id) return
+
+  isUpdating.value = true
+  try {
+    await userService.adminUpdateProfile(editMember.value.id, {
+      name: editMember.value.name,
+      role: editMember.value.role,
+      points: editMember.value.points,
+      department: editMember.value.department
+    })
+    addToast('會員資料更新成功', 'success')
+    showEditModal.value = false
+    await loadProfiles()
+  } catch (err: any) {
+    addToast(err.message || '更新會員失敗', 'error')
+  } finally {
+    isUpdating.value = false
   }
 }
 
@@ -154,7 +199,8 @@ onMounted(async () => {
           <div
             v-for="profile in filteredProfiles"
             :key="profile.id"
-            class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4"
+            @click="openEditModal(profile)"
+            class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer"
           >
             <div
               class="size-12 rounded-2xl bg-slate-100 bg-cover bg-center shrink-0"
@@ -189,6 +235,72 @@ onMounted(async () => {
         </div>
       </section>
     </main>
+
+    <!-- Edit Member Modal -->
+    <van-action-sheet v-model:show="showEditModal" title="編輯會員資料" class="rounded-t-[2.5rem]">
+      <div v-if="selectedProfile" class="px-6 pb-12 pt-4 space-y-6">
+        <div class="flex items-center gap-4 mb-2">
+          <div
+            class="size-16 rounded-2xl bg-slate-100 bg-cover bg-center shadow-inner"
+            :style="{ backgroundImage: selectedProfile.avatar ? `url(${selectedProfile.avatar})` : 'none' }"
+          >
+            <div v-if="!selectedProfile.avatar" class="w-full h-full flex items-center justify-center text-slate-300">
+              <span class="material-symbols-outlined text-3xl">person</span>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-slate-900">{{ selectedProfile.name }}</h3>
+            <p class="text-xs text-slate-500 font-medium">{{ selectedProfile.email }}</p>
+          </div>
+        </div>
+
+        <div class="space-y-4">
+          <FormField label="姓名">
+            <input
+              v-model="editMember.name"
+              type="text"
+              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
+            />
+          </FormField>
+
+          <div class="grid grid-cols-2 gap-4">
+            <FormField label="身分角色">
+              <select
+                v-model="editMember.role"
+                class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20 appearance-none"
+              >
+                <option value="member">一般成員</option>
+                <option value="admin">管理員</option>
+              </select>
+            </FormField>
+            <FormField label="剩餘點數">
+              <input
+                v-model.number="editMember.points"
+                type="number"
+                class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
+              />
+            </FormField>
+          </div>
+
+          <FormField label="部門 / 小組">
+            <input
+              v-model="editMember.department"
+              type="text"
+              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
+            />
+          </FormField>
+        </div>
+
+        <button
+          @click="handleUpdateMember"
+          :disabled="isUpdating"
+          class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+        >
+          <span v-if="isUpdating" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>{{ isUpdating ? '更新中...' : '儲存變更' }}</span>
+        </button>
+      </div>
+    </van-action-sheet>
 
     <!-- Add Member Modal -->
     <van-action-sheet v-model:show="showAddModal" title="新增會員" class="rounded-t-[2.5rem]">
