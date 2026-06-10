@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode'
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { eventService } from '@/services/eventService'
 import type { Event } from '@/types'
 
@@ -13,10 +13,11 @@ const events = ref<Event[]>([])
 const selectedEventId = ref('')
 const isLoading = ref(true)
 const isScanning = ref(false)
+const isCameraActive = ref(false)
 const lastScannedId = ref('')
 const { addToast } = useToast()
 
-let scanner: Html5QrcodeScanner | null = null
+let html5QrCode: Html5Qrcode | null = null
 
 const loadEvents = async () => {
   try {
@@ -84,38 +85,60 @@ const onScanFailure = (error: any) => {
   // 靜默處理失敗 (掃描中很常發生)
 }
 
-const startScanner = () => {
+const startScanner = async () => {
   if (!selectedEventId.value) {
     addToast('請先選擇活動', 'info')
     return
   }
 
-  // 清除舊的
-  if (scanner) {
-    scanner.clear()
-  }
+  try {
+    // 確保舊的實例已停止
+    if (html5QrCode) {
+      await stopScanner()
+    }
 
-  scanner = new Html5QrcodeScanner(
-    'reader',
-    { 
-      fps: 10, 
-      qrbox: { width: 250, height: 250 },
-      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
-    },
-    /* verbose= */ false
-  )
-  
-  scanner.render(onScanSuccess, onScanFailure)
+    html5QrCode = new Html5Qrcode('reader')
+    
+    await html5QrCode.start(
+      { facingMode: 'environment' },
+      { 
+        fps: 10, 
+        qrbox: { width: 250, height: 250 },
+        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+      },
+      onScanSuccess,
+      onScanFailure
+    )
+    isCameraActive.value = true
+  } catch (err: any) {
+    console.error('Failed to start scanner', err)
+    addToast('啟動相機失敗，請確保已授權相機權限', 'error')
+  }
+}
+
+const stopScanner = async () => {
+  if (html5QrCode) {
+    try {
+      // 只有在掃描中才停止
+      if (html5QrCode.isScanning) {
+        await html5QrCode.stop()
+      }
+      // 清除內容
+      html5QrCode.clear()
+    } catch (err) {
+      console.error('Failed to stop scanner', err)
+    } finally {
+      isCameraActive.value = false
+    }
+  }
 }
 
 onMounted(() => {
   loadEvents()
 })
 
-onUnmounted(() => {
-  if (scanner) {
-    scanner.clear()
-  }
+onUnmounted(async () => {
+  await stopScanner()
 })
 </script>
 
@@ -160,14 +183,15 @@ onUnmounted(() => {
 
         <div class="mt-6 flex flex-col items-center gap-3">
           <button
-            @click="startScanner"
+            @click="isCameraActive ? stopScanner() : startScanner()"
             class="w-full h-14 rounded-2xl bg-sky-500 text-white font-bold shadow-lg shadow-sky-200 active:scale-95 transition-all flex items-center justify-center gap-2"
+            :class="{ 'bg-rose-500 shadow-rose-200': isCameraActive }"
           >
-            <span class="material-symbols-outlined">photo_camera</span>
-            啟動相機
+            <span class="material-symbols-outlined">{{ isCameraActive ? 'videocam_off' : 'photo_camera' }}</span>
+            {{ isCameraActive ? '停止掃描' : '啟動相機' }}
           </button>
           <p class="text-[10px] text-slate-400 text-center font-medium">
-            請將會員的 QR Code 對準掃描框。<br>掃描成功後系統會自動完成簽到。
+            {{ isCameraActive ? '請將會員的 QR Code 對準掃描框。' : '點擊按鈕啟動相機開始掃描。' }}<br>掃描成功後系統會自動完成簽到。
           </p>
         </div>
       </section>
@@ -186,13 +210,7 @@ onUnmounted(() => {
 
 <style scoped>
 /* html5-qrcode overrides */
-#reader :deep(button) {
-  @apply bg-sky-500 text-white border-0 px-4 py-2 rounded-xl text-xs font-bold shadow-md active:scale-95 transition-all;
-}
-#reader :deep(select) {
-  @apply bg-white border border-slate-200 px-3 py-2 rounded-xl text-xs font-medium outline-none mb-2;
-}
-#reader :deep(img) {
-  display: none;
+#reader :deep(video) {
+  @apply w-full object-cover rounded-2xl;
 }
 </style>
