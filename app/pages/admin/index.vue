@@ -107,7 +107,9 @@ const quickActions = [
   { label: '新增活動', icon: 'add_circle', path: '/admin/event-editor', color: 'bg-sky-500' },
   { label: '報名管理', icon: 'assignment_ind', path: '/admin/registrations', color: 'bg-indigo-500' },
   { label: '活動簽到', icon: 'qr_code_scanner', path: '/admin/checkin', color: 'bg-emerald-500' },
+  { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
   { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
+  { label: '權限管理', icon: 'admin_panel_settings', path: '/admin/scanner-permissions', color: 'bg-cyan-600' },
 ]
 
 onMounted(async () => {
@@ -173,7 +175,7 @@ onMounted(async () => {
       <!-- Quick Actions -->
       <section class="space-y-4">
         <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">快速功能</h3>
-        <div class="grid grid-cols-4 gap-2">
+        <div class="grid grid-cols-3 gap-y-6 gap-x-2">
           <NuxtLink
             v-for="action in quickActions"
             :key="action.label"

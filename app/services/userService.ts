@@ -307,6 +307,65 @@ export const userService = {
   },
 
   /**
+   * (管理員) 取得系統中所有的會員資料
+   */
+  async fetchAllProfiles(): Promise<UserProfile[]> {
+    try {
+      const supabase = useSupabaseClient<Database>()
+      
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .order('created_at', { ascending: false })
+
+      if (error) throw error
+
+      return (data || []).map((profile: any) => ({
+        id: profile.id,
+        email: profile.email || '',
+        name: profile.name || 'User',
+        role: (profile.role as Role) || 'member',
+        scanPermission: profile.scan_permission ?? false,
+        joinDate: profile.created_at || 'Since 2024',
+        department: profile.department || '',
+        points: profile.points ?? 0,
+        avatar: profile.avatar_url || undefined,
+        phoneNumber: profile.phone_number || '',
+        gender: profile.gender || '',
+        bio: profile.bio || ''
+      }))
+    } catch (error: any) {
+      console.error('Error fetching all profiles:', error)
+      throw error
+    }
+  },
+
+  /**
+   * (管理員) 透過 Edge Function 建立新會員並發送邀請
+   */
+  async adminCreateMember(memberData: {
+    email: string
+    name: string
+    role?: string
+    points?: number
+    department?: string
+  }): Promise<void> {
+    try {
+      const supabase = useSupabaseClient()
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        method: 'POST',
+        body: memberData
+      })
+
+      if (error) throw error
+      if (!data?.success) throw new Error(data?.error || '建立會員失敗')
+    } catch (error: any) {
+      console.error('Error creating member:', error)
+      throw error
+    }
+  },
+
+  /**
    * 取得點數紀錄
    */
   async fetchPointTransactions(): Promise<PointTransaction[]> {

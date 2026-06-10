@@ -34,13 +34,25 @@ const menuItems = computed<MenuItem[]>(() => {
     {
       id: 'registrations',
       label: '報名狀況',
-      icon: 'group',
+      icon: 'assignment_ind',
       bgClass: 'bg-indigo-50',
       textClass: 'text-indigo-600',
       hoverClass: 'hover:bg-indigo-100',
       visible: true,
       action: () => {
         void router.push('/admin/registrations')
+      },
+    },
+    {
+      id: 'members',
+      label: '會員管理',
+      icon: 'group',
+      bgClass: 'bg-violet-50',
+      textClass: 'text-violet-600',
+      hoverClass: 'hover:bg-violet-100',
+      visible: true,
+      action: () => {
+        void router.push('/admin/members')
       },
     },
     {

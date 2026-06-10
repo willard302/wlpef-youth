@@ -1,12 +1,15 @@
 <script setup lang="ts">
+const slots = useSlots()
+
 const props = defineProps<{
-  modelValue: string
+  modelValue?: string
   type?: string
   placeholder?: string
-  icon: string
+  icon?: string
   autocomplete?: string
   disabled?: boolean
   label?: string
+  required?: boolean
   options?: { label: string; value: string }[] // For select type
   rows?: number // For textarea type
 }>()
@@ -16,6 +19,8 @@ const emit = defineEmits<{
 }>()
 
 const showPassword = ref(false)
+const hasCustomField = computed(() => Boolean(slots.default))
+
 const inputType = computed(() => {
   if (props.type === 'password') return showPassword.value ? 'text' : 'password'
   return props.type ?? 'text'
@@ -24,13 +29,17 @@ const inputType = computed(() => {
 
 <template>
   <div class="space-y-2">
-    <label v-if="label" class="block text-sm font-semibold text-slate-700 ml-1 flex items-center gap-2">
-      <i v-if="type === 'textarea' || type === 'select'" class="material-symbols-outlined text-lg text-slate-400">{{ icon }}</i>
+    <label v-if="label" class="text-sm font-semibold text-slate-700 ml-1 flex items-center gap-2">
+      <i v-if="icon && (type === 'textarea' || type === 'select')" class="material-symbols-outlined text-lg text-slate-400">{{ icon }}</i>
       {{ label }}
+      <span v-if="required" class="text-red-500">*</span>
     </label>
     <div class="relative group">
+      <slot v-if="hasCustomField" />
+
+      <template v-else>
       <!-- Icon for standard inputs (centered) -->
-      <i v-if="type !== 'textarea' && type !== 'select'" class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+      <i v-if="icon && type !== 'textarea' && type !== 'select'" class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
         {{ icon }}
       </i>
 
@@ -86,6 +95,7 @@ const inputType = computed(() => {
       >
         <i class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>
       </button>
+      </template>
     </div>
   </div>
 </template>
