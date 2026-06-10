@@ -97,14 +97,16 @@ const startScanner = async () => {
       await stopScanner()
     }
 
-    html5QrCode = new Html5Qrcode('reader')
+    html5QrCode = new Html5Qrcode('reader', {
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+      verbose: false
+    })
     
     await html5QrCode.start(
       { facingMode: 'environment' },
       { 
         fps: 10, 
-        qrbox: { width: 250, height: 250 },
-        formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+        qrbox: { width: 250, height: 250 }
       },
       onScanSuccess,
       onScanFailure
