@@ -76,7 +76,18 @@ Deno.serve(async (req) => {
       throw new Error(`Failed to update registrations: ${updateError.message}`)
     }
 
-    // 3. Delete user from auth.users (this will cascade delete profiles and related records)
+    // 3. Delete check-in records associated with the email
+    const { error: checkinDeleteError } = await supabaseAdmin
+      .from("checkin_records")
+      .delete()
+      .eq("email", userEmail)
+
+    if (checkinDeleteError) {
+      console.error("Error deleting checkin_records:", checkinDeleteError)
+      throw new Error(`Failed to delete check-in records: ${checkinDeleteError.message}`)
+    }
+
+    // 4. Delete user from auth.users (this will cascade delete profiles and related records)
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
 
     if (deleteError) {
