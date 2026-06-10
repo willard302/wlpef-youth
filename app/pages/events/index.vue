@@ -81,17 +81,6 @@ const selectedEvent = ref<Event | null>(null)
 const isRegistered = ref(false)
 const checkingRegistration = ref(false)
 
-const announcements = ref([
-  {
-    id: '1',
-    category: '公告',
-    title: '歡迎加入領袖會社青團活動中心！',
-    date: '2026.05.30',
-    time: '20:00',
-    content: '感謝您加入領袖會社青團活動中心！該網站將幫助您獲取最新活動資訊和公告。期待在活動中見到你！',
-  },
-])
-
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
 
 const STATUS_LABEL_MAP = {
@@ -201,10 +190,6 @@ const handleRegister = async () => {
   }
 
   window.open(formUrl, '_blank', 'noopener,noreferrer')
-}
-
-const viewAllAnnouncements = () => {
-  addToast('公告列表尚未開放', 'info')
 }
 
 onMounted(async () => {
@@ -372,33 +357,6 @@ onMounted(async () => {
               </div>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section class="pt-2">
-        <div class="flex items-center justify-between mb-4 px-2">
-          <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">最新公告</h4>
-          <button @click="viewAllAnnouncements" class="text-[11px] font-bold text-sky-600 hover:text-sky-700 transition-colors">
-            查看全部
-          </button>
-        </div>
-
-        <div class="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm overflow-hidden">
-          <button
-            v-for="(item, idx) in announcements"
-            :key="item.id"
-            class="w-full text-left p-6 hover:bg-slate-50/50 transition-colors"
-            :class="{ 'border-b border-slate-50': idx !== announcements.length - 1 }"
-          >
-            <div class="flex items-center gap-2 mb-2">
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-sky-50 text-sky-600 uppercase tracking-wider">
-                {{ item.category }}
-              </span>
-              <span class="text-[10px] font-bold text-slate-400">{{ item.date }} {{ item.time }}</span>
-            </div>
-            <h5 class="font-bold text-slate-900 text-sm mb-1">{{ item.title }}</h5>
-            <p class="text-slate-500 text-xs leading-relaxed line-clamp-2">{{ item.content }}</p>
-          </button>
         </div>
       </section>
     </main>
