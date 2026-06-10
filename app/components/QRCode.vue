@@ -87,8 +87,4 @@ const qrValue = computed(() => userProfile.value?.id || '')
   </van-popup>
 </template>
 
-<style scoped>
-.qr-code-popup {
-  max-height: 90%;
-}
-</style>
+<style scoped></style>
