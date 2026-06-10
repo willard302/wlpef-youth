@@ -18,10 +18,55 @@ export function useUser() {
   const error = useState<string | null>('user-error', () => null)
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
 
+  const profileSubscription = useState<any>('user-profile-subscription', () => null)
+
   // 動作 (Actions)
+  const setupProfileListener = async () => {
+    // 如果已經有監聽器，就不再建立
+    if (profileSubscription.value) return
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const channel = supabase
+      .channel(`profile-updates-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'profiles',
+          filter: `id=eq.${user.id}`
+        },
+        (payload) => {
+          if (userProfile.value) {
+            // 將資料庫的 snake_case 映射回 UserProfile 的 camelCase
+            userProfile.value = {
+              ...userProfile.value,
+              points: payload.new.points ?? userProfile.value.points,
+              name: payload.new.name ?? userProfile.value.name,
+              avatar: payload.new.avatar_url ?? userProfile.value.avatar,
+              role: payload.new.role ?? userProfile.value.role,
+              scanPermission: payload.new.scan_permission ?? userProfile.value.scanPermission,
+              department: payload.new.department ?? userProfile.value.department,
+              phoneNumber: payload.new.phone_number ?? userProfile.value.phoneNumber,
+              gender: payload.new.gender ?? userProfile.value.gender,
+              bio: payload.new.bio ?? userProfile.value.bio
+            }
+          }
+        }
+      )
+      .subscribe()
+    
+    profileSubscription.value = channel
+  }
+
   const loadUserData = async (force = false) => {
     // 如果已經有資料且不是強制更新，則跳過
-    if (userProfile.value && !force) return
+    if (userProfile.value && !force) {
+      setupProfileListener() // 確保監聽器有啟動
+      return
+    }
 
     // 若已有進行中的請求，等待既有請求完成，避免重複打 API
     if (loadingPromise.value && !force) {
@@ -41,6 +86,9 @@ export function useUser() {
 
         userProfile.value = profileData
         recentActivities.value = activitiesData
+        
+        // 成功載入後啟動監聽器
+        setupProfileListener()
       } catch (err: any) {
         error.value = err.message || '載入用戶資料失敗'
         console.error(err)
@@ -122,6 +170,11 @@ export function useUser() {
   }
 
   const clearUserData = () => {
+    // 清除監聽器
+    if (profileSubscription.value) {
+      supabase.removeChannel(profileSubscription.value)
+      profileSubscription.value = null
+    }
     userProfile.value = null
     recentActivities.value = []
     error.value = null
