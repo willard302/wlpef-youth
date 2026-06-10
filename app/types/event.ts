@@ -23,6 +23,8 @@ export interface Event {
   date: Date        // alias of startAt for calendar grid lookup
   time: string      // 'HH:mm' formatted from startAt
   period: 'AM' | 'PM'
+  isRegistered?: boolean
+  isCheckedIn?: boolean
 }
 
 export interface CreateEventPayload {

@@ -65,11 +65,14 @@ const upcomingEventDisplay = computed(() => {
   }
 })
 
+const isUpcomingCheckedIn = ref(false)
+
 const upcomingRegistrationStatus = computed(() => {
   const event = upcomingEventData.value
   if (!event) return ''
   if (canViewAllEventStatus.value) return STATUS_LABEL_MAP[event.status]
-  if (isUpcomingRegistrationLoading.value) return '確認報名狀態中'
+  if (isUpcomingRegistrationLoading.value) return '確認狀態中'
+  if (isUpcomingCheckedIn.value) return '已報到'
   if (isUpcomingRegistered.value) return '已報名'
   if (event.status === 'closed') return '報名已關閉'
   return '未報名'
@@ -79,6 +82,7 @@ const upcomingRegistrationStatus = computed(() => {
 const eventDetailVisible = ref(false)
 const selectedEvent = ref<Event | null>(null)
 const isRegistered = ref(false)
+const isCheckedIn = ref(false)
 const checkingRegistration = ref(false)
 
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
@@ -119,7 +123,12 @@ const loadUpcomingEvent = async () => {
 
     if (upcomingEventData.value && !canViewAllEventStatus.value) {
       isUpcomingRegistrationLoading.value = true
-      isUpcomingRegistered.value = await eventService.checkRegistrationStatus(upcomingEventData.value.id)
+      const [regStatus, checkinStatus] = await Promise.all([
+        eventService.checkRegistrationStatus(upcomingEventData.value.id),
+        eventService.checkCheckinStatus(upcomingEventData.value.id)
+      ])
+      isUpcomingRegistered.value = regStatus
+      isUpcomingCheckedIn.value = checkinStatus
     }
   } catch (error) {
     console.error('Failed to load events', error)
@@ -169,12 +178,18 @@ const openEventDetail = async (event: Event) => {
   selectedEvent.value = event
   eventDetailVisible.value = true
   isRegistered.value = false
+  isCheckedIn.value = false
   checkingRegistration.value = true
   
   try {
-    isRegistered.value = await eventService.checkRegistrationStatus(event.id)
+    const [regStatus, checkinStatus] = await Promise.all([
+      eventService.checkRegistrationStatus(event.id),
+      eventService.checkCheckinStatus(event.id)
+    ])
+    isRegistered.value = regStatus
+    isCheckedIn.value = checkinStatus
   } catch (err) {
-    console.error('Check registration error:', err)
+    console.error('Check status error:', err)
   } finally {
     checkingRegistration.value = false
   }
@@ -236,7 +251,7 @@ onMounted(async () => {
             :class="canViewAllEventStatus ? STATUS_CLASS_MAP[upcomingEventData.status] : 'border-white/25 bg-white/15 text-white'"
           >
             <span class="material-symbols-outlined text-[14px]">
-              {{ canViewAllEventStatus ? 'sell' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg') }}
+              {{ canViewAllEventStatus ? 'sell' : (isUpcomingCheckedIn ? 'task_alt' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg')) }}
             </span>
             {{ upcomingRegistrationStatus }}
           </span>
@@ -412,23 +427,28 @@ onMounted(async () => {
         <div class="pt-4">
           <button
             @click="handleRegister"
-            :disabled="isRegistered || checkingRegistration || selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl"
+            :disabled="isCheckedIn || isRegistered || checkingRegistration || selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl"
             class="w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
             :class="[
-              isRegistered 
-                ? 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200' 
-                : (selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
+              isCheckedIn
+                ? 'bg-rose-500 text-white cursor-not-allowed shadow-rose-200'
+                : isRegistered 
+                  ? 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200' 
+                  : (selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
             ]"
           >
-            <span class="material-symbols-outlined">{{ isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'open_in_new') }}</span>
+            <span class="material-symbols-outlined">{{ isCheckedIn ? 'task_alt' : (isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'open_in_new')) }}</span>
             <span>
-              {{ isRegistered ? '已完成報名' : (selectedEvent.status === 'closed' ? '報名已截止' : (!selectedEvent.googleFormUrl ? '尚未開放報名' : '前往 Google 表單報名')) }}
+              {{ isCheckedIn ? '已完成活動報到' : (isRegistered ? '已完成報名' : (selectedEvent.status === 'closed' ? '報名已截止' : (!selectedEvent.googleFormUrl ? '尚未開放報名' : '前往 Google 表單報名'))) }}
             </span>
           </button>
-          <p v-if="isRegistered" class="text-[10px] text-center text-slate-400 mt-2">
+          <p v-if="isCheckedIn" class="text-[10px] text-center text-slate-400 mt-2">
+            * 您已完成本次活動的現場報到。
+          </p>
+          <p v-else-if="isRegistered" class="text-[10px] text-center text-slate-400 mt-2">
             * 點數將於一分鐘內自動發放。
           </p>
-          <p v-else-if="checkingRegistration" class="text-[10px] text-center text-slate-400 mt-2">正在確認報名狀態...</p>
+          <p v-else-if="checkingRegistration" class="text-[10px] text-center text-slate-400 mt-2">正在確認狀態...</p>
         </div>
       </div>
     </van-action-sheet>

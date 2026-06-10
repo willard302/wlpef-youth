@@ -215,6 +215,29 @@ export const eventService = {
   },
 
   /**
+   * 檢查使用者是否已完成活動簽到
+   */
+  async checkCheckinStatus(eventId: string): Promise<boolean> {
+    const supabase = useSupabaseClient<Database>()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const { data, error } = await supabase
+      .from('checkin_records')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (error) {
+      console.error('Error checking checkin status:', error)
+      return false
+    }
+
+    return !!data
+  },
+
+  /**
    * 報名活動 (直接在資料庫建立紀錄)
    */
   async registerForEvent(eventId: string): Promise<void> {
