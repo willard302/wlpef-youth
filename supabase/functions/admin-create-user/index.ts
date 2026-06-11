@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
 
     if (profile?.role !== "admin") throw new Error("Forbidden: Admin access required")
 // 取得參數
-const { email, name, role = "member", points = 0 } = await req.json()
+const { email, name, role = "member", points = 0, scanPermission = false } = await req.json()
 
 if (!email || !name) throw new Error("Email and Name are required")
 
@@ -69,7 +69,8 @@ if (inviteError) {
           email: email,
           name: name,
           role: role,
-          points: points
+          points: points,
+          scan_permission: scanPermission
         })
 
       if (profileError) throw profileError
@@ -89,7 +90,8 @@ const { error: profileError } = await supabase
     email: email,
     name: name,
     role: role,
-    points: points
+    points: points,
+    scan_permission: scanPermission
   })
 
     if (profileError) throw profileError

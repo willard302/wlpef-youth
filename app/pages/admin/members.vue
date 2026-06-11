@@ -34,7 +34,8 @@ const editMember = ref({
   id: '',
   name: '',
   role: 'member' as Role,
-  points: 0
+  points: 0,
+  scanPermission: false
 })
 
 const loadProfiles = async () => {
@@ -54,7 +55,8 @@ const openEditModal = (profile: UserProfile) => {
     id: profile.id,
     name: profile.name,
     role: profile.role,
-    points: profile.points
+    points: profile.points,
+    scanPermission: profile.scanPermission
   }
   showEditModal.value = true
 }
@@ -67,7 +69,8 @@ const handleUpdateMember = async () => {
     await userService.adminUpdateProfile(editMember.value.id, {
       name: editMember.value.name,
       role: editMember.value.role,
-      points: editMember.value.points
+      points: editMember.value.points,
+      scanPermission: editMember.value.scanPermission
     })
     addToast('會員資料更新成功', 'success')
     showEditModal.value = false
@@ -273,6 +276,21 @@ onMounted(async () => {
                 class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
               />
             </FormField>
+          </div>
+
+          <!-- Scanner Permission Toggle -->
+          <div class="flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-slate-400">qr_code_scanner</span>
+              <div class="flex flex-col">
+                <span class="text-sm font-medium text-slate-700">簽到掃描權限</span>
+                <span class="text-[10px] text-slate-400">開通後該用戶可協助活動簽到</span>
+              </div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input v-model="editMember.scanPermission" type="checkbox" class="sr-only peer" />
+              <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
+            </label>
           </div>
         </div>
 
