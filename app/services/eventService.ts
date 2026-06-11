@@ -43,8 +43,6 @@ function mapToEvent(row: EventRow): Event {
     status: (row.status ?? 'draft') as Event['status'],
     googleSheetId: row.google_sheet_id ?? undefined,
     googleFormUrl: row.google_form_url ?? undefined,
-    targetId: row.target_id ?? undefined,
-    subdomain: row.subdomain ?? undefined,
     registrationBonus: row.registration_bonus ?? 0,
     checkinBonus: row.checkin_bonus ?? 0,
     raffleThreshold: row.raffle_threshold ?? 0,
@@ -76,11 +74,11 @@ export const eventService = {
     const supabase = useSupabaseClient<Database>()
     const { start, end } = getMonthRange(yearMonth)
 
+    // Fetch events that overlap with the range or have no start_at (though they shouldn't)
     const { data, error } = await supabase
       .from('events')
       .select('*')
-      .lte('start_at', end)
-      .gte('end_at', start)
+      .or(`start_at.lte.${end},end_at.gte.${start}`)
       .order('start_at', { ascending: true })
 
     if (error) throw error

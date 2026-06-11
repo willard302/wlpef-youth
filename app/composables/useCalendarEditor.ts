@@ -40,8 +40,6 @@ export function useCalendarEditor() {
     status: 'draft' as CreateEventPayload['status'],
     googleSheetId: '',
     googleFormUrl: '',
-    targetId: '',
-    subdomain: '',
     registrationBonus: 0,
     checkinBonus: 0,
     raffleThreshold: 0,
@@ -76,8 +74,6 @@ export function useCalendarEditor() {
     formData.value.status = event.status
     formData.value.googleSheetId = event.googleSheetId || ''
     formData.value.googleFormUrl = event.googleFormUrl || ''
-    formData.value.targetId = event.targetId || ''
-    formData.value.subdomain = event.subdomain || ''
     formData.value.registrationBonus = event.registrationBonus
     formData.value.checkinBonus = event.checkinBonus
     formData.value.raffleThreshold = event.raffleThreshold
@@ -179,8 +175,6 @@ export function useCalendarEditor() {
         status: formData.value.status,
         google_sheet_id: formData.value.googleSheetId.trim() || undefined,
         google_form_url: formData.value.googleFormUrl.trim(),
-        target_id: formData.value.targetId.trim() || undefined,
-        subdomain: formData.value.subdomain.trim() || undefined,
         registration_bonus: Number(formData.value.registrationBonus) || 0,
         checkin_bonus: Number(formData.value.checkinBonus) || 0,
         raffle_threshold: Number(formData.value.raffleThreshold) || 0,

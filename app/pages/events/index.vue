@@ -50,7 +50,7 @@ const upcomingEventDisplay = computed(() => {
   if (!event) {
     return {
       title: '目前沒有活動',
-      meta: isAdmin.value ? '新增活動後會顯示在這裡' : '請稍後再查看最新活動',
+      meta: isAdmin.value ? '管理員：建立活動並發佈後會顯示在這裡' : '請稍後再查看最新活動',
     }
   }
 
@@ -64,6 +64,7 @@ const upcomingEventDisplay = computed(() => {
     meta: `${timeText} · ${event.location || '地點未定'}`,
   }
 })
+
 
 const isUpcomingCheckedIn = ref(false)
 
@@ -216,7 +217,7 @@ onMounted(async () => {
 <template>
   <div class="dashboard-page pb-24">
     <AppHeaderHero
-      eyebrow="領袖會社青團"
+      :eyebrow="userProfile?.role === 'admin' ? '管理員模式' : '領袖會社青團'"
       :title="`哈囉，${userProfile?.name ?? '使用者'}`"
       height-class="h-56"
     >
@@ -359,10 +360,6 @@ onMounted(async () => {
                   <span class="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
                     <span class="material-symbols-outlined text-[14px] text-sky-500">location_on</span>
                     {{ event.location || '未指定地點' }}
-                  </span>
-                  <span class="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-                    <span class="material-symbols-outlined text-[14px] text-indigo-400">group</span>
-                    {{ event.attendees }} 人參與
                   </span>
                 </div>
               </div>

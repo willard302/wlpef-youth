@@ -213,26 +213,6 @@ const getTimeColumns = (timeStr: string) => {
             class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
           />
         </div>
-        <div class="h-[1px] bg-white/30 mx-3"></div>
-        <div class="flex items-start gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400 mt-0.5">flag</span>
-          <input
-            v-model="formData.targetId"
-            type="text"
-            placeholder="Target ID"
-            class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
-          />
-        </div>
-        <div class="h-[1px] bg-white/30 mx-3"></div>
-        <div class="flex items-start gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400 mt-0.5">language</span>
-          <input
-            v-model="formData.subdomain"
-            type="text"
-            placeholder="活動子網域"
-            class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
-          />
-        </div>
       </section>
 
       <section class="glass-card rounded-2xl p-2 space-y-1">

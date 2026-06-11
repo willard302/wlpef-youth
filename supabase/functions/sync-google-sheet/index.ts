@@ -5,7 +5,6 @@ type EventRow = {
   id: string
   title: string
   google_sheet_id: string | null
-  target_id: string | null
 }
 
 type ProfileRow = {
@@ -29,7 +28,6 @@ type SheetRegistration = {
 type SyncResult = {
   eventId: string
   sheetId: string
-  targetId: string | null
   importedCount: number
   matchedCount: number
   skippedCount: number
@@ -252,7 +250,7 @@ function toRegistrations(
       matched_user_id: matchedProfile?.id || null,
       email,
       name,
-      google_sheet_row_id: `${event.target_id || event.id}:row_${index + 2}`,
+      google_sheet_row_id: `${event.id}:row_${index + 2}`,
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
       raw_data: rawData,
@@ -314,7 +312,6 @@ async function syncEvent(
     return {
       eventId: event.id,
       sheetId: event.google_sheet_id,
-      targetId: event.target_id,
       importedCount: registrations.length,
       matchedCount: allEmails.length,
       skippedCount,
@@ -323,7 +320,6 @@ async function syncEvent(
     return {
       eventId: event.id,
       sheetId: event.google_sheet_id || "",
-      targetId: event.target_id,
       importedCount: 0,
       matchedCount: 0,
       skippedCount: 0,
@@ -337,14 +333,13 @@ async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]>
     return [{
       id: body.eventId,
       title: body.title || body.eventId,
-      google_sheet_id: body.sheetId,
-      target_id: body.targetId || null,
+      google_sheet_id: body.sheetId
     }]
   }
 
   const { data, error } = await supabaseAdmin
     .from("events")
-    .select("id,title,google_sheet_id,target_id")
+    .select("id,title,google_sheet_id")
     .not("google_sheet_id", "is", null)
 
   if (error) throw new Error(`Failed to load events for sync: ${error.message}`)
