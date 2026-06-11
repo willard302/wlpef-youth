@@ -109,7 +109,6 @@ const quickActions = [
   { label: '活動簽到', icon: 'qr_code_scanner', path: '/admin/checkin', color: 'bg-emerald-500' },
   { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
   { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
-  { label: '權限管理', icon: 'admin_panel_settings', path: '/admin/scanner-permissions', color: 'bg-cyan-600' },
 ]
 
 onMounted(async () => {

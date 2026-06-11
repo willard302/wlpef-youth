@@ -279,6 +279,7 @@ export const userService = {
     name: string
     role?: string
     points?: number
+    scanPermission?: boolean
   }): Promise<void> {
     try {
       const supabase = useSupabaseClient()
