@@ -222,15 +222,6 @@ const toggleMode = () => {
               />
             </div>
             <div class="relative">
-              <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">groups</span>
-              <input
-                v-model="registerData.department"
-                type="text"
-                placeholder="部門/小組 (選填)"
-                class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-              />
-            </div>
-            <div class="relative">
               <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">lock</span>
               <input
                 v-model="registerData.password"
