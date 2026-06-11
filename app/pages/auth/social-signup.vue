@@ -5,9 +5,10 @@ definePageMeta({
 
 const router = useRouter()
 const supabase = useSupabaseClient()
-const loading = ref(false)
+const { completeSocialSignup } = useUser()
+
+const { loading, errorMessage, handleAuthError } = useAuth()
 const initializing = ref(true)
-const errorMessage = ref('')
 
 const formData = ref({
   email: '',
@@ -42,7 +43,6 @@ const formFields: SocialSignupField[] = [
   }
 ]
 
-// Fetch existing user data if any
 const fetchUserData = async () => {
   try {
     initializing.value = true
@@ -50,7 +50,7 @@ const fetchUserData = async () => {
     if (!user?.id) {
       errorMessage.value = '使用者未登入，請重新登入。'
       setTimeout(() => {
-        router.push('/auth/login')
+        router.push('/auth')
       }, 2000)
       return
     }
@@ -72,11 +72,8 @@ const fetchUserData = async () => {
       .maybeSingle()
 
     if (profile) {
-      // 如果資料庫已有 profile，也視為已完成
       router.push('/home')
-      return
     } else {
-      // Fallback to metadata for initial display
       formData.value.fullName = metadata.full_name || metadata.name || ''
     }
   } catch (err: any) {
@@ -101,8 +98,6 @@ const handleCompleteRegistration = async () => {
   try {
     loading.value = true
     errorMessage.value = ''
-
-    const { completeSocialSignup } = useUser()
     
     await completeSocialSignup({
       fullName: formData.value.fullName.trim(),
@@ -111,12 +106,7 @@ const handleCompleteRegistration = async () => {
 
     router.push('/home')
   } catch (err: any) {
-    console.error('Error completing registration:', err)
-    if (err?.code === '22023' && String(err?.message || '').includes('role')) {
-      errorMessage.value = '帳號角色設定異常，請先登出後重新登入；若仍失敗請聯絡管理員。'
-    } else {
-      errorMessage.value = err.message || '完成註冊失敗'
-    }
+    handleAuthError(err, '完成註冊失敗，請稍後再試')
   } finally {
     loading.value = false
   }

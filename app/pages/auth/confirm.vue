@@ -50,7 +50,7 @@ onMounted(async () => {
     errorMessage.value = '重設密碼功能已停用，請改用 Google 登入。'
     loading.value = false
     setTimeout(() => {
-      router.push('/auth/login')
+      router.push('/auth')
     }, 2000)
     return
   }
@@ -60,7 +60,7 @@ onMounted(async () => {
     errorMessage.value = errorDescription || '驗證過程中發生錯誤'
     loading.value = false
     setTimeout(() => {
-      router.push('/auth/login')
+      router.push('/auth')
     }, 3000)
     return
   }
@@ -71,7 +71,7 @@ onMounted(async () => {
     errorMessage.value = decodeURIComponent(oauthError)
     loading.value = false
     setTimeout(() => {
-      router.push('/auth/login')
+      router.push('/auth')
     }, 3000)
     return
   }
@@ -84,7 +84,7 @@ onMounted(async () => {
       errorMessage.value = '登入狀態已失效，請重新登入。'
       loading.value = false
       setTimeout(() => {
-        router.push('/auth/login')
+        router.push('/auth')
       }, 1200)
       return
     }
@@ -122,7 +122,7 @@ onMounted(async () => {
       loading.value = false
       setTimeout(async () => {
         await supabase.auth.signOut()
-        router.push('/auth/login')
+        router.push('/auth')
       }, 3000)
     }
   }
@@ -180,7 +180,7 @@ onMounted(async () => {
 
       <div class="pt-4">
         <NuxtLink 
-          to="/auth/login" 
+          to="/auth" 
           class="inline-flex items-center gap-2 text-white/60 hover:text-white font-bold transition-colors"
         >
           <svg class="size-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">

@@ -10,13 +10,13 @@ export default defineNuxtRouteMiddleware(async (to) => {
   // 1. 未登入處理
   if (!user?.id) {
     if (!to.path.startsWith('/auth')) {
-      return navigateTo('/auth/login')
+      return navigateTo('/auth')
     }
     return
   }
 
   // 2. 已登入但訪問登入頁
-  if (to.path === '/auth/login') {
+  if (to.path === '/auth') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')

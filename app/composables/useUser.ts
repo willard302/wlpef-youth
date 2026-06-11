@@ -90,7 +90,7 @@ export function useUser() {
         console.error(err)
         // 只有在真的沒權限時才跳轉
         if (err.message === 'User not authenticated') {
-          router.push('/auth/login')
+          router.push('/auth')
         }
       } finally {
         isLoading.value = false
@@ -176,11 +176,11 @@ export function useUser() {
     try {
       await supabase.auth.signOut()
       clearUserData()
-      router.push('/auth/login')
+      router.push('/auth')
     } catch (err) {
       console.error('Logout error:', err)
       clearUserData()
-      router.push('/auth/login')
+      router.push('/auth')
     }
   }
 
@@ -192,7 +192,7 @@ export function useUser() {
       isLoading.value = true
       await userService.resetUserAccount()
       clearUserData()
-      router.push('/auth/login')
+      router.push('/auth')
     } catch (err: any) {
       console.error('Reset account error:', err)
       error.value = err.message || '重置帳號失敗'

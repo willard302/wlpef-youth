@@ -227,21 +227,6 @@ export const userService = {
   },
 
   /**
-   * 完成社群登入後的基本資料設置
-   */
-  async completeSocialSignup(data: {
-    id: string
-    email: string
-    name?: string
-  }): Promise<void> {
-    const supabase = useSupabaseClient<Database>()
-    return this.updateUserProfile(supabase, {
-      email: data.email,
-      name: data.name
-    })
-  },
-
-  /**
    * (管理員) 取得系統中所有的會員資料
    */
   async fetchAllProfiles(): Promise<UserProfile[]> {
