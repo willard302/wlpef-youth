@@ -147,7 +147,7 @@ onMounted(async () => {
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="搜尋姓名、Email、部門..."
+            placeholder="搜尋姓名、Email..."
             class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
           />
         </div>
