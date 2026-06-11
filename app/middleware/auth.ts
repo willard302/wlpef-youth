@@ -1,16 +1,13 @@
 import type { UserProfile } from '@/types'
 import type { Database } from '@/types/database.types'
-import { userService } from '@/services/userService'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient<Database>()
   const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  if (userError) {
-    console.warn('auth middleware getUser error:', userError.message)
-  }
+  const { data: { user } } = await supabase.auth.getUser()
 
+  // 1. 未登入處理
   if (!user?.id) {
     if (!to.path.startsWith('/auth')) {
       return navigateTo('/auth/login')
@@ -18,7 +15,8 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  if (to.path === '/auth/login' || to.path === '/auth/register') {
+  // 2. 已登入但訪問登入頁
+  if (to.path === '/auth/login') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -29,39 +27,33 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return navigateTo(dest)
   }
 
-  const excludedPaths = [
-    '/auth/login', 
-    '/auth/register',
-    '/auth/confirm', 
-    '/auth/social-signup'
-  ]
-  if (!excludedPaths.includes(to.path)) {
-    if (!user.email) {
-      return navigateTo('/auth/social-signup')
-    }
-
+  // 3. 檢查資料完整性 (排除 auth 相關頁面)
+  const isAuthPage = to.path.startsWith('/auth')
+  if (!isAuthPage) {
+    // 檢查是否有 cached profile
     const hasCachedProfile = cachedUserProfile.value?.id === user.id
+    
     if (!hasCachedProfile) {
-      // 檢查 profiles 是否已有資料 (比對 email)
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('email', user.email)
-        .maybeSingle()
+      // 檢查 metadata 是否標記已完成註冊
+      const metadata = user.user_metadata || {}
+      const isCompleted = metadata.social_signup_completed || metadata.google_signup_completed
 
-      if (!existingProfile) {
-        return navigateTo('/auth/social-signup')
-      }
+      if (!isCompleted) {
+        // 檢查 profiles 表是否真的沒有資料
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle()
 
-      try {
-        await userService.ensureProfileExists(supabase)
-      } catch (error) {
-        console.warn('auth middleware ensureProfileExists error:', error)
-        return navigateTo('/auth/social-signup')
+        if (!profile) {
+          return navigateTo('/auth/social-signup')
+        }
       }
     }
   }
 
+  // 4. 根目錄跳轉
   if (to.path === '/') {
     const { data: profile } = await supabase
       .from('profiles')

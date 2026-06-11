@@ -6,7 +6,6 @@ export interface LoginFormData {
 export interface RegisterFormData {
   email: string
   fullName: string
-  department: string
   password: string
   confirmPassword: string
 }

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Database } from '@/types/database.types'
-import { userService } from '@/services/userService'
 
 definePageMeta({
   layout: 'auth'
@@ -98,9 +97,6 @@ onMounted(async () => {
       console.warn('Auto merge skipped:', mergeError.message)
     }
 
-    // Removed explicit ensureProfileExists call; the auth middleware will now 
-    // handle the profile check and redirect to social-signup if needed.
-
     const destination = await resolveDestination(user.id)
 
     redirectWithSuccess(
@@ -134,78 +130,64 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="relative flex h-screen w-full flex-col overflow-hidden bg-background-light font-display">
-    <!-- Animated background elements -->
-    <div class="absolute inset-0 z-0 overflow-hidden">
-      <div
-        class="h-full w-full bg-cover bg-center"
-        style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuAKLqnX9ZXB6k4S_M2OiUzo28rwbVbB4qgtt-CuoJnz7esDmG4EipwCVb159pJxmBEUzY0SIMcJffb8sBWx7x0cCktLUUeogL4l_7CKhM4tw-WrZapPYOiXOJ_wFK0XCHI8tjk2PkDynPSxN-hiE_8DwZJ0-k355BY8O0Jn4yeAvRUuQ6juPcePLPZzromKaH4sAy7R06qG24jk8u4mJDZr3UbyPmicNP-tofDjENIMKDtGvnRYe5SgAVTeEDieQCXIlvpG11VqryQ')"
-      ></div>
-      <div class="absolute inset-0 bg-gradient-to-tr from-primary/15 via-white/5 to-white/10"></div>
-      <div class="absolute -top-24 -left-24 h-72 w-72 rounded-full bg-white/15 blur-3xl animate-pulse"></div>
-      <div class="absolute bottom-8 -right-28 h-80 w-80 rounded-full bg-white/20 blur-3xl animate-pulse" style="animation-delay: 1s"></div>
-    </div>
+  <div class="flex flex-col items-center justify-center flex-1 px-8 text-center">
+    <div class="w-full max-w-sm glass-effect rounded-[2.5rem] p-10 shadow-2xl space-y-8 border border-white/20 bg-white/10 backdrop-blur-xl">
+      <div class="size-24 rounded-3xl flex items-center justify-center mx-auto text-primary">
+        <span v-if="loading" class="status-spinner" aria-label="載入中"></span>
+        <svg
+          v-else-if="errorMessage"
+          class="size-14 text-red-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-label="錯誤"
+        >
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.25" />
+          <path d="M12 7.5v5.25" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" />
+          <circle cx="12" cy="16.5" r="1.2" fill="currentColor" />
+        </svg>
+        <svg
+          v-else
+          class="size-14 text-green-500"
+          viewBox="0 0 24 24"
+          fill="none"
+          aria-label="成功"
+        >
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.25" />
+          <path d="m8 12.25 2.55 2.55L16.5 8.85" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </div>
 
-    <!-- Content -->
-    <div class="relative z-10 flex flex-col items-center justify-center h-full px-8 text-center">
-      <div class="w-full max-w-sm glass-effect rounded-[2.5rem] p-10 shadow-2xl space-y-8 border border-white/20">
-        <div class="size-24 rounded-3xl flex items-center justify-center mx-auto text-primary">
-          <span v-if="loading" class="status-spinner" aria-label="載入中"></span>
-          <svg
-            v-else-if="errorMessage"
-            class="size-14 text-red-500"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-label="錯誤"
-          >
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.25" />
-            <path d="M12 7.5v5.25" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" />
-            <circle cx="12" cy="16.5" r="1.2" fill="currentColor" />
-          </svg>
-          <svg
-            v-else
-            class="size-14 text-green-500"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-label="成功"
-          >
-            <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.25" />
-            <path d="m8 12.25 2.55 2.55L16.5 8.85" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
-          </svg>
-        </div>
-
-        <div class="space-y-3">
-          <h1 class="text-white text-2xl font-bold tracking-tight">
-            電子郵件確認
-          </h1>
-          
-          <div v-if="loading" class="space-y-4">
-            <p class="text-white/70">正在驗證您的電子郵件...</p>
-            <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
-              <div class="bg-white h-full animate-progress-bar"></div>
-            </div>
+      <div class="space-y-3">
+        <h1 class="text-white text-2xl font-bold tracking-tight">
+          電子郵件確認
+        </h1>
+        
+        <div v-if="loading" class="space-y-4">
+          <p class="text-white/70">正在驗證您的電子郵件...</p>
+          <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
+            <div class="bg-white h-full animate-progress-bar"></div>
           </div>
-
-          <p v-else-if="errorMessage" class="text-red-200 font-medium">
-            {{ errorMessage }}
-          </p>
-
-          <p v-else-if="successMessage" class="text-green-200 font-medium">
-            {{ successMessage }}
-          </p>
         </div>
 
-        <div class="pt-4">
-          <NuxtLink 
-            to="/auth/login" 
-            class="inline-flex items-center gap-2 text-white/60 hover:text-white font-bold transition-colors"
-          >
-            <svg class="size-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M19 12H5m0 0 6-6m-6 6 6 6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-            <span>返回登入</span>
-          </NuxtLink>
-        </div>
+        <p v-else-if="errorMessage" class="text-red-200 font-medium">
+          {{ errorMessage }}
+        </p>
+
+        <p v-else-if="successMessage" class="text-green-200 font-medium">
+          {{ successMessage }}
+        </p>
+      </div>
+
+      <div class="pt-4">
+        <NuxtLink 
+          to="/auth/login" 
+          class="inline-flex items-center gap-2 text-white/60 hover:text-white font-bold transition-colors"
+        >
+          <svg class="size-5" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M19 12H5m0 0 6-6m-6 6 6 6" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+          <span>返回登入</span>
+        </NuxtLink>
       </div>
     </div>
   </div>
