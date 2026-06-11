@@ -40,11 +40,12 @@ $$;
 
 -- Profiles RLS
 DROP POLICY IF EXISTS "Public profiles are viewable by everyone" ON public.profiles;
+DROP POLICY IF EXISTS "Users can view own profile or admins can view all" ON public.profiles;
 CREATE POLICY "Users can view own profile or admins can view all"
   ON public.profiles FOR SELECT
   USING (
     auth.uid() = id
-    OR public.is_admin(auth.uid())
+    OR (SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin'
   );
 
 CREATE POLICY "Users can update own profile"
@@ -54,10 +55,9 @@ CREATE POLICY "Users can update own profile"
 
 CREATE POLICY "Admins can update all profiles"
   ON public.profiles FOR UPDATE
-  USING (public.is_admin(auth.uid()))
-  WITH CHECK (public.is_admin(auth.uid()));
+  USING ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin')
+  WITH CHECK ((SELECT role FROM public.profiles WHERE id = auth.uid()) = 'admin');
 
-DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
   WITH CHECK (auth.uid() = id);
@@ -75,31 +75,29 @@ CREATE TRIGGER tr_profiles_updated_at
   BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION handle_updated_at();
 
--- Trigger to link registrations and update participant counts when a profile is created
-CREATE OR REPLACE FUNCTION public.handle_after_profile_create()
+-- Function to handle new user creation
+CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
-  -- Link any registrations that match the new profile's email
-  UPDATE public.event_registrations
-  SET matched_user_id = NEW.id
-  WHERE lower(trim(email)) = lower(trim(NEW.email))
-    AND matched_user_id IS NULL;
-  
-  -- Automatically process points for the newly linked registrations
-  PERFORM public.process_pending_points();
-    
+  INSERT INTO public.profiles (id, email, name, role)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'name', NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1), 'User'),
+    COALESCE(NEW.raw_user_meta_data->>'role', 'member')
+  )
+  ON CONFLICT (id) DO UPDATE SET
+    email = EXCLUDED.email,
+    name = COALESCE(profiles.name, EXCLUDED.name);
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
-DROP TRIGGER IF EXISTS tr_after_profile_create ON public.profiles;
-CREATE TRIGGER tr_after_profile_create
-  AFTER INSERT ON public.profiles
-  FOR EACH ROW EXECUTE FUNCTION public.handle_after_profile_create();
-
--- Disable auto-creating profile on signup.
+-- Re-enable auto-creating profile on signup.
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user();
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- 3. Calendar Events
 CREATE TABLE IF NOT EXISTS public.events (
@@ -114,8 +112,6 @@ CREATE TABLE IF NOT EXISTS public.events (
   status       TEXT         DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'closed')),
   google_sheet_id TEXT,
   google_form_url TEXT,
-  target_id    TEXT,
-  subdomain    TEXT,
   registration_bonus INTEGER DEFAULT 0,
   checkin_bonus INTEGER DEFAULT 0,
   raffle_threshold INTEGER DEFAULT 0,
@@ -128,8 +124,6 @@ ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'draft',
   ADD COLUMN IF NOT EXISTS google_sheet_id TEXT,
   ADD COLUMN IF NOT EXISTS google_form_url TEXT,
-  ADD COLUMN IF NOT EXISTS target_id TEXT,
-  ADD COLUMN IF NOT EXISTS subdomain TEXT,
   ADD COLUMN IF NOT EXISTS registration_bonus INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS checkin_bonus INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS raffle_threshold INTEGER DEFAULT 0;
@@ -187,7 +181,6 @@ CREATE POLICY "Admins and creators can delete events"
 
 CREATE INDEX IF NOT EXISTS idx_events_start_at ON public.events (start_at);
 CREATE INDEX IF NOT EXISTS idx_events_google_sheet_id ON public.events (google_sheet_id) WHERE google_sheet_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_events_target_id ON public.events (target_id) WHERE target_id IS NOT NULL;
 
 -- 4. Event Registrations & Checkins
 CREATE TABLE IF NOT EXISTS public.event_registrations (

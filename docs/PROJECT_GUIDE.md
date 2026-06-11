@@ -37,7 +37,7 @@
 - 一般會員只看 `published` 活動；管理員可看全部狀態
 - 管理員可於活動編輯器新增/編輯/刪除活動，欄位包含：
   - 基本資料（名稱、地點、描述、顏色、全天）
-  - 外部整合（Google Form URL、Google Sheet ID、target_id、subdomain）
+  - 外部整合（Google Form URL、Google Sheet ID）
   - 點數規則（registration_bonus、checkin_bonus、raffle_threshold）
 
 ### 3.3 報名與同步
