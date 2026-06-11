@@ -56,17 +56,6 @@ const inputType = computed(() => {
         :class="type === 'password' ? 'pr-12' : 'pr-4'"
       />
 
-      <!-- Textarea -->
-      <textarea
-        v-else-if="type === 'textarea'"
-        :value="modelValue"
-        @input="emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
-        :placeholder="placeholder"
-        :disabled="disabled"
-        :rows="rows || 3"
-        class="block w-full px-4 py-3.5 rounded-2xl border-none bg-white/80 text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-primary/50 shadow-sm transition-all outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-      ></textarea>
-
       <!-- Select -->
       <div v-else-if="type === 'select'" class="relative">
         <select
