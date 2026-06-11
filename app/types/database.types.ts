@@ -151,7 +151,6 @@ export type Database = {
           checkin_bonus: number | null
           color: string | null
           created_at: string | null
-          created_by: string | null
           description: string | null
           end_at: string
           google_form_url: string | null
@@ -163,8 +162,6 @@ export type Database = {
           registration_bonus: number | null
           start_at: string
           status: string | null
-          subdomain: string | null
-          target_id: string | null
           title: string
         }
         Insert: {
@@ -172,7 +169,6 @@ export type Database = {
           checkin_bonus?: number | null
           color?: string | null
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
           end_at: string
           google_form_url?: string | null
@@ -184,8 +180,6 @@ export type Database = {
           registration_bonus?: number | null
           start_at: string
           status?: string | null
-          subdomain?: string | null
-          target_id?: string | null
           title: string
         }
         Update: {
@@ -193,7 +187,6 @@ export type Database = {
           checkin_bonus?: number | null
           color?: string | null
           created_at?: string | null
-          created_by?: string | null
           description?: string | null
           end_at?: string
           google_form_url?: string | null
@@ -205,8 +198,6 @@ export type Database = {
           registration_bonus?: number | null
           start_at?: string
           status?: string | null
-          subdomain?: string | null
-          target_id?: string | null
           title?: string
         }
         Relationships: []
