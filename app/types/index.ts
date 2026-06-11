@@ -27,10 +27,7 @@ export interface Activity {
 /**
  * Form Data
  */
-export interface LoginFormData {
-  email: string
-  password: string
-}
+
 
 export interface GoogleSignupFormData {
   fullName: string

@@ -3,10 +3,6 @@ import type { Database } from '@/types/database.types'
 import { userService } from '@/services/userService'
 
 export default defineNuxtRouteMiddleware(async (to) => {
-  if (to.path === '/auth/register') {
-    return navigateTo('/auth/login', { replace: true })
-  }
-
   const supabase = useSupabaseClient<Database>()
   const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
 
@@ -22,7 +18,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  if (to.path === '/auth/login') {
+  if (to.path === '/auth/login' || to.path === '/auth/register') {
     const { data: profile } = await supabase
       .from('profiles')
       .select('role')
@@ -35,6 +31,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   const excludedPaths = [
     '/auth/login', 
+    '/auth/register',
     '/auth/confirm', 
     '/auth/social-signup'
   ]
