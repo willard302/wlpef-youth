@@ -84,11 +84,13 @@ CREATE OR REPLACE FUNCTION public.handle_after_profile_create()
 RETURNS TRIGGER AS $$
 BEGIN
   -- Link any registrations that match the new profile's email
-  -- Use trim and lower for robust matching
   UPDATE public.event_registrations
   SET matched_user_id = NEW.id
   WHERE lower(trim(email)) = lower(trim(NEW.email))
     AND matched_user_id IS NULL;
+  
+  -- Automatically process points for the newly linked registrations
+  PERFORM public.process_pending_points();
     
   RETURN NEW;
 END;

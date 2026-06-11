@@ -240,27 +240,35 @@ export const userService = {
 
       if (!user) throw new Error('User not authenticated')
 
-      // 1. 更新 profiles 表
-      const dbUpdate: Database['public']['Tables']['profiles']['Update'] = {}
-      if (profileData.email !== undefined) dbUpdate.email = profileData.email
-      if (profileData.name !== undefined) dbUpdate.name = profileData.name
-      if (profileData.points !== undefined) dbUpdate.points = profileData.points
-      if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
-      if (profileData.scanPermission !== undefined) dbUpdate.scan_permission = profileData.scanPermission
-      if (profileData.department !== undefined) dbUpdate.department = profileData.department
-      if (profileData.phoneNumber !== undefined) dbUpdate.phone_number = profileData.phoneNumber
-      if (profileData.gender !== undefined) dbUpdate.gender = profileData.gender
-      if (profileData.bio !== undefined) dbUpdate.bio = profileData.bio
+      // 1. 使用 upsert 更新或建立 profiles 表
+      const dbData: any = {
+        id: user.id,
+        updated_at: new Date().toISOString()
+      }
+      
+      if (profileData.email !== undefined) dbData.email = profileData.email
+      else if (user.email) dbData.email = user.email
+
+      if (profileData.name !== undefined) dbData.name = profileData.name
+      if (profileData.points !== undefined) dbData.points = profileData.points
+      if (profileData.role !== undefined) dbData.role = profileData.role as Role
+      if (profileData.scanPermission !== undefined) dbData.scan_permission = profileData.scanPermission
+      if (profileData.department !== undefined) dbData.department = profileData.department
+      if (profileData.phoneNumber !== undefined) dbData.phone_number = profileData.phoneNumber
+      if (profileData.gender !== undefined) dbData.gender = profileData.gender
+      if (profileData.bio !== undefined) dbData.bio = profileData.bio
+
+      // 如果是新建立且沒有名字，從 metadata 獲取預設值
+      if (!dbData.name) {
+        const metadata = user.user_metadata || {}
+        dbData.name = metadata.name || metadata.full_name || user.email?.split('@')[0] || 'User'
+      }
 
       const { error: dbError } = await supabase
         .from('profiles')
-        .update(dbUpdate)
-        .eq('id', user.id)
+        .upsert(dbData)
 
       if (dbError) throw dbError
-
-      // 註冊後的個人資料編輯僅修改 profiles 表，不再同步更新 auth metadata
-      // 這是為了確保數據單一來源，避免 metadata 冗餘
     } catch (error: any) {
       console.error('Error updating user profile:', error)
       throw new Error(error.message || 'Failed to update user profile')
@@ -278,32 +286,14 @@ export const userService = {
     gender?: string
     bio?: string
   }): Promise<void> {
-    try {
-      const supabase = useSupabaseClient<Database>()
-      const profileName = data.name?.trim() || data.email.split('@')[0] || 'User'
-      const normalizedDepartment = data.department?.trim() || null
-      
-      // 1. 在 profiles 表中創建或更新資料
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: data.id,
-          email: data.email,
-          name: profileName,
-          department: normalizedDepartment,
-          gender: data.gender,
-          bio: data.bio,
-          points: 0,
-          updated_at: new Date().toISOString()
-        })
-
-      if (profileError) throw profileError
-
-      // 社群登入後的基本資料補填僅修改 profiles 表，不再同步更新 auth metadata
-    } catch (error: any) {
-      console.error('Error completing social signup:', error)
-      throw error
-    }
+    const supabase = useSupabaseClient<Database>()
+    return this.updateUserProfile(supabase, {
+      email: data.email,
+      name: data.name,
+      department: data.department,
+      gender: data.gender,
+      bio: data.bio
+    })
   },
 
   /**

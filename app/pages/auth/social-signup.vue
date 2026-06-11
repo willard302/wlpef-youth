@@ -108,9 +108,7 @@ const handleCompleteRegistration = async () => {
     
     await completeSocialSignup({
       fullName: formData.value.fullName.trim(),
-      points: 0,
-      department: formData.value.department.trim(),
-      bio: formData.value.bio.trim()
+      points: 0
     })
 
     router.push('/home')

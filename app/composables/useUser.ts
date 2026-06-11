@@ -216,10 +216,6 @@ export function useUser() {
   const completeSocialSignup = async (socialSignupData: {
     fullName: string
     points: number
-    department?: string
-    phoneNumber?: string
-    gender?: string
-    bio?: string
   }) => {
     isUpdatingProfile.value = true
     error.value = null
@@ -228,11 +224,7 @@ export function useUser() {
       // 更新用戶個人資料
       await userService.updateUserProfile(supabase, {
         name: socialSignupData.fullName,
-        points: socialSignupData.points,
-        department: socialSignupData.department,
-        phoneNumber: socialSignupData.phoneNumber,
-        gender: socialSignupData.gender,
-        bio: socialSignupData.bio
+        points: socialSignupData.points
       })
 
       // 標記社群登入首次資料補填已完成
