@@ -190,13 +190,6 @@ onMounted(() => {
           <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
         </button>
       </div>
-
-      <div class="text-center pt-2">
-        <NuxtLink to="/home" class="text-slate-400 text-sm font-bold hover:text-sky-500 transition-colors inline-flex items-center gap-1">
-          <span>稍後再說，先回首頁</span>
-          <span class="material-symbols-outlined text-base">arrow_forward</span>
-        </NuxtLink>
-      </div>
     </div>
 
     <!-- Footer Branding -->
