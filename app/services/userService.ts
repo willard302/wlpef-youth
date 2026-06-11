@@ -8,42 +8,6 @@ type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
  */
 export const userService = {
   /**
-   * 確保當前登入使用者在 profiles 表中有對應資料
-   */
-  // async ensureProfileExists(supabase: TypedSupabaseClient): Promise<void> {
-  //   const { data: { user }, error: userError } = await supabase.auth.getUser()
-
-  //   if (userError) throw userError
-  //   if (!user?.id) throw new Error('User not authenticated')
-
-  //   const { data: existingProfile, error: profileQueryError } = await supabase
-  //     .from('profiles')
-  //     .select('id')
-  //     .eq('id', user.id)
-  //     .maybeSingle()
-
-  //   if (profileQueryError) throw profileQueryError
-  //   if (existingProfile) return
-
-  //   const metadata = user.user_metadata || {}
-  //   const profileName = metadata.name || metadata.display_name || metadata.full_name || user.email?.split('@')[0] || 'User'
-
-  //   const { error: createProfileError } = await supabase
-  //     .from('profiles')
-  //     .insert({
-  //       id: user.id,
-  //       email: user.email,
-  //       name: profileName,
-  //       avatar_url: metadata.avatar_url || null,
-  //       points: 0
-  //     })
-
-  //   if (createProfileError && createProfileError.code !== '23505') {
-  //     throw createProfileError
-  //   }
-  // },
-
-  /**
    * 取得使用者詳細資料
    */
   async fetchUserProfile(): Promise<UserProfile> {
@@ -74,12 +38,8 @@ export const userService = {
         role: (profile?.role as Role) || 'member',
         scanPermission: profile?.scan_permission ?? false,
         joinDate: profile?.created_at || metadata.join_date || 'Since 2024',
-        department: profile?.department || metadata.department || '',
         points,
-        avatar: profile?.avatar_url || metadata.avatar_url || undefined,
-        phoneNumber: profile?.phone_number || metadata.phone_number || '',
-        gender: profile?.gender || metadata.gender || '',
-        bio: profile?.bio || metadata.bio || ''
+        avatar: profile?.avatar_url || metadata.avatar_url || undefined
       }
     } catch (error: any) {
       console.error('Error fetching user profile:', error)
@@ -204,8 +164,7 @@ export const userService = {
           ...currentMetadata,
           name: displayName,
           display_name: displayName,
-          join_date: new Date().toISOString().split('T')[0],
-          department: ''
+          join_date: new Date().toISOString().split('T')[0]
         }
       })
 
@@ -229,10 +188,6 @@ export const userService = {
       points?: number
       role?: string
       scanPermission?: boolean
-      department?: string
-      phoneNumber?: string
-      gender?: string
-      bio?: string
     }
   ): Promise<void> {
     try {
@@ -253,10 +208,6 @@ export const userService = {
       if (profileData.points !== undefined) dbData.points = profileData.points
       if (profileData.role !== undefined) dbData.role = profileData.role as Role
       if (profileData.scanPermission !== undefined) dbData.scan_permission = profileData.scanPermission
-      if (profileData.department !== undefined) dbData.department = profileData.department
-      if (profileData.phoneNumber !== undefined) dbData.phone_number = profileData.phoneNumber
-      if (profileData.gender !== undefined) dbData.gender = profileData.gender
-      if (profileData.bio !== undefined) dbData.bio = profileData.bio
 
       // 如果是新建立且沒有名字，從 metadata 獲取預設值
       if (!dbData.name) {
@@ -282,17 +233,11 @@ export const userService = {
     id: string
     email: string
     name?: string
-    department?: string
-    gender?: string
-    bio?: string
   }): Promise<void> {
     const supabase = useSupabaseClient<Database>()
     return this.updateUserProfile(supabase, {
       email: data.email,
-      name: data.name,
-      department: data.department,
-      gender: data.gender,
-      bio: data.bio
+      name: data.name
     })
   },
 
@@ -317,12 +262,8 @@ export const userService = {
         role: (profile.role as Role) || 'member',
         scanPermission: profile.scan_permission ?? false,
         joinDate: profile.created_at || 'Since 2024',
-        department: profile.department || '',
         points: profile.points ?? 0,
-        avatar: profile.avatar_url || undefined,
-        phoneNumber: profile.phone_number || '',
-        gender: profile.gender || '',
-        bio: profile.bio || ''
+        avatar: profile.avatar_url || undefined
       }))
     } catch (error: any) {
       console.error('Error fetching all profiles:', error)
@@ -338,7 +279,6 @@ export const userService = {
     name: string
     role?: string
     points?: number
-    department?: string
   }): Promise<void> {
     try {
       const supabase = useSupabaseClient()
@@ -365,7 +305,6 @@ export const userService = {
       points?: number
       role?: string
       scanPermission?: boolean
-      department?: string
     }
   ): Promise<void> {
     try {
@@ -376,7 +315,6 @@ export const userService = {
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
       if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
       if (profileData.scanPermission !== undefined) dbUpdate.scan_permission = profileData.scanPermission
-      if (profileData.department !== undefined) dbUpdate.department = profileData.department
 
       const { error } = await supabase
         .from('profiles')

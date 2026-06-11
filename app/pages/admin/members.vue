@@ -27,16 +27,14 @@ const newMember = ref({
   email: '',
   name: '',
   role: 'member' as Role,
-  points: 0,
-  department: ''
+  points: 0
 })
 
 const editMember = ref({
   id: '',
   name: '',
   role: 'member' as Role,
-  points: 0,
-  department: ''
+  points: 0
 })
 
 const loadProfiles = async () => {
@@ -56,8 +54,7 @@ const openEditModal = (profile: UserProfile) => {
     id: profile.id,
     name: profile.name,
     role: profile.role,
-    points: profile.points,
-    department: profile.department || ''
+    points: profile.points
   }
   showEditModal.value = true
 }
@@ -70,8 +67,7 @@ const handleUpdateMember = async () => {
     await userService.adminUpdateProfile(editMember.value.id, {
       name: editMember.value.name,
       role: editMember.value.role,
-      points: editMember.value.points,
-      department: editMember.value.department
+      points: editMember.value.points
     })
     addToast('會員資料更新成功', 'success')
     showEditModal.value = false
@@ -99,8 +95,7 @@ const handleAddMember = async () => {
       email: '',
       name: '',
       role: 'member',
-      points: 0,
-      department: ''
+      points: 0
     }
     await loadProfiles()
   } catch (err: any) {
@@ -120,8 +115,7 @@ const filteredProfiles = computed(() => {
   return profiles.value.filter((profile) => {
     return (
       profile.name.toLowerCase().includes(keyword) ||
-      profile.email.toLowerCase().includes(keyword) ||
-      profile.department.toLowerCase().includes(keyword)
+      profile.email.toLowerCase().includes(keyword)
     )
   })
 })
@@ -229,7 +223,6 @@ onMounted(async () => {
                 <span class="material-symbols-outlined text-amber-500 text-xs font-variation-settings-fill-1">database</span>
                 <span class="text-sm font-black text-slate-800">{{ profile.points }}</span>
               </div>
-              <p v-if="profile.department" class="text-[9px] font-bold text-slate-400">{{ profile.department }}</p>
             </div>
           </div>
         </div>
@@ -281,14 +274,6 @@ onMounted(async () => {
               />
             </FormField>
           </div>
-
-          <FormField label="部門 / 小組">
-            <input
-              v-model="editMember.department"
-              type="text"
-              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-            />
-          </FormField>
         </div>
 
         <button
@@ -342,15 +327,6 @@ onMounted(async () => {
               />
             </FormField>
           </div>
-
-          <FormField label="部門 / 小組">
-            <input
-              v-model="newMember.department"
-              type="text"
-              placeholder="例如：青年部"
-              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-            />
-          </FormField>
         </div>
 
         <button

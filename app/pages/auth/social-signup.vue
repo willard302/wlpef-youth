@@ -11,9 +11,7 @@ const errorMessage = ref('')
 
 const formData = ref({
   email: '',
-  fullName: '',
-  department: '',
-  bio: ''
+  fullName: ''
 })
 
 type SocialSignupField = {
@@ -69,7 +67,7 @@ const fetchUserData = async () => {
     // Try to get existing profile
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, name, department, bio')
+      .select('id, name')
       .eq('id', user.id)
       .maybeSingle()
 

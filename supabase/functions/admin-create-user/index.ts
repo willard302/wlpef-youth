@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
     if (profile?.role !== "admin") throw new Error("Forbidden: Admin access required")
 
     // 取得參數
-    const { email, name, role = "member", points = 0, department = "" } = await req.json()
+    const { email, name, role = "member", points = 0 } = await req.json()
 
     if (!email || !name) throw new Error("Email and Name are required")
 
@@ -70,8 +70,7 @@ Deno.serve(async (req) => {
               email: email,
               name: name,
               role: role,
-              points: points,
-              department: department
+              points: points
             })
           
           if (profileError) throw profileError
@@ -91,8 +90,7 @@ Deno.serve(async (req) => {
         email: email,
         name: name,
         role: role,
-        points: points,
-        department: department
+        points: points
       })
 
     if (profileError) throw profileError

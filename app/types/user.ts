@@ -12,12 +12,8 @@ export interface UserProfile {
   role: Role
   scanPermission: boolean
   joinDate: string
-  department: string
   points: number
-  phoneNumber?: string
   avatar?: string
-  gender?: string
-  bio?: string
 }
 
 export interface PointTransaction {

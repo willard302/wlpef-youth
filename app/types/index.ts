@@ -32,10 +32,6 @@ export interface Activity {
 export interface GoogleSignupFormData {
   fullName: string
   points: number
-  department: string
-  dateOfBirth: string
-  gender: string
-  bio: string
 }
 
 /**

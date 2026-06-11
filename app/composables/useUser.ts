@@ -47,11 +47,7 @@ export function useUser() {
               name: payload.new.name ?? userProfile.value.name,
               avatar: payload.new.avatar_url ?? userProfile.value.avatar,
               role: payload.new.role ?? userProfile.value.role,
-              scanPermission: payload.new.scan_permission ?? userProfile.value.scanPermission,
-              department: payload.new.department ?? userProfile.value.department,
-              phoneNumber: payload.new.phone_number ?? userProfile.value.phoneNumber,
-              gender: payload.new.gender ?? userProfile.value.gender,
-              bio: payload.new.bio ?? userProfile.value.bio
+              scanPermission: payload.new.scan_permission ?? userProfile.value.scanPermission
             }
           }
         }
@@ -143,10 +139,6 @@ export function useUser() {
       points?: number
       role?: string
       scanPermission?: boolean
-      department?: string
-      phoneNumber?: string
-      gender?: string
-      bio?: string
     }
   ) => {
     if (!userProfile.value) return

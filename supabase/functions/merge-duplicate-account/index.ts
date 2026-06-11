@@ -11,11 +11,7 @@ type MinimalAuthUser = {
 type ProfileRow = {
   id: string
   name: string | null
-  department: string | null
-  gender: string | null
-  bio: string | null
   avatar_url: string | null
-  phone_number: string | null
   role: string | null
   points: number | null
 }
@@ -211,11 +207,7 @@ Deno.serve(async(req) => {
       const mergedProfile = {
         id: primaryId,
         name,
-        department: pickString(primaryProfile?.department, secondaryProfile?.department) || null,
-        gender: pickString(primaryProfile?.gender, secondaryProfile?.gender) || null,
-        bio: pickString(primaryProfile?.bio, secondaryProfile?.bio) || null,
         avatar_url: pickString(primaryProfile?.avatar_url, secondaryProfile?.avatar_url) || null,
-        phone_number: pickString(primaryProfile?.phone_number, secondaryProfile?.phone_number) || null,
         role: toRole(primaryProfile?.role, secondaryProfile?.role),
         points: Math.max(primaryProfile?.points || 0, secondaryProfile?.points || 0),
         updated_at: new Date().toISOString(),
