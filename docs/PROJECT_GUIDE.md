@@ -75,7 +75,7 @@
 ## 5. 資料模型重點
 主要表格以 `supabase/full_schema.sql` 為準，常用資料表如下：
 
-- `profiles`: 會員資料（name、role、department、points、avatar_url...）
+- `profiles`: 會員資料（name、role、points、avatar_url、email）
 - `events`: 活動主檔（時間、狀態、外部整合欄位、點數規則）
 - `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data...）
 - `point_transactions`: 點數異動紀錄

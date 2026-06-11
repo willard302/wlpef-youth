@@ -17,11 +17,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   role         TEXT DEFAULT 'member', -- admin, member
   scan_permission BOOLEAN DEFAULT FALSE,
   email        TEXT,
-  department   TEXT,
-  phone_number TEXT,
   points       INTEGER DEFAULT 0,
-  bio          TEXT,
-  gender       TEXT,
   updated_at   TIMESTAMPTZ DEFAULT NOW(),
   created_at   TIMESTAMPTZ DEFAULT NOW()
 );
