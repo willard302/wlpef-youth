@@ -8,7 +8,6 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:show', value: boolean): void
-  (e: 'navigate-to-editor'): void
 }>()
 
 const router = useRouter()
@@ -22,14 +21,16 @@ const menuVisible = computed({
 const menuItems = computed<MenuItem[]>(() => {
   const adminItems: MenuItem[] = [
     {
-      id: 'add-event',
-      label: '新增活動',
-      icon: 'add_circle',
+      id: 'events',
+      label: '活動管理',
+      icon: 'edit_calendar',
       bgClass: 'bg-sky-50',
       textClass: 'text-sky-600',
       hoverClass: 'hover:bg-sky-100',
       visible: true,
-      action: () => emit('navigate-to-editor'),
+      action: () => {
+        void router.push('/admin/events')
+      },
     },
     {
       id: 'registrations',
@@ -41,6 +42,18 @@ const menuItems = computed<MenuItem[]>(() => {
       visible: true,
       action: () => {
         void router.push('/admin/registrations')
+      },
+    },
+    {
+      id: 'attendance',
+      label: '活動出席',
+      icon: 'verified',
+      bgClass: 'bg-teal-50',
+      textClass: 'text-teal-600',
+      hoverClass: 'hover:bg-teal-100',
+      visible: true,
+      action: () => {
+        void router.push('/admin/attendance')
       },
     },
     {

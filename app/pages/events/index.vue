@@ -142,7 +142,7 @@ const loadUpcomingEvent = async () => {
 }
 
 const navigateToEditEvent = (eventId: string) => {
-  router.push({ path: '/admin/event-editor', query: { id: eventId } })
+  router.push({ path: '/admin/events', query: { id: eventId } })
 }
 
 const handleDeleteEvent = async (eventId: string) => {

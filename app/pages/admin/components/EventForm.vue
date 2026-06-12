@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { COLOR_OPTIONS } from '@/composables/useCalendarEditor'
 
-definePageMeta({
-  layout: 'admin',
-  middleware: ['auth', 'admin'],
-  showTabbar: false,
-})
+const props = defineProps<{
+  show: boolean
+  eventId?: string | null
+  initialDate?: string
+}>()
+
+const emit = defineEmits<{
+  (e: 'update:show', value: boolean): void
+  (e: 'saved'): void
+}>()
 
 const {
   formData,
@@ -20,14 +25,35 @@ const {
   formatDisplayTime,
 } = useCalendarEditor()
 
-onMounted(() => {
-  initEditor()
-})
-
 const showStartDatePicker = ref(false)
 const showStartTimePicker = ref(false)
 const showEndDatePicker = ref(false)
 const showEndTimePicker = ref(false)
+
+const eventFormVisible = computed({
+  get: () => props.show,
+  set: (value) => emit('update:show', value)
+})
+
+watch(() => props.show, (newVal) => {
+  if (newVal) {
+    initEditor(props.eventId, props.initialDate)
+  }
+})
+
+const handleSave = async () => {
+  await saveEvent(() => {
+    emit('saved')
+    eventFormVisible.value = false
+  })
+}
+
+const handleDelete = async () => {
+  await deleteEvent(() => {
+    emit('saved')
+    eventFormVisible.value = false
+  })
+}
 
 const onStartDateConfirm = ({ selectedValues }: { selectedValues: string[] }) => {
   formData.value.startDate = selectedValues.join('-')
@@ -58,23 +84,30 @@ const getTimeColumns = (timeStr: string) => {
   if (!timeStr) return undefined
   return timeStr.split(':')
 }
+
 </script>
 
 <template>
-  <div class="min-h-screen editor-bg">
-    <AppHeaderPage :title="isEditMode ? '編輯活動' : '新增活動'">
-      <template #actions>
+  <van-action-sheet 
+    v-model:show="eventFormVisible" 
+    position="bottom"
+    :title="isEditMode ? '編輯活動' : '新增活動'"
+  >
+    <div class="h-full flex flex-col overflow-hidden">
+      <!-- Custom Header inside Popup -->
+      <div class="flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-md border-b border-sky-500/10 shrink-0">
+        <button @click="eventFormVisible = false" class="text-slate-500 text-sm font-medium">取消</button>
         <button
-          @click="saveEvent"
+          @click="handleSave"
           :disabled="isSaving || isDeleting || isInitializing"
-          class="text-slate-900 text-sm font-bold tracking-widest active:opacity-70 active:scale-95 transition-all disabled:opacity-40"
+          class="text-sky-600 text-sm font-bold tracking-widest active:opacity-70 active:scale-95 transition-all disabled:opacity-40"
         >
           {{ isSaving ? '儲存中...' : (isEditMode ? '更新' : '儲存') }}
         </button>
-      </template>
-    </AppHeaderPage>
+      </div>
 
-    <main v-if="!isInitializing" class="px-4 pt-4 pb-24 space-y-5 max-w-md mx-auto">
+      <div class="flex-1 overflow-y-auto">
+        <main v-if="!isInitializing" class="px-4 pt-4 pb-24 space-y-5 max-w-md mx-auto">
       <div class="relative h-32 w-full rounded-2xl overflow-hidden shadow-sm">
         <div class="absolute inset-0 sky-hero-gradient"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[#F0F9FF]/80 to-transparent"></div>
@@ -282,7 +315,7 @@ const getTimeColumns = (timeStr: string) => {
 
       <section class="pt-4 space-y-3">
         <button
-          @click="saveEvent"
+          @click="handleSave"
           :disabled="isSaving || isDeleting || isInitializing"
           class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#2b9dee] text-white font-bold text-sm shadow-lg shadow-blue-200 active:scale-[0.98] transition-all disabled:opacity-50"
         >
@@ -292,7 +325,7 @@ const getTimeColumns = (timeStr: string) => {
 
         <button
           v-if="isEditMode"
-          @click="deleteEvent"
+          @click="handleDelete"
           :disabled="isDeleting || isSaving"
           class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-50 text-red-500 font-bold text-sm active:bg-red-100 transition-colors disabled:opacity-50"
         >
@@ -308,6 +341,8 @@ const getTimeColumns = (timeStr: string) => {
         載入活動中...
       </div>
     </main>
+    </div>
+    </div>
 
     <van-popup v-model:show="showStartDatePicker" position="bottom" round>
       <van-date-picker
@@ -344,7 +379,7 @@ const getTimeColumns = (timeStr: string) => {
         @cancel="showEndTimePicker = false"
       />
     </van-popup>
-  </div>
+  </van-action-sheet>
 </template>
 
 <style scoped>

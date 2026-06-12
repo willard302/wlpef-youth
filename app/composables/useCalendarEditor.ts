@@ -21,10 +21,7 @@ export function useCalendarEditor() {
   const isDeleting = ref(false)
   const isInitializing = ref(false)
 
-  const editingEventId = computed(() => {
-    const queryId = route.query.id
-    return typeof queryId === 'string' && queryId.length > 0 ? queryId : null
-  })
+  const editingEventId = ref<string | null>(null)
   const isEditMode = computed(() => editingEventId.value !== null)
 
   const formData = ref({
@@ -81,21 +78,22 @@ export function useCalendarEditor() {
     savedEndTime = formData.value.endTime
   }
 
-  const initEditor = async () => {
+  const initEditor = async (id?: string | null, initialDate?: string) => {
     isInitializing.value = true
 
     try {
+      editingEventId.value = id || (route.query.id as string | null)
+      
       if (editingEventId.value) {
         const event = await eventService.fetchEventById(editingEventId.value)
         fillFormFromEvent(event)
         return
       }
 
-      const queryDate = route.query.date
-      initForm(typeof queryDate === 'string' ? queryDate : undefined)
+      const queryDate = initialDate || (route.query.date as string | undefined)
+      initForm(queryDate)
     } catch (err: any) {
       addToast(err.message || '載入活動失敗', 'error')
-      router.replace('/events')
     } finally {
       isInitializing.value = false
     }
@@ -154,7 +152,7 @@ export function useCalendarEditor() {
     return { valid: true }
   }
 
-  const saveEvent = async () => {
+  const saveEvent = async (onSuccess?: () => void) => {
     const { valid, error } = validateForm()
     if (!valid) {
       addToast(error!, 'error')
@@ -188,7 +186,11 @@ export function useCalendarEditor() {
         addToast('活動已建立', 'success')
       }
 
-      router.push('/events')
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push('/events')
+      }
     } catch (err: any) {
       addToast(err.message || '儲存活動失敗', 'error')
     } finally {
@@ -196,7 +198,7 @@ export function useCalendarEditor() {
     }
   }
 
-  const deleteEvent = async () => {
+  const deleteEvent = async (onSuccess?: () => void) => {
     if (!editingEventId.value) return
 
     try {
@@ -217,7 +219,12 @@ export function useCalendarEditor() {
     try {
       await eventService.deleteEvent(editingEventId.value)
       addToast('活動已刪除', 'success')
-      router.push('/events')
+      
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        router.push('/events')
+      }
     } catch (err: any) {
       addToast(err.message || '刪除活動失敗', 'error')
     } finally {

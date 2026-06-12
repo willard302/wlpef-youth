@@ -2,6 +2,7 @@
 import { format as fnsFormat } from 'date-fns'
 import { eventService } from '@/services/eventService'
 import type { Event } from '@/types'
+import EventForm from './components/EventForm.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -15,7 +16,7 @@ const { addToast } = useToast()
 const router = useRouter()
 
 const quickActions = [
-  { label: '活動管理', icon: 'edit_calendar', color: 'bg-sky-500', action: () => { showManagementSheet.value = true } },
+  { label: '活動管理', icon: 'edit_calendar', path: '/admin/events', color: 'bg-sky-500' },
   { label: '報名管理', icon: 'assignment_ind', path: '/admin/registrations', color: 'bg-indigo-500' },
   { label: '活動出席', icon: 'verified', path: '/admin/attendance', color: 'bg-teal-500' },
   { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
@@ -33,7 +34,14 @@ const events = ref<Event[]>([])
 const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const showPointsBreakdown = ref(false)
-const showManagementSheet = ref(false)
+const eventFormVisible = ref(false)
+const editingEventId = ref<string | null>(null)
+
+const openEventEditor = (id: string | null = null) => {
+  editingEventId.value = id
+  eventFormVisible.value = true
+}
+
 const stats = ref({
   totalProfiles: 0,
   eventRegistrations: 0,
@@ -86,7 +94,6 @@ const handleSync = async () => {
     addToast(err.message || '同步失敗', 'error')
   } finally {
     isSyncing.value = false
-    showManagementSheet.value = false
   }
 }
 
@@ -104,35 +111,6 @@ const eventPickerActions = computed(() => {
   }))
 })
 
-const managementActions = computed(() => [
-  { 
-    name: '新增活動', 
-    color: '#2b9dee',
-    callback: () => router.push('/admin/event-editor') 
-  },
-  { 
-    name: '編輯目前活動', 
-    subname: selectedEvent.value?.title,
-    disabled: !selectedEvent.value,
-    callback: () => {
-      if (selectedEvent.value) {
-        router.push(`/admin/event-editor?id=${selectedEvent.value.id}`)
-      }
-    }
-  },
-  { 
-    name: '同步報名資料', 
-    subname: selectedEvent.value?.googleSheetId ? '從 Google 試算表同步' : '未設定試算表 ID',
-    disabled: !selectedEvent.value?.googleSheetId || isSyncing.value,
-    loading: isSyncing.value,
-    callback: handleSync
-  },
-  { 
-    name: '前往活動行事曆', 
-    callback: () => router.push('/events') 
-  }
-])
-
 const displayStats = computed(() => [
   { 
     id: 'profiles',
@@ -140,7 +118,9 @@ const displayStats = computed(() => [
     value: stats.value.totalProfiles.toString(), 
     icon: 'person_check', 
     color: 'text-blue-500', 
-    bg: 'bg-blue-50' 
+    bg: 'bg-blue-50',
+    clickable: true,
+    path: '/admin/members'
   },
   { 
     id: 'registrations',
@@ -203,15 +183,25 @@ onMounted(async () => {
       <!-- Event Selector Trigger -->
       <div class="mt-4 flex flex-col gap-1">
         <p class="text-sky-100 text-[10px] font-bold uppercase tracking-widest opacity-80">正在檢視活動</p>
-        <button
-          @click="showEventPicker = true"
-          class="flex items-center gap-2 text-left group"
-        >
-          <h2 class="text-white text-xl font-bold truncate max-w-[280px]">
-            {{ selectedEvent?.title || '載入活動中...' }}
-          </h2>
-          <span class="material-symbols-outlined text-white/60 group-hover:text-white transition-colors">swap_horiz</span>
-        </button>
+        <div class="flex items-center justify-between gap-2">
+          <button
+            @click="showEventPicker = true"
+            class="flex items-center gap-2 text-left group min-w-0"
+          >
+            <h2 class="text-white text-xl font-bold truncate max-w-[240px]">
+              {{ selectedEvent?.title || '載入活動中...' }}
+            </h2>
+            <span class="material-symbols-outlined text-white/60 group-hover:text-white transition-colors shrink-0">swap_horiz</span>
+          </button>
+
+          <button
+            v-if="selectedEvent"
+            @click="openEventEditor(selectedEvent.id)"
+            class="shrink-0 size-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all"
+          >
+            <span class="material-symbols-outlined text-lg">edit</span>
+          </button>
+        </div>
       </div>
     </AppHeaderHero>
 
@@ -245,7 +235,7 @@ onMounted(async () => {
           <button
             v-for="action in quickActions"
             :key="action.label"
-            @click="action.path ? router.push(action.path) : action.action?.()"
+            @click="router.push(action.path)"
             class="flex flex-col items-center gap-2"
           >
             <div :class="[action.color, 'size-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-sky-100 active:scale-95 transition-transform']">
@@ -266,13 +256,10 @@ onMounted(async () => {
       close-on-click-action
     />
 
-    <!-- Event Management Action Sheet -->
-    <van-action-sheet
-      v-model:show="showManagementSheet"
-      :actions="managementActions"
-      title="活動管理"
-      cancel-text="取消"
-      close-on-click-action
+    <EventForm 
+      v-model:show="eventFormVisible"
+      :event-id="editingEventId"
+      @saved="loadEvents"
     />
 
     <!-- Points Breakdown Modal -->
