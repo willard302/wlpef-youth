@@ -17,6 +17,7 @@
     "@vant/nuxt": "^1.0.7",
     "date-fns": "^4.1.0",
     "html5-qrcode": "^2.3.8",
+    "material-symbols": "^0.45.0",
     "nuxt": "^4.4.2",
     "qrcode.vue": "^3.9.1",
     "vant": "^4.9.1",
