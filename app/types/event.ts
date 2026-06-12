@@ -8,7 +8,6 @@ export interface Event {
   startAt: Date
   endAt: Date
   allDay: boolean
-  color: string
   createdBy: string
   attendees: number
   status: EventStatus
@@ -32,7 +31,6 @@ export interface CreateEventPayload {
   start_at: string  // ISO8601
   end_at: string    // ISO8601
   all_day?: boolean
-  color?: string
   status?: EventStatus
   google_sheet_id?: string
   google_form_url: string

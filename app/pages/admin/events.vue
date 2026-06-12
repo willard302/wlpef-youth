@@ -93,12 +93,11 @@ onMounted(() => {
         >
           <div 
             class="size-14 rounded-2xl flex flex-col items-center justify-center shrink-0"
-            :style="{ backgroundColor: event.color + '10', border: `1px solid ${event.color}20` }"
           >
-            <span class="text-[10px] font-bold uppercase opacity-60" :style="{ color: event.color }">
+            <span class="text-[10px] font-bold uppercase opacity-60">
               {{ fnsFormat(event.startAt, 'MMM') }}
             </span>
-            <span class="text-xl font-black" :style="{ color: event.color }">
+            <span class="text-xl font-black">
               {{ fnsFormat(event.startAt, 'dd') }}
             </span>
           </div>

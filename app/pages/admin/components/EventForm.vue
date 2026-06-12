@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { COLOR_OPTIONS } from '@/composables/useCalendarEditor'
-
 const props = defineProps<{
   show: boolean
   eventId?: string | null
@@ -283,33 +281,6 @@ const getTimeColumns = (timeStr: string) => {
         <p class="px-3 pb-3 text-[11px] leading-relaxed text-slate-500">
           * 系統每分鐘自動結算點數，報名或簽到後請稍候。
         </p>
-      </section>
-
-      <section class="glass-card rounded-2xl p-5 space-y-4">
-        <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-500">
-          活動顏色
-        </label>
-        <div class="flex justify-between items-center px-1">
-          <button
-            v-for="color in COLOR_OPTIONS"
-            :key="color"
-            @click="formData.color = color"
-            class="w-8 h-8 rounded-full flex items-center justify-center transition-all hover:scale-110"
-            :class="formData.color === color ? 'ring-2 ring-offset-2' : ''"
-            :style="{
-              backgroundColor: color,
-              '--tw-ring-color': formData.color === color ? color : 'transparent',
-            }"
-          >
-            <span
-              v-if="formData.color === color"
-              class="material-symbols-outlined text-white text-lg"
-              style="font-variation-settings: 'FILL' 1;"
-            >
-              check
-            </span>
-          </button>
-        </div>
       </section>
 
       <section class="pt-4 space-y-3">

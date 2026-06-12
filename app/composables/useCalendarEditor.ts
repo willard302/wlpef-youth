@@ -3,15 +3,6 @@ import { showDialog } from 'vant'
 import type { CreateEventPayload, Event } from '@/types'
 import { eventService } from '@/services/eventService'
 
-export const COLOR_OPTIONS = [
-  '#2b9dee',
-  '#14b8a6',
-  '#8b5cf6',
-  '#f43f5e',
-  '#f59e0b',
-  '#64748b',
-] as const
-
 export function useCalendarEditor() {
   const router = useRouter()
   const route = useRoute()
@@ -33,7 +24,6 @@ export function useCalendarEditor() {
     endDate: '',
     endTime: '',
     allDay: false,
-    color: COLOR_OPTIONS[0] as string,
     status: 'draft' as CreateEventPayload['status'],
     googleSheetId: '',
     googleFormUrl: '',
@@ -67,7 +57,6 @@ export function useCalendarEditor() {
     formData.value.endDate = format(event.endAt, 'yyyy-MM-dd')
     formData.value.endTime = format(event.endAt, 'HH:mm')
     formData.value.allDay = event.allDay
-    formData.value.color = event.color || COLOR_OPTIONS[0]
     formData.value.status = event.status
     formData.value.googleSheetId = event.googleSheetId || ''
     formData.value.googleFormUrl = event.googleFormUrl || ''
@@ -169,7 +158,6 @@ export function useCalendarEditor() {
         start_at: new Date(`${formData.value.startDate}T${formData.value.startTime}`).toISOString(),
         end_at: new Date(`${formData.value.endDate}T${formData.value.endTime}`).toISOString(),
         all_day: formData.value.allDay,
-        color: formData.value.color,
         status: formData.value.status,
         google_sheet_id: formData.value.googleSheetId.trim() || undefined,
         google_form_url: formData.value.googleFormUrl.trim(),
@@ -246,7 +234,6 @@ export function useCalendarEditor() {
     isDeleting,
     isInitializing,
     isEditMode,
-    COLOR_OPTIONS,
     initForm,
     initEditor,
     validateForm,

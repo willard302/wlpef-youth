@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
-import type { CreateEventPayload, Event, EventRegistration, EventStatus } from '@/types'
+import type { CreateEventPayload, Event, EventCheckin, EventRegistration, EventStatus } from '@/types'
 import type { Database } from '@/types/database.types'
 
 type EventRow = Database['public']['Tables']['events']['Row']
@@ -55,7 +55,6 @@ function mapToEvent(row: EventRow): Event {
     startAt,
     endAt,
     allDay: row.all_day ?? false,
-    color: row.color ?? '#38bdf8',
     createdBy: row.created_by ?? '',
     attendees: row.participants?.length ?? 0,
     status: (row.status ?? 'draft') as Event['status'],
