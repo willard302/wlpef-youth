@@ -2,6 +2,7 @@
 import { format as fnsFormat } from 'date-fns'
 import { userService } from '@/services/userService'
 import type { UserProfile, Role } from '@/types'
+import MemberForm from './components/MemberForm.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -23,22 +24,6 @@ const showAddModal = ref(false)
 const showEditModal = ref(false)
 const selectedProfile = ref<UserProfile | null>(null)
 
-const newMember = ref({
-  email: '',
-  name: '',
-  role: 'member' as Role,
-  points: 0,
-  scanPermission: false
-})
-
-const editMember = ref({
-  id: '',
-  name: '',
-  role: 'member' as Role,
-  points: 0,
-  scanPermission: false
-})
-
 const loadProfiles = async () => {
   isLoading.value = true
   try {
@@ -52,26 +37,19 @@ const loadProfiles = async () => {
 
 const openEditModal = (profile: UserProfile) => {
   selectedProfile.value = profile
-  editMember.value = {
-    id: profile.id,
-    name: profile.name,
-    role: profile.role,
-    points: profile.points,
-    scanPermission: profile.scanPermission
-  }
   showEditModal.value = true
 }
 
-const handleUpdateMember = async () => {
-  if (!editMember.value.id) return
+const handleUpdateMember = async (formData: any) => {
+  if (!selectedProfile.value?.id) return
 
   isUpdating.value = true
   try {
-    await userService.adminUpdateProfile(editMember.value.id, {
-      name: editMember.value.name,
-      role: editMember.value.role,
-      points: editMember.value.points,
-      scanPermission: editMember.value.scanPermission
+    await userService.adminUpdateProfile(selectedProfile.value.id, {
+      name: formData.name,
+      role: formData.role,
+      points: formData.points,
+      scanPermission: formData.scanPermission
     })
     addToast('會員資料更新成功', 'success')
     showEditModal.value = false
@@ -83,8 +61,8 @@ const handleUpdateMember = async () => {
   }
 }
 
-const handleAddMember = async () => {
-  if (!newMember.value.email || !newMember.value.name) {
+const handleAddMember = async (formData: any) => {
+  if (!formData.email || !formData.name) {
     addToast('請填寫 Email 與姓名', 'error')
     return
   }
@@ -92,22 +70,14 @@ const handleAddMember = async () => {
   isCreating.value = true
   try {
     await userService.adminCreateMember({
-      email: newMember.value.email,
-      name: newMember.value.name,
-      role: newMember.value.role,
-      points: newMember.value.points,
-      scanPermission: newMember.value.scanPermission
+      email: formData.email,
+      name: formData.name,
+      role: formData.role,
+      points: formData.points,
+      scanPermission: formData.scanPermission
     })
     addToast('會員建立成功並已發送邀請', 'success')
     showAddModal.value = false
-    // 重置表單
-    newMember.value = {
-      email: '',
-      name: '',
-      role: 'member',
-      points: 0,
-      scanPermission: false
-    }
     await loadProfiles()
   } catch (err: any) {
     addToast(err.message || '建立會員失敗', 'error')
@@ -240,146 +210,21 @@ onMounted(async () => {
       </section>
     </main>
 
-    <!-- Edit Member Modal -->
-    <van-action-sheet v-model:show="showEditModal" title="編輯會員資料" class="rounded-t-[2.5rem]">
-      <div v-if="selectedProfile" class="px-6 pb-12 pt-4 space-y-6">
-        <div class="flex items-center gap-4 mb-2">
-          <div
-            class="size-16 rounded-2xl bg-slate-100 bg-cover bg-center shadow-inner"
-            :style="{ backgroundImage: selectedProfile.avatar ? `url(${selectedProfile.avatar})` : 'none' }"
-          >
-            <div v-if="!selectedProfile.avatar" class="w-full h-full flex items-center justify-center text-slate-300">
-              <span class="material-symbols-outlined text-3xl">person</span>
-            </div>
-          </div>
-          <div>
-            <h3 class="text-lg font-bold text-slate-900">{{ selectedProfile.name }}</h3>
-            <p class="text-xs text-slate-500 font-medium">{{ selectedProfile.email }}</p>
-          </div>
-        </div>
+    <!-- Member Modals -->
+    <MemberForm
+      v-model:show="showAddModal"
+      mode="add"
+      :loading="isCreating"
+      @submit="handleAddMember"
+    />
 
-        <div class="space-y-4">
-          <FormField label="姓名">
-            <input
-              v-model="editMember.name"
-              type="text"
-              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-            />
-          </FormField>
-
-          <div class="grid grid-cols-2 gap-4">
-            <FormField label="身分角色">
-              <select
-                v-model="editMember.role"
-                class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20 appearance-none"
-              >
-                <option value="member">一般成員</option>
-                <option value="admin">管理員</option>
-              </select>
-            </FormField>
-            <FormField label="剩餘點數">
-              <input
-                v-model.number="editMember.points"
-                type="number"
-                class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-              />
-            </FormField>
-          </div>
-
-          <!-- Scanner Permission Toggle -->
-          <div class="flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl">
-            <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-slate-400">qr_code_scanner</span>
-              <div class="flex flex-col">
-                <span class="text-sm font-medium text-slate-700">簽到掃描權限</span>
-                <span class="text-[10px] text-slate-400">開通後該用戶可協助活動簽到</span>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input v-model="editMember.scanPermission" type="checkbox" class="sr-only peer" />
-              <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
-            </label>
-          </div>
-        </div>
-
-        <button
-          @click="handleUpdateMember"
-          :disabled="isUpdating"
-          class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-        >
-          <span v-if="isUpdating" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>{{ isUpdating ? '更新中...' : '儲存變更' }}</span>
-        </button>
-      </div>
-    </van-action-sheet>
-
-    <!-- Add Member Modal -->
-    <van-action-sheet v-model:show="showAddModal" title="新增會員" class="rounded-t-[2.5rem]">
-      <div class="px-6 pb-12 pt-4 space-y-6">
-        <div class="space-y-4">
-          <FormField label="電子郵件" required>
-            <input
-              v-model="newMember.email"
-              type="email"
-              placeholder="example@gmail.com"
-              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-            />
-          </FormField>
-
-          <FormField label="姓名" required>
-            <input
-              v-model="newMember.name"
-              type="text"
-              placeholder="請輸入真實姓名"
-              class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-            />
-          </FormField>
-
-          <div class="grid grid-cols-2 gap-4">
-            <FormField label="身分角色">
-              <select
-                v-model="newMember.role"
-                class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20 appearance-none"
-              >
-                <option value="member">一般成員</option>
-                <option value="admin">管理員</option>
-              </select>
-            </FormField>
-            <FormField label="初始點數">
-              <input
-                v-model.number="newMember.points"
-                type="number"
-                class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20"
-              />
-            </FormField>
-          </div>
-
-          <!-- Scanner Permission Toggle (Add Modal) -->
-          <div class="flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl">
-            <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-slate-400">qr_code_scanner</span>
-              <div class="flex flex-col">
-                <span class="text-sm font-medium text-slate-700">簽到掃描權限</span>
-                <span class="text-[10px] text-slate-400">開通後該用戶可協助活動簽到</span>
-              </div>
-            </div>
-            <label class="relative inline-flex items-center cursor-pointer">
-              <input v-model="newMember.scanPermission" type="checkbox" class="sr-only peer" />
-              <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
-            </label>
-          </div>
-        </div>
-
-        <button
-          @click="handleAddMember"
-          :disabled="isCreating"
-          class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-        >
-          <span v-if="isCreating" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-          <span>{{ isCreating ? '建立中...' : '建立並發送邀請' }}</span>
-        </button>
-      </div>
-    </van-action-sheet>
+    <MemberForm
+      v-model:show="showEditModal"
+      mode="edit"
+      :profile="selectedProfile"
+      :loading="isUpdating"
+      @submit="handleUpdateMember"
+    />
   </div>
 </template>
 
