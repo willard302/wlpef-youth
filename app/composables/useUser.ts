@@ -17,44 +17,56 @@ export function useUser() {
   const isUpdatingProfile = useState('user-updating', () => false)
   const error = useState<string | null>('user-error', () => null)
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
-
   const profileSubscription = useState<any>('user-profile-subscription', () => null)
+  const isSettingUpListener = useState('user-profile-listener-loading', () => false)
 
   // 動作 (Actions)
   const setupProfileListener = async () => {
-    // 如果已經有監聽器，就不再建立
-    if (profileSubscription.value) return
+    // ✨ 檢查：如果已經有監聽器，或者「正在建立中」，就直接返回，避免重複觸發
+    if (profileSubscription.value || isSettingUpListener.value) return
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    isSettingUpListener.value = true
 
-    const channel = supabase
-      .channel(`profile-updates-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
-        },
-        (payload) => {
-          if (userProfile.value) {
-            // 將資料庫的 snake_case 映射回 UserProfile 的 camelCase
-            userProfile.value = {
-              ...userProfile.value,
-              points: payload.new.points ?? userProfile.value.points,
-              name: payload.new.name ?? userProfile.value.name,
-              avatar: payload.new.avatar_url ?? userProfile.value.avatar,
-              role: payload.new.role ?? userProfile.value.role,
-              scanPermission: payload.new.scan_permission ?? userProfile.value.scanPermission
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      // ⚠️ 關鍵二次檢查：
+      // 因為在 await user 的期間（非同步空檔），可能另一個並行的呼叫已經把訂閱建立好了。
+      // 如果這裡發現別人已經建立好了，就默默退出
+      if (!user || profileSubscription.value) return
+      
+      const channel = supabase
+        .channel(`profile-updates-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'profiles',
+            filter: `id=eq.${user.id}`
+          },
+          (payload) => {
+            if (userProfile.value) {
+              // 將資料庫的 snake_case 映射回 UserProfile 的 camelCase
+              userProfile.value = {
+                ...userProfile.value,
+                points: payload.new.points ?? userProfile.value.points,
+                name: payload.new.name ?? userProfile.value.name,
+                avatar: payload.new.avatar_url ?? userProfile.value.avatar,
+                role: payload.new.role ?? userProfile.value.role,
+                scanPermission: payload.new.scan_permission ?? userProfile.value.scanPermission
+              }
             }
           }
-        }
-      )
-      .subscribe()
-    
-    profileSubscription.value = channel
+        )
+        .subscribe()
+
+      profileSubscription.value = channel
+    } catch (err) {
+      console.error('建立 Profile 監聽器失敗:', err)
+    } finally {
+      isSettingUpListener.value = false
+    }
   }
 
   const loadUserData = async (force = false) => {
