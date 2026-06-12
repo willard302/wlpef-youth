@@ -36,22 +36,23 @@ Deno.serve(async (req) => {
       .single()
 
     if (profile?.role !== "admin") throw new Error("Forbidden: Admin access required")
-// 取得參數
-const { email, name, role = "member", points = 0, scanPermission = false } = await req.json()
+    
+      // 取得參數
+    const { email, name, role = "member", points = 0, scanPermission = false } = await req.json()
 
-if (!email || !name) throw new Error("Email and Name are required")
+    if (!email || !name) throw new Error("Email and Name are required")
 
-// 1. 邀請用戶 (這會建立 auth.users 記錄)
-const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-  email,
-  {
-    data: { 
-      full_name: name,
-      role: role
-    },
-    redirectTo: `${new URL(req.url).origin.replace("/functions/v1/admin-create-user", "")}/auth/confirm`
-  }
-)
+  // 1. 邀請用戶 (這會建立 auth.users 記錄)
+  const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+    email,
+    {
+      data: { 
+        full_name: name,
+        role: role
+      },
+      redirectTo: `${new URL(req.url).origin.replace("/functions/v1/admin-create-user", "")}/auth/confirm`
+    }
+  )
 
 if (inviteError) {
   // 如果用戶已存在，可能是想要手動補全 profile
