@@ -352,38 +352,18 @@ Deno.serve(async (req) => {
 
   try {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")
-    if (!serviceRoleKey || !supabaseUrl) throw new Error("Missing Supabase configuration")
+    if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY")
 
     const authHeader = req.headers.get("Authorization") || ""
-    
-    // 1. 驗證 JWT 並取得使用者資訊
-    const supabaseClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } }
-    })
-    
-    const { data: { user: requester }, error: authError } = await supabaseClient.auth.getUser()
-    if (authError || !requester) {
-      return Response.json({ error: "Unauthorized", message: "身份驗證失敗" }, { status: 401, headers: corsHeaders })
+    if (authHeader.replace(/^Bearer\s+/i, "").trim() !== serviceRoleKey) {
+      return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders })
     }
 
-    // 2. 建立 Admin Client 以便操作資料庫
     const supabaseAdmin = createClient(
-      supabaseUrl,
+      Deno.env.get("SUPABASE_URL")!,
       serviceRoleKey,
       { auth: { persistSession: false, autoRefreshToken: false } }
     )
-
-    // 3. 檢查權限 (必須是 admin)
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", requester.id)
-      .single()
-
-    if (profileError || profile?.role !== "admin") {
-      return Response.json({ error: "Forbidden", message: "權限不足，需要管理員權限" }, { status: 403, headers: corsHeaders })
-    }
 
     const body = await req.json().catch(() => ({}))
     const events = await resolveEvents(supabaseAdmin, body)
