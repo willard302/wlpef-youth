@@ -247,38 +247,7 @@ onMounted(async () => {
             <span class="text-[10px] font-bold text-slate-600">{{ action.label }}</span>
           </button>
         </div>
-      </section>
-
-      <!-- Recent System Logs Placeholder -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between px-2">
-          <h3 class="text-sm font-bold text-slate-500 uppercase tracking-widest">活動狀態</h3>
-        </div>
-        <div class="bg-white rounded-[2rem] border border-slate-100 shadow-sm p-6">
-          <div class="flex items-center gap-4">
-            <div class="flex-1 space-y-1">
-              <p class="text-xs font-bold text-slate-400 uppercase">活動時間</p>
-              <p class="text-sm font-bold text-slate-700">
-                {{ selectedEvent ? fnsFormat(selectedEvent.startAt, 'yyyy/MM/dd HH:mm') : '...' }}
-              </p>
-            </div>
-            <div class="text-right space-y-1">
-              <p class="text-xs font-bold text-slate-400 uppercase">狀態</p>
-              <span 
-                v-if="selectedEvent"
-                class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold border"
-                :class="{
-                  'bg-emerald-50 text-emerald-600 border-emerald-100': selectedEvent.status === 'published',
-                  'bg-amber-50 text-amber-600 border-amber-100': selectedEvent.status === 'draft',
-                  'bg-slate-50 text-slate-600 border-slate-100': selectedEvent.status === 'closed'
-                }"
-              >
-                {{ selectedEvent.status === 'published' ? '已發佈' : (selectedEvent.status === 'draft' ? '草稿' : '已關閉') }}
-              </span>
-            </div>
-          </div>
-        </div>
-      </section>
+      </section>      
     </main>
 
     <!-- Event Picker -->
