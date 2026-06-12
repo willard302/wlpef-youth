@@ -32,7 +32,7 @@ const redirectWithSuccess = (message: string, path: '/admin' | '/home') => {
 }
 
 onMounted(async () => {
-  // Wait a bit to ensure the auth state is ready
+  // 等待一下確保 auth 狀態就緒
   await new Promise((resolve) => setTimeout(resolve, 500))
   
   const { clearUserData } = useUser()
@@ -46,12 +46,14 @@ onMounted(async () => {
   const queryType = route.query.type as string | undefined
   const hashType = hashParams.get('type') || undefined
 
-  if (queryType === 'recovery' || hashType === 'recovery') {
-    errorMessage.value = '重設密碼功能已停用，請改用 Google 登入。'
+  // 1. 🔍 修正這裡：如果是 recovery 或 invite 流程，導向設置密碼頁面
+  if (queryType === 'recovery' || hashType === 'recovery' || queryType === 'invite' || hashType === 'invite') {
+    successMessage.value = '密碼驗證成功，正在前往設定新密碼...'
     loading.value = false
     setTimeout(() => {
-      router.push('/auth')
-    }, 2000)
+      // 帶著 access_token（如果有的話，通常 Supabase 已經自動在瀏覽器存入 Session）
+      router.push('/auth/reset-password')
+    }, 1500)
     return
   }
 
@@ -65,7 +67,7 @@ onMounted(async () => {
     return
   }
 
-  // Also check for error parameters in the hash (Supabase sometimes puts them there)
+  // Also check for error parameters in the hash
   const oauthError = hashParams.get('error_description')
   if (oauthError) {
     errorMessage.value = decodeURIComponent(oauthError)
@@ -89,7 +91,7 @@ onMounted(async () => {
       return
     }
 
-    // 嘗試自動合併同 Email 的重複帳號（例如先 Google 後密碼註冊）
+    // 嘗試自動合併同 Email 的重複帳號
     const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
       body: {}
     })
@@ -107,7 +109,7 @@ onMounted(async () => {
     )
   } catch (err: any) {
     console.error('Confirmation error:', err)
-    // If there's an error but we're already logged in, just redirect to home
+    
     const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       const { data: { user: sessionUser } } = await supabase.auth.getUser()
