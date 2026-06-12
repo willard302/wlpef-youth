@@ -51,7 +51,11 @@ export default defineNuxtConfig({
       callback: '/auth/confirm',
       exclude: ['/auth/*']
     },
-    types: '~/types/database.types.ts'
+    types: '~/types/database.types.ts',
+    cookieOptions: {
+      secure:process.env.NODE_ENV === 'production',
+      sameSite: 'lax'
+    }
   },
 
   vant: {
