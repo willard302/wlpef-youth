@@ -29,18 +29,12 @@ const headerActions = [
 ]
 
 const isLoading = ref(true)
-const isSyncing = ref(false)
 const events = ref<Event[]>([])
 const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const showPointsBreakdown = ref(false)
 const eventFormVisible = ref(false)
 const editingEventId = ref<string | null>(null)
-
-const openEventEditor = (id: string | null = null) => {
-  editingEventId.value = id
-  eventFormVisible.value = true
-}
 
 const stats = ref({
   totalProfiles: 0,
@@ -50,16 +44,9 @@ const stats = ref({
   pointsBreakdown: { registration: 0, checkin: 0 }
 })
 
-const loadEvents = async () => {
-  try {
-    const data = await eventService.fetchAllEventsForAdmin()
-    events.value = data
-    if (data.length > 0 && !selectedEvent.value) {
-      selectedEvent.value = data[0]!!
-    }
-  } catch (err: any) {
-    addToast('載入活動列表失敗', 'error')
-  }
+const openEventEditor = (id: string | null = null) => {
+  editingEventId.value = id
+  eventFormVisible.value = true
 }
 
 const loadDashboardStats = async () => {
@@ -76,26 +63,26 @@ const loadDashboardStats = async () => {
   }
 }
 
-const handleSync = async () => {
-  if (!selectedEvent.value?.googleSheetId) {
-    addToast('此活動未設定 Google 試算表 ID', 'error')
-    return
-  }
-
-  isSyncing.value = true
+const loadEvents = async () => {
   try {
-    const result = await eventService.syncGoogleSheet(
-      selectedEvent.value.id,
-      selectedEvent.value.googleSheetId
-    )
-    addToast(`同步完成！匯入 ${result.importedCount} 筆，比對成功 ${result.matchedCount} 筆`, 'success')
-    await loadDashboardStats()
+    const data = await eventService.fetchAllEventsForAdmin()
+    events.value = data
+    if (data.length > 0 ) {
+
+      if (!selectedEvent.value) {
+        selectedEvent.value = data[0]!!
+      }
+
+      await loadDashboardStats()
+    } else {
+      isLoading.value = false
+    }
   } catch (err: any) {
-    addToast(err.message || '同步失敗', 'error')
-  } finally {
-    isSyncing.value = false
+    addToast('載入活動列表失敗', 'error')
+    isLoading.value = false
   }
 }
+
 
 const selectEvent = (event: Event) => {
   selectedEvent.value = event
@@ -106,7 +93,7 @@ const selectEvent = (event: Event) => {
 const eventPickerActions = computed(() => {
   return events.value.map(event => ({
     name: event.title,
-    subname: fnsFormat(event.startAt, 'yyyy/MM/dd'),
+    subname: event.startAt ? fnsFormat(new Date(event.startAt), 'yyyy/MM/dd') : '',
     callback: () => selectEvent(event)
   }))
 })
@@ -154,9 +141,8 @@ const displayStats = computed(() => [
   },
 ])
 
-onMounted(async () => {
-  await loadEvents()
-  await loadDashboardStats()
+onMounted(() => {
+  loadEvents()
 })
 </script>
 
@@ -185,21 +171,20 @@ onMounted(async () => {
         <p class="text-sky-100 text-[10px] font-bold uppercase tracking-widest opacity-80">正在檢視活動</p>
         <div class="flex items-center justify-between gap-2">
           <button
-            @click="showEventPicker = true"
+            v-if="selectedEvent"
+            @click="openEventEditor(selectedEvent.id)"
             class="flex items-center gap-2 text-left group min-w-0"
           >
             <h2 class="text-white text-xl font-bold truncate max-w-[240px]">
               {{ selectedEvent?.title || '載入活動中...' }}
             </h2>
-            <span class="material-symbols-outlined text-white/60 group-hover:text-white transition-colors shrink-0">swap_horiz</span>
           </button>
 
           <button
-            v-if="selectedEvent"
-            @click="openEventEditor(selectedEvent.id)"
+            @click="showEventPicker = true"
             class="shrink-0 size-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all"
           >
-            <span class="material-symbols-outlined text-lg">edit</span>
+            <span class="material-symbols-outlined text-lg">swap_horiz</span>
           </button>
         </div>
       </div>

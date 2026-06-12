@@ -55,43 +55,42 @@ const handleDelete = async () => {
   })
 }
 
-const onStartDateConfirm = ({ selectedValues }: { selectedValues: string[] }) => {
-  formData.value.startDate = selectedValues.join('-')
+const onStartDateConfirm = (result: any) => {
+  formData.value.startDate = result.selectedValues.join('-')
   showStartDatePicker.value = false
 }
 
-const onStartTimeConfirm = ({ selectedValues }: { selectedValues: string[] }) => {
-  formData.value.startTime = selectedValues.join(':')
+const onStartTimeConfirm = (result: any) => {
+  formData.value.startTime = result.selectedValues.join(':')
   showStartTimePicker.value = false
 }
 
-const onEndDateConfirm = ({ selectedValues }: { selectedValues: string[] }) => {
-  formData.value.endDate = selectedValues.join('-')
+const onEndDateConfirm = (result: any) => {
+  formData.value.endDate = result.selectedValues.join('-')
   showEndDatePicker.value = false
 }
 
-const onEndTimeConfirm = ({ selectedValues }: { selectedValues: string[] }) => {
-  formData.value.endTime = selectedValues.join(':')
+const onEndTimeConfirm = (result: any) => {
+  formData.value.endTime = result.selectedValues.join(':')
   showEndTimePicker.value = false
 }
 
 const getDateColumns = (dateStr: string) => {
-  if (!dateStr) return undefined
+  if (!dateStr) return []
   return dateStr.split('-')
 }
 
 const getTimeColumns = (timeStr: string) => {
-  if (!timeStr) return undefined
+  if (!timeStr) return []
   return timeStr.split(':')
 }
 
 </script>
 
 <template>
-  <van-action-sheet 
+  <van-popup 
     v-model:show="eventFormVisible" 
     position="bottom"
-    :title="isEditMode ? '編輯活動' : '新增活動'"
   >
     <div class="h-full flex flex-col overflow-hidden">
       <!-- Custom Header inside Popup -->
@@ -379,22 +378,16 @@ const getTimeColumns = (timeStr: string) => {
         @cancel="showEndTimePicker = false"
       />
     </van-popup>
-  </van-action-sheet>
+  </van-popup>
 </template>
 
 <style scoped>
-.editor-bg {
-  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-}
-
 .sky-hero-gradient {
   background: linear-gradient(135deg, #87CEEB 0%, #B0E0F6 40%, #E0F2FE 100%);
 }
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(241, 245, 249, 1);
 }
 </style>
