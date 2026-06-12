@@ -14,6 +14,19 @@ const { openMenu } = useSideMenu()
 const { addToast } = useToast()
 const router = useRouter()
 
+const quickActions = [
+  { label: '活動管理', icon: 'edit_calendar', color: 'bg-sky-500', action: () => { showManagementSheet.value = true } },
+  { label: '報名管理', icon: 'assignment_ind', path: '/admin/registrations', color: 'bg-indigo-500' },
+  { label: '活動出席', icon: 'verified', path: '/admin/attendance', color: 'bg-teal-500' },
+  { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
+  { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
+]
+
+const headerActions = [
+  { label: 'checkin', icon: 'qr_code', action: () => router.push('/admin/checkin') },
+  { label: 'menu', icon: 'menu', action: openMenu }
+]
+
 const isLoading = ref(true)
 const isSyncing = ref(false)
 const events = ref<Event[]>([])
@@ -21,7 +34,6 @@ const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const showPointsBreakdown = ref(false)
 const showManagementSheet = ref(false)
-
 const stats = ref({
   totalProfiles: 0,
   eventRegistrations: 0,
@@ -162,15 +174,6 @@ const displayStats = computed(() => [
   },
 ])
 
-const quickActions = [
-  { label: '活動管理', icon: 'edit_calendar', color: 'bg-sky-500', action: () => { showManagementSheet.value = true } },
-  { label: '報名管理', icon: 'assignment_ind', path: '/admin/registrations', color: 'bg-indigo-500' },
-  { label: '活動簽到', icon: 'qr_code_scanner', path: '/admin/checkin', color: 'bg-emerald-500' },
-  { label: '活動出席', icon: 'verified', path: '/admin/attendance', color: 'bg-teal-500' },
-  { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
-  { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
-]
-
 onMounted(async () => {
   await loadEvents()
   await loadDashboardStats()
@@ -185,12 +188,16 @@ onMounted(async () => {
       height-class="h-56"
     >
       <template #actions>
-        <button
-          @click="openMenu"
-          class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all"
-        >
-          <span class="material-symbols-outlined text-2xl">menu</span>
-        </button>
+        <div class="flex">
+          <button
+            v-for="button in headerActions"
+            :key="button.label"
+            @click="button.action"
+            class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all ml-2"
+          >
+            <span class="material-symbols-outlined text-2xl">{{ button.icon }}</span>
+          </button>
+        </div>
       </template>
 
       <!-- Event Selector Trigger -->
