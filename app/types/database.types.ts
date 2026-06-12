@@ -149,7 +149,6 @@ export type Database = {
         Row: {
           all_day: boolean | null
           checkin_bonus: number | null
-          color: string | null
           created_at: string | null
           created_by: string | null
           description: string | null
@@ -168,7 +167,6 @@ export type Database = {
         Insert: {
           all_day?: boolean | null
           checkin_bonus?: number | null
-          color?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
@@ -187,7 +185,6 @@ export type Database = {
         Update: {
           all_day?: boolean | null
           checkin_bonus?: number | null
-          color?: string | null
           created_at?: string | null
           created_by?: string | null
           description?: string | null
