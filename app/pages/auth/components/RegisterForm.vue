@@ -19,7 +19,7 @@ const registerData = ref<RegisterFormData>({
 </script>
 
 <template>
-  <div class="flex flex-col gap-3 animate-fade-in">
+  <form @submit.prevent="signupWithEmail(registerData)" class="flex flex-col gap-3 animate-fade-in">
     <div class="relative">
       <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">person</span>
       <input
@@ -27,6 +27,7 @@ const registerData = ref<RegisterFormData>({
         type="text"
         placeholder="真實姓名 (必填)"
         class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
+        autocomplete="name"
       />
     </div>
     <div class="relative">
@@ -36,6 +37,7 @@ const registerData = ref<RegisterFormData>({
         type="email"
         placeholder="Email (必填)"
         class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
+        autocomplete="username"
       />
     </div>
     <div class="relative">
@@ -45,6 +47,7 @@ const registerData = ref<RegisterFormData>({
         type="password"
         placeholder="設定密碼"
         class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
+        autocomplete="new-password"
       />
     </div>
     <div class="relative">
@@ -54,6 +57,7 @@ const registerData = ref<RegisterFormData>({
         type="password"
         placeholder="確認密碼"
         class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
+        autocomplete="new-password"
       />
     </div>
     
@@ -66,7 +70,8 @@ const registerData = ref<RegisterFormData>({
       立即註冊
     </van-button>
 
-    <button 
+    <button
+      type="button" 
       @click="emit('switchMode', 'login')" 
       class="text-xs text-white/80 hover:text-white mt-1"
     >已有帳號？返回登入</button>
@@ -74,7 +79,7 @@ const registerData = ref<RegisterFormData>({
     <div v-if="errorMessage" class="rounded-xl border border-red-300/40 bg-red-500/20 px-4 py-3 text-center text-xs text-red-100 mt-2">
       {{ errorMessage }}
     </div>
-  </div>
+  </form>
 </template>
 
 <style scoped>

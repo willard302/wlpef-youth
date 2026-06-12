@@ -43,7 +43,7 @@ const formData = ref<LoginFormData>({
       </button>
     </div>
 
-    <div v-if="showMoreOptions" class="flex flex-col gap-3 mt-2 animate-fade-in">
+    <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(formData)" class="flex flex-col gap-3 mt-2 animate-fade-in">
       <div class="relative">
         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">mail</span>
         <input
@@ -51,6 +51,7 @@ const formData = ref<LoginFormData>({
           type="email"
           placeholder="Email"
           class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
+          autocomplete="username"
         />
       </div>
       <div class="relative">
@@ -60,6 +61,7 @@ const formData = ref<LoginFormData>({
           type="password"
           placeholder="密碼"
           class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
+          autocomplete="current-password"
         />
       </div>
       <van-button
@@ -72,16 +74,18 @@ const formData = ref<LoginFormData>({
       </van-button>
       
       <div class="flex justify-between items-center px-1 mt-1">
-        <button 
+        <button
+          type="button" 
           @click="emit('switchMode', 'register')" 
           class="text-xs text-white/80 hover:text-white"
         >還沒有帳號？立即註冊</button>
         <button 
+          type="button"
           @click="showMoreOptions = false" 
           class="text-xs text-white/40 hover:text-white"
         >收起</button>
       </div>
-    </div>
+    </form>
 
     <div v-if="errorMessage" class="rounded-xl border border-red-300/40 bg-red-500/20 px-4 py-3 text-center text-xs text-red-100 mt-2">
       {{ errorMessage }}
