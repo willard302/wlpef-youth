@@ -108,7 +108,6 @@ CREATE TABLE IF NOT EXISTS public.events (
   start_at     TIMESTAMPTZ  NOT NULL,
   end_at       TIMESTAMPTZ  NOT NULL,
   all_day      BOOLEAN      DEFAULT false,
-  color        TEXT         DEFAULT '#38bdf8',
   status       TEXT         DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'closed')),
   google_sheet_id TEXT,
   google_form_url TEXT,
