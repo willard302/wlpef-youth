@@ -136,15 +136,19 @@ const displayStats = computed(() => [
     value: stats.value.eventRegistrations.toString(), 
     icon: 'how_to_reg', 
     color: 'text-indigo-500', 
-    bg: 'bg-indigo-50' 
+    bg: 'bg-indigo-50',
+    clickable: true,
+    path: '/admin/registrations'
   },
   { 
     id: 'checkins',
-    label: '報到人數', 
+    label: '出席人數', 
     value: stats.value.eventCheckins.toString(), 
     icon: 'check_circle', 
     color: 'text-emerald-500', 
-    bg: 'bg-emerald-50' 
+    bg: 'bg-emerald-50',
+    clickable: true,
+    path: '/admin/attendance'
   },
   { 
     id: 'points',
@@ -153,7 +157,8 @@ const displayStats = computed(() => [
     icon: 'database', 
     color: 'text-amber-500', 
     bg: 'bg-amber-50',
-    clickable: true
+    clickable: true,
+    action: () => { showPointsBreakdown.value = true }
   },
 ])
 
@@ -161,6 +166,7 @@ const quickActions = [
   { label: '活動管理', icon: 'edit_calendar', color: 'bg-sky-500', action: () => { showManagementSheet.value = true } },
   { label: '報名管理', icon: 'assignment_ind', path: '/admin/registrations', color: 'bg-indigo-500' },
   { label: '活動簽到', icon: 'qr_code_scanner', path: '/admin/checkin', color: 'bg-emerald-500' },
+  { label: '活動出席', icon: 'verified', path: '/admin/attendance', color: 'bg-teal-500' },
   { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
   { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
 ]
@@ -210,7 +216,7 @@ onMounted(async () => {
           :key="stat.id"
           class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-3 transition-all active:scale-[0.98]"
           :class="{ 'cursor-pointer hover:border-primary/30': stat.clickable }"
-          @click="stat.clickable && (showPointsBreakdown = true)"
+          @click="stat.clickable && (stat.path ? router.push(stat.path) : stat.action?.())"
         >
           <div :class="[stat.bg, stat.color, 'size-10 rounded-2xl flex items-center justify-center']">
             <span class="material-symbols-outlined text-2xl">{{ stat.icon }}</span>

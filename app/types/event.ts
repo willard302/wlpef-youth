@@ -54,3 +54,19 @@ export interface EventRegistration {
   rawData?: Record<string, any>
   createdAt: Date
 }
+
+export interface EventCheckin {
+  id: string
+  eventId: string
+  userId: string
+  registrationId: string | null
+  email: string
+  checkinMethod: string | null
+  checkedInBy: string | null
+  checkedInAt: Date
+  checkinPointsGrantedAt: Date | null
+  createdAt: Date
+  // Joined fields
+  userName?: string
+  userAvatar?: string
+}

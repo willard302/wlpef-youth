@@ -7,6 +7,7 @@ type EventInsert = Database['public']['Tables']['events']['Insert']
 type EventUpdate = Database['public']['Tables']['events']['Update']
 
 type RegistrationRow = Database['public']['Tables']['event_registrations']['Row']
+type CheckinRow = Database['public']['Tables']['checkin_records']['Row']
 
 function mapToRegistration(row: RegistrationRow): EventRegistration {
   return {
@@ -21,6 +22,23 @@ function mapToRegistration(row: RegistrationRow): EventRegistration {
     registrationPointsGrantedAt: row.registration_points_granted_at ? parseISO(row.registration_points_granted_at) : null,
     rawData: row.raw_data as Record<string, any> | undefined,
     createdAt: parseISO(row.created_at as string),
+  }
+}
+
+function mapToCheckin(row: CheckinRow & { profiles?: { name: string, avatar_url: string | null } }): EventCheckin {
+  return {
+    id: row.id,
+    eventId: row.event_id || '',
+    userId: row.user_id || '',
+    registrationId: row.registration_id,
+    email: row.email,
+    checkinMethod: row.checkin_method,
+    checkedInBy: row.checked_in_by,
+    checkedInAt: parseISO(row.checked_in_at || row.created_at as string),
+    checkinPointsGrantedAt: row.checkin_points_granted_at ? parseISO(row.checkin_points_granted_at) : null,
+    createdAt: parseISO(row.created_at as string),
+    userName: row.profiles?.name,
+    userAvatar: row.profiles?.avatar_url || undefined,
   }
 }
 
@@ -310,6 +328,22 @@ export const eventService = {
 
     if (error) throw error
     return (data ?? []).map(mapToRegistration)
+  },
+
+  /**
+   * 獲取特定活動的出席名單 (已完成報名且已簽到)
+   */
+  async fetchAttendanceByEventId(eventId: string): Promise<EventCheckin[]> {
+    const supabase = useSupabaseClient<Database>()
+    const { data, error } = await supabase
+      .from('checkin_records')
+      .select('*, profiles!user_id(name, avatar_url)')
+      .eq('event_id', eventId)
+      .not('registration_id', 'is', null) // 必須有報名紀錄
+      .order('checked_in_at', { ascending: false })
+
+    if (error) throw error
+    return (data as any[] ?? []).map(mapToCheckin)
   },
 
   /**
