@@ -98,7 +98,10 @@ export const useAuth = () => {
       if (error) throw error
 
       if (data.user && !data.session) {
-        errorMessage.value = '註冊成功！請前往您的 Email 以驗證帳號。'
+        router.push({
+          path: '/auth/success',
+          query: { email: registerData.email }
+        })
       } else if (data.session) {
         const profile = await userService.fetchUserProfile()
         const dest = profile.role === 'admin' ? '/admin' : '/home'
