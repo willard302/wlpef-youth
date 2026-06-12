@@ -91,18 +91,6 @@ const menuItems = computed<MenuItem[]>(() => {
       action: () => {
         void router.push('/admin/checkin')
       },
-    },
-    {
-      id: 'scanner-permissions',
-      label: '權限管理',
-      icon: 'admin_panel_settings',
-      bgClass: 'bg-cyan-50',
-      textClass: 'text-cyan-700',
-      hoverClass: 'hover:bg-cyan-100',
-      visible: true,
-      action: () => {
-        void router.push('/admin/scanner-permissions')
-      },
     }
   ]
 
