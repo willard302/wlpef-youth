@@ -1,3 +1,4 @@
+import { userService } from "@/services/userService"
 import type { Database } from "~/types/database.types"
 import type { LoginFormData, RegisterFormData } from "~/types/auth"
 
@@ -58,7 +59,11 @@ export const useAuth = () => {
       })
       if (error) throw error
 
-      router.push('/home')
+      // 登入成功後，取得用戶資料以判斷導向路徑
+      const profile = await userService.fetchUserProfile()
+      const dest = profile.role === 'admin' ? '/admin' : '/home'
+      
+      router.push(dest)
     } catch (error) {
       handleAuthError(error, '登入失敗，請檢查您的帳號密碼。')
     } finally {
@@ -95,7 +100,9 @@ export const useAuth = () => {
       if (data.user && !data.session) {
         errorMessage.value = '註冊成功！請前往您的 Email 以驗證帳號。'
       } else if (data.session) {
-        router.push('/home')
+        const profile = await userService.fetchUserProfile()
+        const dest = profile.role === 'admin' ? '/admin' : '/home'
+        router.push(dest)
       }
     } catch (error) {
       handleAuthError(error, '註冊失敗')
