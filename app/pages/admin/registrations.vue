@@ -67,11 +67,12 @@ const handleSync = async () => {
 
   isSyncing.value = true
   try {
-    const result = await eventService.syncGoogleSheet(
+    const { results } = await eventService.syncGoogleSheet(
       selectedEvent.value.id,
       selectedEvent.value.googleSheetId
     )
-    addToast(`同步完成！匯入 ${result.importedCount} 筆，比對成功 ${result.matchedCount} 筆`, 'success')
+    
+    addToast(`同步完成！匯入 ${results[0].importedCount} 筆，比對成功 ${results[0].matchedCount} 筆`, 'success')
     // Reload registrations
     await selectEvent(selectedEvent.value)
   } catch (err: any) {
@@ -153,7 +154,7 @@ onMounted(async () => {
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm relative group">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總報名人數</p>
           <div class="flex items-end justify-between">
-            <p class="text-2xl font-black text-slate-800">{{ registrations.length }}</p>
+            <p class="text-2xl font-black text-slate-800">{{ registrations.length - 1 }}</p>
             <button
               @click="handleSync"
               :disabled="isSyncing || !selectedEvent.googleSheetId"
@@ -169,7 +170,7 @@ onMounted(async () => {
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Google 同步</p>
           <p class="text-2xl font-black text-sky-500">
-            {{ registrations.filter(r => !!r.googleSheetRowId).length }}
+            {{ registrations.filter(r => !!r.googleSheetRowId).length - 1 }}
           </p>
         </div>
       </div>
