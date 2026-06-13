@@ -32,8 +32,8 @@ const redirectWithSuccess = (message: string, path: '/admin' | '/home') => {
 }
 
 onMounted(async () => {
-  // 等待一下確保 auth 狀態就緒
-  await new Promise((resolve) => setTimeout(resolve, 500))
+  // 1. 稍微等待，給予 Supabase SDK 足夠時間去解析網址並自動寫入 Session
+  await new Promise((resolve) => setTimeout(resolve, 800))
   
   const { clearUserData } = useUser()
   clearUserData()
@@ -46,12 +46,26 @@ onMounted(async () => {
   const queryType = route.query.type as string | undefined
   const hashType = hashParams.get('type') || undefined
 
-  // 1. 🔍 修正這裡：如果是 recovery 或 invite 流程，導向設置密碼頁面
+  // 2. ⚠️ 關鍵修正：檢查當前是否真的成功拿到了 Session
+  const { data: { session } } = await supabase.auth.getSession()
+
+  // 如果網址標明是 invite 或 recovery
   if (queryType === 'recovery' || hashType === 'recovery' || queryType === 'invite' || hashType === 'invite') {
-    successMessage.value = '密碼驗證成功，正在前往設定新密碼...'
+    
+    // 防呆：如果網址有 Token 但 SDK 來不及存入，我們手動幫它塞進去
+    if (!session && hashParams.get('access_token')) {
+      const accessToken = hashParams.get('access_token')!
+      const refreshToken = hashParams.get('refresh_token')!
+      await supabase.auth.setSession({
+        access_token: accessToken,
+        refresh_token: refreshToken
+      })
+    }
+
+    successMessage.value = '驗證成功，正在建立安全連線...'
     loading.value = false
+    
     setTimeout(() => {
-      // 帶著 access_token（如果有的話，通常 Supabase 已經自動在瀏覽器存入 Session）
       router.push('/auth/reset-password')
     }, 1500)
     return
@@ -67,7 +81,6 @@ onMounted(async () => {
     return
   }
 
-  // Also check for error parameters in the hash
   const oauthError = hashParams.get('error_description')
   if (oauthError) {
     errorMessage.value = decodeURIComponent(oauthError)
@@ -79,6 +92,7 @@ onMounted(async () => {
   }
 
   try {
+    // 常規登入驗證（非邀請/重設密碼流程）
     const { data: { user }, error: userError } = await supabase.auth.getUser()
     if (userError) throw userError
 
@@ -91,7 +105,6 @@ onMounted(async () => {
       return
     }
 
-    // 嘗試自動合併同 Email 的重複帳號
     const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
       body: {}
     })
@@ -102,15 +115,12 @@ onMounted(async () => {
     const destination = await resolveDestination(user.id)
 
     redirectWithSuccess(
-      mergeData?.merged
-        ? '帳號已整合完成！即將跳轉中...'
-        : '驗證成功！即將跳轉中...',
+      mergeData?.merged ? '帳號已整合完成！即將跳轉中...' : '驗證成功！即將跳轉中...',
       destination
     )
   } catch (err: any) {
     console.error('Confirmation error:', err)
     
-    const { data: { session } } = await supabase.auth.getSession()
     if (session) {
       const { data: { user: sessionUser } } = await supabase.auth.getUser()
       if (sessionUser?.id) {

@@ -50,7 +50,8 @@ Deno.serve(async (req) => {
         full_name: name,
         role: role
       },
-      redirectTo: `${new URL(req.url).origin.replace("/functions/v1/admin-create-user", "")}/auth/confirm`
+      // redirectTo: `${new URL(req.url).origin.replace("/functions/v1/admin-create-user", "")}/auth/confirm`
+      redirectTo: 'https://new-chat-ashen.vercel.app/auth/confirm'
     }
   )
 
