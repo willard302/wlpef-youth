@@ -21,23 +21,27 @@ Deno.serve(async (req) => {
   })
 
   try {
-    // 驗證請求者是否為 admin
+    // 驗證請求者是否為 admin 或使用 Service Role Key
     const authHeader = req.headers.get("Authorization")!
-    const { data: { user: requester }, error: authError } = await createClient(supabaseUrl!, Deno.env.get("SUPABASE_ANON_KEY")!, {
-      global: { headers: { Authorization: authHeader } }
-    }).auth.getUser()
-
-    if (authError || !requester) throw new Error("Unauthorized")
-
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", requester.id)
-      .single()
-
-    if (profile?.role !== "admin") throw new Error("Forbidden: Admin access required")
+    const isServiceRole = authHeader === `Bearer ${serviceRoleKey}`
     
-      // 取得參數
+    if (!isServiceRole) {
+      const { data: { user: requester }, error: authError } = await createClient(supabaseUrl!, Deno.env.get("SUPABASE_ANON_KEY")!, {
+        global: { headers: { Authorization: authHeader } }
+      }).auth.getUser()
+
+      if (authError || !requester) throw new Error("Unauthorized")
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", requester.id)
+        .single()
+
+      if (profile?.role !== "admin") throw new Error("Forbidden: Admin access required")
+    }
+    
+    // 取得參數
     const { email, name, role = "member", points = 0, scanPermission = false } = await req.json()
 
     if (!email || !name) throw new Error("Email and Name are required")
