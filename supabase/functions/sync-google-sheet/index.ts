@@ -21,7 +21,6 @@ type SheetRegistration = {
   google_sheet_row_id: string
   form_submitted_at: string
   synced_at: string
-  demo_user?: boolean
   raw_data?: Record<string, any>
 }
 
@@ -48,8 +47,7 @@ const corsHeaders = {
 const HEADER_ALIASES = {
   timestamp: ["timestamp", "time", "submittedat", "submittedtime", "時間戳記", "提交時間", "報名時間"],
   email: ["email", "mail", "e-mail", "電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
-  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"],
-  demo_user: ["demouser", "demo", "測試帳號", "測試用戶", "演示用戶"],
+  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"]
 }
 
 const normalizeEmail = (value?: string | null) => (value || "").trim().toLowerCase()
@@ -214,7 +212,6 @@ function toRegistrations(
   const timestampIndex = findHeaderIndex(headers, HEADER_ALIASES.timestamp, 0)
   const emailIndex = findHeaderIndex(headers, HEADER_ALIASES.email, 1)
   const nameIndex = findHeaderIndex(headers, HEADER_ALIASES.name, 2)
-  const demoUserIndex = findHeaderIndex(headers, HEADER_ALIASES.demo_user, -1)
   const syncedAt = new Date().toISOString()
   let skippedCount = 0
   let duplicateCount = 0
@@ -254,12 +251,6 @@ function toRegistrations(
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
       raw_data: rawData,
-    }
-
-    // 💡 只有當試算表真的有這欄時，才加入此屬性，避免蓋掉資料庫手動修改的值
-    if (demoUserIndex >= 0) {
-      const demoVal = (row[demoUserIndex] || "").trim().toLowerCase()
-      registration.demo_user = ["true", "yes", "1", "是", "y"].includes(demoVal)
     }
 
     return [registration] as SheetRegistration[]

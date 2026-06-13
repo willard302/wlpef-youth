@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
       .from("event_registrations")
       .select("id, email, name")
       .is("matched_user_id", null)
-      .eq("demo_user", true)
       .is("invitation_sent_at", null)
 
     if (fetchError) throw fetchError
