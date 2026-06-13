@@ -48,12 +48,25 @@ Deno.serve(async (req) => {
               full_name: reg.name,
               invited_via: "event_registration_sync"
             },
-            // 邀請成功後要導回的頁面（例如註冊或首頁）
-            redirectTo: `${new URL(req.url).origin.replace("/functions/v1/send-invitations", "")}/auth/confirm`
+            // 邀請成功後要導回的頁面
+            redirectTo: 'https://new-chat-ashen.vercel.app/auth/confirm'
           }
         )
 
-        if (inviteError) throw inviteError
+        if (inviteError) {
+          // 如果用戶已經存在或已被邀請，我們視為「邀請已處理」
+          if (inviteError.message.includes("already has been invited") || inviteError.message.includes("User already registered")) {
+            console.log(`User ${reg.email} already exists or invited. Marking as sent.`);
+            await supabase
+              .from("event_registrations")
+              .update({ invitation_sent_at: new Date().toISOString() })
+              .eq("id", reg.id)
+            
+            results.push({ email: reg.email, status: "already_exists" })
+            continue
+          }
+          throw inviteError
+        }
 
         // 標記為已發送
         await supabase
