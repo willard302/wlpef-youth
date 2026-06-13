@@ -22,13 +22,12 @@ Deno.serve(async (req) => {
   })
 
   try {
-    // 1. 找出尚未匹配用戶、是 demo 測試用戶、且尚未發送邀請的報名資料
+    // 1. 找出尚未匹配用戶、且尚未發送邀請的報名資料
     const { data: pendingInvitations, error: fetchError } = await supabase
       .from("event_registrations")
       .select("id, email, name")
       .is("matched_user_id", null)
       .is("invitation_sent_at", null)
-
     if (fetchError) throw fetchError
 
     if (!pendingInvitations || pendingInvitations.length === 0) {

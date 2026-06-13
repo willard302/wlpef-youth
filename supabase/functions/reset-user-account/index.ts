@@ -101,7 +101,6 @@ Deno.serve(async (req) => {
       .from("event_registrations")
       .update({
         matched_user_id: null,
-        demo_user: true,
         registration_points_granted_at: null,
         invitation_sent_at: null
       })
