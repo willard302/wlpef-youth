@@ -39,51 +39,83 @@ Deno.serve(async (req) => {
     const results = []
     for (const reg of pendingInvitations) {
       try {
-        // 💡 呼叫 Supabase 內建的邀請功能
-        // 這會觸發 Supabase Auth 發送「User Invitation」郵件範本
+        console.log(`Processing invitation for: ${reg.email}`)
+        
+        // 1. 嘗試發送邀請
         const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
           reg.email,
           {
             data: { 
               full_name: reg.name,
+              role: "member",
               invited_via: "event_registration_sync"
             },
-            // 邀請成功後要導回的頁面
             redirectTo: 'https://new-chat-ashen.vercel.app/auth/confirm'
           }
         )
 
+        let targetUserId: string | undefined
+
         if (inviteError) {
-          // 如果用戶已經存在或已被邀請，我們視為「邀請已處理」
+          // 2. 如果用戶已存在，嘗試獲取其 ID 並補全 profile
           if (inviteError.message.includes("already has been invited") || inviteError.message.includes("User already registered")) {
-            console.log(`User ${reg.email} already exists or invited. Marking as sent.`);
-            await supabase
-              .from("event_registrations")
-              .update({ invitation_sent_at: new Date().toISOString() })
-              .eq("id", reg.id)
+            console.log(`User ${reg.email} already exists, fetching user details...`)
             
-            results.push({ email: reg.email, status: "already_exists" })
-            continue
+            // 遍歷用戶清單找出該用戶 (雖然效能稍低，但在開發期是穩健的做法)
+            const { data: userList } = await supabase.auth.admin.listUsers()
+            const existingUser = userList.users.find(u => u.email?.toLowerCase() === reg.email.toLowerCase())
+            
+            if (existingUser) {
+              targetUserId = existingUser.id
+              console.log(`Found existing user ID: ${targetUserId}`)
+            } else {
+              throw new Error(`Could not find existing user for email: ${reg.email}`)
+            }
+          } else {
+            throw inviteError
           }
-          throw inviteError
+        } else {
+          targetUserId = inviteData.user.id
         }
 
-        // 標記為已發送
+        // 3. 確保 Profile 資料正確 (跟隨 admin-create-user 模式)
+        if (targetUserId) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              id: targetUserId,
+              email: reg.email,
+              name: reg.name,
+              role: "member"
+            })
+
+          if (profileError) {
+            console.error(`Profile upsert error for ${reg.email}:`, profileError)
+            // 不拋出錯誤，繼續標記報名表
+          }
+        }
+
+        // 4. 標記報名表為已發送
         await supabase
           .from("event_registrations")
           .update({ invitation_sent_at: new Date().toISOString() })
           .eq("id", reg.id)
           
-        results.push({ email: reg.email, status: "invited", userId: inviteData.user.id })
+        results.push({ 
+          email: reg.email, 
+          status: inviteError ? "updated_existing" : "invited", 
+          userId: targetUserId 
+        })
+
       } catch (err: any) {
-        console.error(`Failed to invite ${reg.email}:`, err)
+        console.error(`Failed to process ${reg.email}:`, err)
         results.push({ email: reg.email, status: "error", message: err.message })
       }
     }
 
     return Response.json({ 
-      message: "Invitation process completed via Supabase Auth Invite", 
-      invitedCount: results.filter(r => r.status === "invited").length,
+      message: "Invitation process completed", 
+      invitedCount: results.filter(r => r.status === "invited" || r.status === "updated_existing").length,
       results 
     }, { headers: corsHeaders })
 
