@@ -64,10 +64,10 @@ const onReset = async () => {
 
   try {
     await showDialog({
-      title: '重置會員帳號',
-      message: `確定要重置 ${props.profile.name} 的帳號嗎？這將會刪除其個人資料、點數紀錄，並將報名狀態重置。此操作無法復原。`,
+      title: '刪除會員帳號',
+      message: `確定要刪除 ${props.profile.name} 的帳號嗎？這將會刪除其個人資料、點數紀錄，並將報名狀態重置。此操作無法復原。`,
       showCancelButton: true,
-      confirmButtonText: '確定重置',
+      confirmButtonText: '確定刪除',
       confirmButtonColor: '#ef4444',
       cancelButtonText: '取消'
     })
