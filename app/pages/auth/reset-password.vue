@@ -94,6 +94,7 @@ const handleResetPassword = async () => {
             placeholder="請輸入至少 6 位數密碼"
             class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/50 transition-colors"
             :disabled="loading"
+            autocomplete="new-password"
           />
         </div>
 
@@ -105,6 +106,7 @@ const handleResetPassword = async () => {
             placeholder="請再次輸入新密碼"
             class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/50 transition-colors"
             :disabled="loading"
+            autocomplete="new-password"
           />
         </div>
 
