@@ -391,11 +391,12 @@ export const userService = {
   /**
    * 重置使用者帳號 (透過 Edge Function)
    */
-  async resetUserAccount(): Promise<void> {
+  async resetUserAccount(userId?: string): Promise<void> {
     try {
       const supabase = useSupabaseClient()
       const { data, error } = await supabase.functions.invoke('reset-user-account', {
-        method: 'POST'
+        method: 'POST',
+        body: userId ? { userId } : {}
       })
 
       if (error) throw error

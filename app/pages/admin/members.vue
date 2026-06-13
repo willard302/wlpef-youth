@@ -224,6 +224,7 @@ onMounted(async () => {
       :profile="selectedProfile"
       :loading="isUpdating"
       @submit="handleUpdateMember"
+      @reset-success="loadProfiles"
     />
   </div>
 </template>

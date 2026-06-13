@@ -47,10 +47,46 @@ Deno.serve(async (req) => {
     )
   }
 
-  const userId = user.id
-  const userEmail = user.email
+  // Parse request body for optional userId
+  let targetUserId = user.id;
+  let targetUserEmail = user.email;
 
-  if (!userEmail) {
+  try {
+    const body = await req.json();
+    if (body.userId && body.userId !== user.id) {
+      // Check if the caller is an admin
+      const { data: callerProfile, error: callerError } = await supabaseAdmin
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (callerError || callerProfile?.role !== 'admin') {
+        return Response.json(
+          { error: "Unauthorized: Only admins can reset other accounts" },
+          { status: 403, headers: corsHeaders }
+        );
+      }
+
+      // Get target user email from auth
+      const { data: { user: targetUser }, error: targetError } = await supabaseAdmin.auth.admin.getUserById(body.userId);
+      
+      if (targetError || !targetUser) {
+        return Response.json(
+          { error: "Target user not found" },
+          { status: 404, headers: corsHeaders }
+        );
+      }
+
+      targetUserId = targetUser.id;
+      targetUserEmail = targetUser.email;
+    }
+  } catch (e) {
+    // If no body or invalid JSON, default to the caller's account
+    console.log("No valid JSON body found, defaulting to caller's account");
+  }
+
+  if (!targetUserEmail) {
     return Response.json(
       { error: "User email not found" },
       { status: 400, headers: corsHeaders }
@@ -58,7 +94,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    console.log(`Starting reset for user: ${userId} (${userEmail})`)
+    console.log(`Starting reset for user: ${targetUserId} (${targetUserEmail})`)
 
     // 2. Update event_registrations to prevent cascade delete and reset status
     const { error: updateError } = await supabaseAdmin
@@ -69,7 +105,7 @@ Deno.serve(async (req) => {
         registration_points_granted_at: null,
         invitation_sent_at: null
       })
-      .eq("email", userEmail)
+      .eq("email", targetUserEmail)
 
     if (updateError) {
       console.error("Error updating event_registrations:", updateError)
@@ -80,7 +116,7 @@ Deno.serve(async (req) => {
     const { error: checkinDeleteError } = await supabaseAdmin
       .from("checkin_records")
       .delete()
-      .eq("email", userEmail)
+      .eq("email", targetUserEmail)
 
     if (checkinDeleteError) {
       console.error("Error deleting checkin_records:", checkinDeleteError)
@@ -88,14 +124,14 @@ Deno.serve(async (req) => {
     }
 
     // 4. Delete user from auth.users (this will cascade delete profiles and related records)
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId)
+    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(targetUserId)
 
     if (deleteError) {
       console.error("Error deleting user from auth:", deleteError)
       throw new Error(`Failed to delete user: ${deleteError.message}`)
     }
 
-    console.log(`Successfully reset account for ${userEmail}`)
+    console.log(`Successfully reset account for ${targetUserEmail}`)
 
     return Response.json(
       { success: true, message: "Account has been reset successfully." },

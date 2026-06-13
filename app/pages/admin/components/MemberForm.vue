@@ -12,7 +12,11 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   'update:show': [value: boolean]
   'submit': [data: any]
+  'reset-success': []
 }>()
+
+const { handleResetAccount } = useUser()
+const { addToast } = useToast()
 
 const formData = ref({
   email: '',
@@ -21,6 +25,8 @@ const formData = ref({
   points: 0,
   scanPermission: false
 })
+
+const isResetting = ref(false)
 
 // Sync internal state when profile or show changes
 watch(() => props.show, (newVal) => {
@@ -51,6 +57,33 @@ const handleSubmit = () => {
 
 const handleClose = () => {
   emit('update:show', false)
+}
+
+const onReset = async () => {
+  if (!props.profile?.id) return
+
+  try {
+    await showDialog({
+      title: '重置會員帳號',
+      message: `確定要重置 ${props.profile.name} 的帳號嗎？這將會刪除其個人資料、點數紀錄，並將報名狀態重置。此操作無法復原。`,
+      showCancelButton: true,
+      confirmButtonText: '確定重置',
+      confirmButtonColor: '#ef4444',
+      cancelButtonText: '取消'
+    })
+
+    isResetting.value = true
+    await handleResetAccount(props.profile.id)
+    addToast('帳號已成功重置', 'success')
+    emit('update:show', false)
+    emit('reset-success')
+  } catch (err) {
+    if (err !== 'cancel' && err) {
+      addToast('重置帳號失敗', 'error')
+    }
+  } finally {
+    isResetting.value = false
+  }
 }
 </script>
 
@@ -131,14 +164,27 @@ const handleClose = () => {
         </div>
       </div>
 
-      <button
-        @click="handleSubmit"
-        :disabled="loading"
-        class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-      >
-        <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-        <span>{{ loading ? '處理中...' : (mode === 'edit' ? '儲存變更' : '建立並發送邀請') }}</span>
-      </button>
+      <div class="space-y-3">
+        <button
+          @click="handleSubmit"
+          :disabled="loading || isResetting"
+          class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+        >
+          <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <span>{{ loading ? '處理中...' : (mode === 'edit' ? '儲存變更' : '建立並發送邀請') }}</span>
+        </button>
+
+        <button
+          v-if="mode === 'edit'"
+          @click="onReset"
+          :disabled="loading || isResetting"
+          class="w-full h-12 bg-white text-red-500 border border-red-100 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+        >
+          <span v-if="isResetting" class="size-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></span>
+          <span v-else class="material-symbols-outlined text-lg">delete_forever</span>
+          <span>刪除帳號</span>
+        </button>
+      </div>
     </div>
   </van-action-sheet>
 </template>

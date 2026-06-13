@@ -199,12 +199,18 @@ export function useUser() {
   /**
    * 重置帳號
    */
-  const handleResetAccount = async () => {
+  const handleResetAccount = async (userId?: string) => {
     try {
       isLoading.value = true
-      await userService.resetUserAccount()
-      clearUserData()
-      router.push('/auth')
+      await userService.resetUserAccount(userId)
+      
+      // 只有在重置的是「當前登入者」自己時，才需要清除資料並導向登入頁
+      // 如果沒有傳 userId，預設也是重置自己
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!userId || userId === user?.id) {
+        clearUserData()
+        router.push('/auth')
+      }
     } catch (err: any) {
       console.error('Reset account error:', err)
       error.value = err.message || '重置帳號失敗'
