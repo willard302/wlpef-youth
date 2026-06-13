@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Database } from '@/types/database.types'
+import AuthInputField from './components/AuthInputField.vue'
 
 definePageMeta({
   layout: 'auth'
@@ -8,23 +9,43 @@ definePageMeta({
 const router = useRouter()
 const supabase = useSupabaseClient<Database>()
 
-const password = ref('')
-const confirmPassword = ref('')
+const formData = ref({
+  password: '',
+  confirmPassword: ''
+})
+
+const fields = [
+  { 
+    id: 'password', 
+    label: '新密碼', 
+    type: 'password', 
+    placeholder: '請輸入至少 6 位數密碼',
+    autocomplete: 'new-password'
+  },
+  { 
+    id: 'confirmPassword', 
+    label: '確認新密碼', 
+    type: 'password', 
+    placeholder: '請再次輸入新密碼',
+    autocomplete: 'new-password'
+  }
+]
+
 const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 
 const handleResetPassword = async () => {
   // 基礎驗證
-  if (!password.value) {
+  if (!formData.value.password) {
     errorMessage.value = '請輸入新密碼'
     return
   }
-  if (password.value.length < 6) {
+  if (formData.value.password.length < 6) {
     errorMessage.value = '密碼長度至少需要 6 個字元'
     return
   }
-  if (password.value !== confirmPassword.value) {
+  if (formData.value.password !== formData.value.confirmPassword) {
     errorMessage.value = '兩次輸入的密碼不相同'
     return
   }
@@ -36,7 +57,7 @@ const handleResetPassword = async () => {
   try {
     // 調用 Supabase API 更新當前登入用戶的密碼
     const { error } = await supabase.auth.updateUser({
-      password: password.value
+      password: formData.value.password
     })
 
     if (error) throw error
@@ -86,33 +107,21 @@ const handleResetPassword = async () => {
       </div>
 
       <form @submit.prevent="handleResetPassword" class="space-y-4">
-        <div class="space-y-1">
-          <label class="text-white/80 text-sm font-medium pl-1">新密碼</label>
-          <input 
-            v-model="password"
-            type="password" 
-            placeholder="請輸入至少 6 位數密碼"
-            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/50 transition-colors"
-            :disabled="loading"
-            autocomplete="new-password"
-          />
-        </div>
-
-        <div class="space-y-1">
-          <label class="text-white/80 text-sm font-medium pl-1">確認新密碼</label>
-          <input 
-            v-model="confirmPassword"
-            type="password" 
-            placeholder="請再次輸入新密碼"
-            class="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/50 transition-colors"
-            :disabled="loading"
-            autocomplete="new-password"
-          />
-        </div>
+        <AuthInputField
+          v-for="field in fields"
+          :key="field.id"
+          v-model="formData[field.id as keyof typeof formData]"
+          :label="field.label"
+          :type="field.type"
+          :placeholder="field.placeholder"
+          :autocomplete="field.autocomplete"
+          :disabled="loading"
+        />
 
         <p v-if="errorMessage" class="text-red-300 text-sm font-medium text-center bg-red-500/10 py-2 rounded-lg border border-red-500/20">
           {{ errorMessage }}
         </p>
+
         <p v-if="successMessage" class="text-green-300 text-sm font-medium text-center bg-green-500/10 py-2 rounded-lg border border-green-500/20">
           {{ successMessage }}
         </p>
