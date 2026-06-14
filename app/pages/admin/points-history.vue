@@ -10,12 +10,13 @@ definePageMeta({
   showTabbar: false,
 })
 
-const router = useRouter()
 const transactions = ref<PointTransaction[]>([])
 const isLoading = ref(true)
 const searchQuery = ref('')
 const detailsDialogOpen = ref(false)
 const selectedTransaction = ref<PointTransaction | null>(null)
+const currentPage = ref(1)
+const itemsPerPage = 20
 
 const fetchTransactions = async () => {
   try {
@@ -37,6 +38,12 @@ const filteredTransactions = computed(() => {
     tx.eventTitle?.toLowerCase().includes(query) ||
     tx.description?.toLowerCase().includes(query)
   )
+})
+
+const paginatedTransactions = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredTransactions.value.slice(start, end)
 })
 
 const openDetails = (tx: PointTransaction) => {
@@ -82,7 +89,7 @@ onMounted(() => {
 
       <div v-else class="space-y-4">
         <div 
-          v-for="tx in filteredTransactions" 
+          v-for="tx in paginatedTransactions" 
           :key="tx.id"
           class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4 cursor-pointer active:scale-[0.99] transition-transform"
           @click="openDetails(tx)"
@@ -107,6 +114,16 @@ onMounted(() => {
           </div>
 
           <p class="text-[11px] text-slate-400">點擊查看交易明細</p>
+        </div>
+
+        <div v-if="filteredTransactions.length > itemsPerPage" class="pt-4 pb-8">
+          <van-pagination 
+            v-model="currentPage"
+            :total-items="filteredTransactions.length"
+            :items-per-page="itemsPerPage"
+            force-ellipses
+            class="custom-pagination"
+          />
         </div>
       </div>
 
