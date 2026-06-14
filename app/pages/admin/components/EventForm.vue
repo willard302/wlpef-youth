@@ -126,7 +126,7 @@ const getTimeColumns = (timeStr: string) => {
       <section class="glass-card rounded-2xl p-2 space-y-1">
         <div class="flex items-center justify-between px-3 py-4">
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-slate-400">schedule</span>
+            <AppIcon class="text-slate-400">schedule</AppIcon>
             <span class="font-medium text-slate-700">全天活動</span>
           </div>
           <label class="relative inline-flex items-center cursor-pointer">
@@ -139,7 +139,7 @@ const getTimeColumns = (timeStr: string) => {
 
         <div class="flex items-center justify-between px-3 py-4">
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-slate-400">calendar_today</span>
+            <AppIcon class="text-slate-400">calendar_today</AppIcon>
             <span class="text-sm font-medium text-slate-700">開始時間</span>
           </div>
           <div class="flex gap-2 text-sm">
@@ -163,7 +163,7 @@ const getTimeColumns = (timeStr: string) => {
 
         <div class="flex items-center justify-between px-3 py-4">
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-slate-400">event</span>
+            <AppIcon class="text-slate-400">event</AppIcon>
             <span class="text-sm font-medium text-slate-700">結束時間</span>
           </div>
           <div class="flex gap-2 text-sm">
@@ -186,7 +186,7 @@ const getTimeColumns = (timeStr: string) => {
 
       <section class="glass-card rounded-2xl p-2 space-y-1">
         <div class="flex items-start gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400 mt-0.5">location_on</span>
+          <AppIcon class="text-slate-400 mt-0.5">location_on</AppIcon>
           <input
             v-model="formData.location"
             type="text"
@@ -196,7 +196,7 @@ const getTimeColumns = (timeStr: string) => {
         </div>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-start gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400 mt-1">notes</span>
+          <AppIcon class="text-slate-400 mt-1">notes</AppIcon>
           <textarea
             v-model="formData.description"
             placeholder="補充說明"
@@ -208,7 +208,7 @@ const getTimeColumns = (timeStr: string) => {
 
       <section class="glass-card rounded-2xl p-2 space-y-1">
         <div class="flex items-center gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400">visibility</span>
+          <AppIcon class="text-slate-400">visibility</AppIcon>
           <label class="text-sm font-medium text-slate-700 min-w-20">活動狀態</label>
           <select
             v-model="formData.status"
@@ -224,7 +224,7 @@ const getTimeColumns = (timeStr: string) => {
         </p>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-start gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400 mt-0.5">assignment</span>
+          <AppIcon class="text-slate-400 mt-0.5">assignment</AppIcon>
           <input
             v-model="formData.googleFormUrl"
             type="url"
@@ -235,7 +235,7 @@ const getTimeColumns = (timeStr: string) => {
         </div>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-start gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400 mt-0.5">table</span>
+          <AppIcon class="text-slate-400 mt-0.5">table</AppIcon>
           <input
             v-model="formData.googleSheetId"
             type="text"
@@ -247,7 +247,7 @@ const getTimeColumns = (timeStr: string) => {
 
       <section class="glass-card rounded-2xl p-2 space-y-1">
         <div class="flex items-center gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400">how_to_reg</span>
+          <AppIcon class="text-slate-400">how_to_reg</AppIcon>
           <label class="text-sm font-medium text-slate-700 flex-1">報名獎勵點數</label>
           <input
             v-model.number="formData.registrationBonus"
@@ -258,7 +258,7 @@ const getTimeColumns = (timeStr: string) => {
         </div>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-center gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400">fact_check</span>
+          <AppIcon class="text-slate-400">fact_check</AppIcon>
           <label class="text-sm font-medium text-slate-700 flex-1">簽到獎勵點數</label>
           <input
             v-model.number="formData.checkinBonus"
@@ -269,7 +269,7 @@ const getTimeColumns = (timeStr: string) => {
         </div>
         <div class="h-[1px] bg-white/30 mx-3"></div>
         <div class="flex items-center gap-3 px-3 py-4">
-          <span class="material-symbols-outlined text-slate-400">trophy</span>
+          <AppIcon class="text-slate-400">trophy</AppIcon>
           <label class="text-sm font-medium text-slate-700 flex-1">抽獎門檻 (點數)</label>
           <input
             v-model.number="formData.raffleThreshold"
@@ -289,7 +289,7 @@ const getTimeColumns = (timeStr: string) => {
           :disabled="isSaving || isDeleting || isInitializing"
           class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-[#2b9dee] text-white font-bold text-sm shadow-lg shadow-blue-200 active:scale-[0.98] transition-all disabled:opacity-50"
         >
-          <span class="material-symbols-outlined text-lg">done</span>
+          <AppIcon :size="18">done</AppIcon>
           {{ isSaving ? '處理中...' : (isEditMode ? '更新活動' : '建立活動') }}
         </button>
 
@@ -299,7 +299,7 @@ const getTimeColumns = (timeStr: string) => {
           :disabled="isDeleting || isSaving"
           class="w-full flex items-center justify-center gap-2 py-4 rounded-2xl bg-red-50 text-red-500 font-bold text-sm active:bg-red-100 transition-colors disabled:opacity-50"
         >
-          <span class="material-symbols-outlined text-lg">delete</span>
+          <AppIcon :size="18">delete</AppIcon>
           {{ isDeleting ? '刪除中...' : '刪除活動' }}
         </button>
       </section>
@@ -307,7 +307,7 @@ const getTimeColumns = (timeStr: string) => {
 
     <main v-else class="px-4 pt-16 pb-24 max-w-md mx-auto">
       <div class="glass-card rounded-2xl p-8 text-center text-slate-500">
-        <span class="material-symbols-outlined text-3xl block mb-2 animate-spin opacity-50">progress_activity</span>
+        <AppIcon :size="30" class="block mb-2 animate-spin opacity-50">progress_activity</AppIcon>
         載入活動中...
       </div>
     </main>

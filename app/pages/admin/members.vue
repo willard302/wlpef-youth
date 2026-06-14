@@ -124,7 +124,7 @@ onMounted(async () => {
       <!-- Search and Add -->
       <section class="flex gap-2">
         <div class="relative flex-1">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <AppIcon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</AppIcon>
           <input
             v-model="searchQuery"
             type="text"
@@ -136,7 +136,7 @@ onMounted(async () => {
           @click="showAddModal = true"
           class="size-12 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
         >
-          <span class="material-symbols-outlined">person_add</span>
+          <AppIcon>person_add</AppIcon>
         </button>
       </section>
 
@@ -166,7 +166,7 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="filteredProfiles.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">group_off</span>
+          <AppIcon :size="36" class="text-slate-200 mb-2">group_off</AppIcon>
           <p class="text-slate-400 text-sm font-medium">尚無符合條件的會員</p>
         </div>
 
@@ -182,7 +182,7 @@ onMounted(async () => {
               :style="{ backgroundImage: profile.avatar ? `url(${profile.avatar})` : 'none' }"
             >
               <div v-if="!profile.avatar" class="w-full h-full flex items-center justify-center text-slate-400">
-                <span class="material-symbols-outlined">person</span>
+                <AppIcon>person</AppIcon>
               </div>
             </div>
             
@@ -201,7 +201,7 @@ onMounted(async () => {
 
             <div class="text-right shrink-0">
               <div class="flex items-center gap-1 justify-end">
-                <span class="material-symbols-outlined text-amber-500 text-xs font-variation-settings-fill-1">database</span>
+                <AppIcon name="database" fill class="text-amber-500" :size="12" />
                 <span class="text-sm font-black text-slate-800">{{ profile.points }}</span>
               </div>
             </div>
@@ -232,8 +232,5 @@ onMounted(async () => {
 <style scoped>
 .members-page {
   background-color: #f8fafc;
-}
-.font-variation-settings-fill-1 {
-  font-variation-settings: 'FILL' 1;
 }
 </style>

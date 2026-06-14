@@ -101,7 +101,7 @@ const onReset = async () => {
           :style="{ backgroundImage: profile.avatar ? `url(${profile.avatar})` : 'none' }"
         >
           <div v-if="!profile.avatar" class="w-full h-full flex items-center justify-center text-slate-300">
-            <span class="material-symbols-outlined text-3xl">person</span>
+            <AppIcon :size="30">person</AppIcon>
           </div>
         </div>
         <div>
@@ -151,7 +151,7 @@ const onReset = async () => {
         <!-- Scanner Permission Toggle -->
         <div class="flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl">
           <div class="flex items-center gap-3">
-            <span class="material-symbols-outlined text-slate-400">qr_code_scanner</span>
+            <AppIcon class="text-slate-400">qr_code_scanner</AppIcon>
             <div class="flex flex-col">
               <span class="text-sm font-medium text-slate-700">簽到掃描權限</span>
               <span class="text-[10px] text-slate-400">開通後該用戶可協助活動簽到</span>
@@ -181,7 +181,7 @@ const onReset = async () => {
           class="w-full h-12 bg-white text-red-500 border border-red-100 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
         >
           <span v-if="isResetting" class="size-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></span>
-          <span v-else class="material-symbols-outlined text-lg">delete_forever</span>
+          <AppIcon v-else :size="18">delete_forever</AppIcon>
           <span>刪除帳號</span>
         </button>
       </div>

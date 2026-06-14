@@ -152,7 +152,7 @@ onUnmounted(async () => {
       <!-- Step 1: Select Event -->
       <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
         <div class="flex items-center gap-3 mb-4 text-slate-400">
-          <span class="material-symbols-outlined">event_note</span>
+          <AppIcon>event_note</AppIcon>
           <h3 class="text-sm font-bold uppercase tracking-widest">第一步：選擇活動</h3>
         </div>
 
@@ -177,7 +177,7 @@ onUnmounted(async () => {
       <!-- Step 2: Scan QR Code -->
       <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 overflow-hidden">
         <div class="flex items-center gap-3 mb-6 text-slate-400">
-          <span class="material-symbols-outlined">qr_code_scanner</span>
+          <AppIcon>qr_code_scanner</AppIcon>
           <h3 class="text-sm font-bold uppercase tracking-widest">第二步：掃描會員</h3>
         </div>
 
@@ -189,7 +189,7 @@ onUnmounted(async () => {
             class="w-full h-14 rounded-2xl bg-sky-500 text-white font-bold shadow-lg shadow-sky-200 active:scale-95 transition-all flex items-center justify-center gap-2"
             :class="{ 'bg-rose-500 shadow-rose-200': isCameraActive }"
           >
-            <span class="material-symbols-outlined">{{ isCameraActive ? 'videocam_off' : 'photo_camera' }}</span>
+            <AppIcon>{{ isCameraActive ? 'videocam_off' : 'photo_camera' }}</AppIcon>
             {{ isCameraActive ? '停止掃描' : '啟動相機' }}
           </button>
           <p class="text-[10px] text-slate-400 text-center font-medium">
@@ -201,7 +201,7 @@ onUnmounted(async () => {
       <!-- Status Info -->
       <div v-if="isScanning" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
         <div class="size-20 bg-sky-500 rounded-3xl flex items-center justify-center mb-6 animate-bounce">
-          <span class="material-symbols-outlined text-4xl">sync</span>
+          <AppIcon :size="36">sync</AppIcon>
         </div>
         <h2 class="text-xl font-bold mb-2">簽到處理中...</h2>
         <p class="text-white/60 text-sm">正在驗證會員資料並發放點數</p>

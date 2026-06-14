@@ -111,7 +111,7 @@ onMounted(async () => {
             @click="showEventPicker = true"
             class="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 text-xs font-bold hover:bg-sky-100 transition-all flex items-center gap-2"
           >
-            <span class="material-symbols-outlined text-sm">swap_horiz</span>
+            <AppIcon :size="14">swap_horiz</AppIcon>
             切換活動
           </button>
         </div>
@@ -123,7 +123,7 @@ onMounted(async () => {
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總出席人數</p>
           <div class="flex items-end justify-between">
             <p class="text-2xl font-black text-slate-800">{{ attendance.length }}</p>
-            <span class="material-symbols-outlined text-emerald-500">verified</span>
+            <AppIcon class="text-emerald-500">verified</AppIcon>
           </div>
         </div>
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
@@ -145,7 +145,7 @@ onMounted(async () => {
         </div>
 
         <div class="relative">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <AppIcon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</AppIcon>
           <input
             v-model="searchQuery"
             type="text"
@@ -159,12 +159,12 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="attendance.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">person_off</span>
+          <AppIcon :size="36" class="text-slate-200 mb-2">person_off</AppIcon>
           <p class="text-slate-400 text-sm font-medium">尚無出席資料</p>
         </div>
 
         <div v-else-if="filteredAttendance.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">search_off</span>
+          <AppIcon :size="36" class="text-slate-200 mb-2">search_off</AppIcon>
           <p class="text-slate-400 text-sm font-medium">查無符合條件的出席資料</p>
         </div>
 
@@ -180,7 +180,7 @@ onMounted(async () => {
                 <div class="size-10 rounded-full bg-slate-100 overflow-hidden">
                   <img v-if="item.userAvatar" :src="item.userAvatar" class="size-full object-cover" />
                   <div v-else class="size-full flex items-center justify-center text-slate-400">
-                    <span class="material-symbols-outlined text-xl">person</span>
+                    <AppIcon size="sm">person</AppIcon>
                   </div>
                 </div>
                 <div>
@@ -218,7 +218,7 @@ onMounted(async () => {
         <div class="flex items-center gap-4">
           <div class="size-16 rounded-full bg-emerald-500 flex items-center justify-center text-white shadow-lg overflow-hidden">
             <img v-if="selectedAttendance.userAvatar" :src="selectedAttendance.userAvatar" class="size-full object-cover" />
-            <span v-else class="material-symbols-outlined text-3xl">person</span>
+            <AppIcon :size="30">person</AppIcon>
           </div>
           <div>
             <h3 class="text-xl font-bold text-slate-900">{{ selectedAttendance.userName || '未提供姓名' }}</h3>
@@ -244,7 +244,7 @@ onMounted(async () => {
 
         <div class="pt-2">
           <div class="flex items-center gap-2 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-700">
-            <span class="material-symbols-outlined">verified</span>
+            <AppIcon>verified</AppIcon>
             <p class="text-xs font-bold">該成員已完成活動報名與現場報到</p>
           </div>
         </div>

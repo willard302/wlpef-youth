@@ -62,7 +62,7 @@ onMounted(() => {
     <main class="px-4 py-6 max-w-md mx-auto space-y-6">
       <!-- Search Bar -->
       <div class="relative">
-        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+        <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input 
           v-model="searchQuery"
           type="text"
@@ -77,7 +77,7 @@ onMounted(() => {
       </div>
 
       <div v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center py-20 text-slate-400 text-center">
-        <span class="material-symbols-outlined text-6xl opacity-20 mb-4">history_toggle_off</span>
+        <AppIcon name="history_toggle_off" :size="60" class="opacity-20 mb-4" />
         <p class="font-medium">找不到相關紀錄</p>
       </div>
 
@@ -92,7 +92,7 @@ onMounted(() => {
           <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <div class="size-8 rounded-full bg-slate-100 flex items-center justify-center">
-                <span class="material-symbols-outlined text-sm text-slate-400">person</span>
+                <AppIcon name="person" :size="14" class="text-slate-400" />
               </div>
               <div>
                 <p class="text-sm font-black text-slate-900 leading-none">{{ tx.userName || '未知用戶' }}</p>
@@ -130,7 +130,4 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
 </style>

@@ -27,7 +27,7 @@ const getPointsStatus = (reg: EventRegistration) => {
       <!-- Basic Info -->
       <div class="flex items-center gap-4">
         <div class="size-14 rounded-2xl bg-sky-500 flex items-center justify-center text-white shadow-lg">
-          <span class="material-symbols-outlined text-2xl">person</span>
+          <AppIcon size="md">person</AppIcon>
         </div>
         <div>
           <h3 class="text-xl font-bold text-slate-900">{{ selectedRegistration.name || '未提供姓名' }}</h3>

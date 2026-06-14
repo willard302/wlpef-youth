@@ -30,7 +30,7 @@ const inputType = computed(() => {
 <template>
   <div class="space-y-2">
     <label v-if="label" class="text-sm font-semibold text-slate-700 ml-1 flex items-center gap-2">
-      <i v-if="icon && (type === 'textarea' || type === 'select')" class="material-symbols-outlined text-lg text-slate-400">{{ icon }}</i>
+      <AppIcon v-if="icon && (type === 'textarea' || type === 'select')" :size="18" class="text-slate-400">{{ icon }}</AppIcon>
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
@@ -39,9 +39,9 @@ const inputType = computed(() => {
 
       <template v-else>
       <!-- Icon for standard inputs (centered) -->
-      <i v-if="icon && type !== 'textarea' && type !== 'select'" class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
+      <AppIcon v-if="icon && type !== 'textarea' && type !== 'select'" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
         {{ icon }}
-      </i>
+      </AppIcon>
 
       <!-- Standard Input -->
       <input
@@ -69,9 +69,9 @@ const inputType = computed(() => {
             {{ opt.label }}
           </option>
         </select>
-        <i class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+        <AppIcon class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
           expand_more
-        </i>
+        </AppIcon>
       </div>
 
       <!-- Password Toggle Button -->
@@ -82,7 +82,7 @@ const inputType = computed(() => {
         class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
         :aria-label="showPassword ? '隱藏密碼' : '顯示密碼'"
       >
-        <i class="material-symbols-outlined">{{ showPassword ? 'visibility_off' : 'visibility' }}</i>
+        <AppIcon>{{ showPassword ? 'visibility_off' : 'visibility' }}</AppIcon>
       </button>
       </template>
     </div>
@@ -90,7 +90,4 @@ const inputType = computed(() => {
 </template>
 
 <style scoped>
-i {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
 </style>

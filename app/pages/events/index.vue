@@ -226,7 +226,7 @@ onMounted(async () => {
           @click="openMenu"
           class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all"
         >
-          <span class="material-symbols-outlined text-2xl">menu</span>
+          <AppIcon name="menu" />
         </button>
       </template>
 
@@ -257,9 +257,10 @@ onMounted(async () => {
                   : 'border-white/25 bg-white/15 text-white')
             ]"
           >
-            <span class="material-symbols-outlined text-[14px]">
-              {{ canViewAllEventStatus ? 'sell' : (isUpcomingCheckedIn ? 'task_alt' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg')) }}
-            </span>
+            <AppIcon 
+              :name="canViewAllEventStatus ? 'sell' : (isUpcomingCheckedIn ? 'task_alt' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg'))" 
+              :size="14" 
+            />
             {{ upcomingRegistrationStatus }}
           </span>
         </div>

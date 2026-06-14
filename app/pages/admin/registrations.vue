@@ -158,7 +158,7 @@ onMounted(async () => {
             @click="showEventPicker = true"
             class="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 text-xs font-bold hover:bg-sky-100 transition-all flex items-center gap-2"
           >
-            <span class="material-symbols-outlined text-sm">swap_horiz</span>
+            <AppIcon name="swap_horiz" :size="14" />
             切換活動
           </button>
         </div>
@@ -176,9 +176,7 @@ onMounted(async () => {
               class="size-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center hover:bg-sky-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title="立即同步 Google 試算表"
             >
-              <span class="material-symbols-outlined text-lg" :class="{ 'animate-spin': isSyncing }">
-                {{ isSyncing ? 'sync' : 'sync_saved_locally' }}
-              </span>
+              <AppIcon :name="isSyncing ? 'sync' : 'sync_saved_locally'" :size="18" :class="{ 'animate-spin': isSyncing }" />
             </button>
           </div>
         </div>
@@ -203,7 +201,7 @@ onMounted(async () => {
         </div>
 
         <div class="relative">
-          <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+          <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             v-model="searchQuery"
             type="text"
@@ -217,12 +215,12 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="registrations.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">group_off</span>
+          <AppIcon name="group_off" :size="36" class="text-slate-200 mb-2" />
           <p class="text-slate-400 text-sm font-medium">尚無報名資料</p>
         </div>
 
         <div v-else-if="filteredRegistrations.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">search_off</span>
+          <AppIcon name="search_off" :size="36" class="text-slate-200 mb-2" />
           <p class="text-slate-400 text-sm font-medium">查無符合條件的報名資料</p>
         </div>
 
