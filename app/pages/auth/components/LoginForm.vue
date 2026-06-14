@@ -45,10 +45,10 @@ const fields = [
       @click="loginWithGoogle"
       :disabled="loading"
       block
-      class="login-btn !h-14 !rounded-2xl !bg-white !text-[#1f2937] !font-semibold !border-none"
+      class="google-login-btn !h-14 !rounded-2xl !bg-white/10 !backdrop-blur-md !text-white !font-bold !border !border-white/20"
     >
       <div class="flex items-center justify-center gap-3">
-        <div class="google-logo h-6 w-6" />
+        <div class="google-logo size-6" />
         <span class="tracking-wide">使用 Google 登入</span>
       </div>
     </van-button>
@@ -103,17 +103,20 @@ const fields = [
 </template>
 
 <style scoped>
-.login-btn {
-  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+.google-login-btn {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.login-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+.google-login-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
 }
 
-.login-btn:active {
-  transform: scale(0.98);
+.google-login-btn:active {
+  transform: translateY(0);
+  background-color: rgba(255, 255, 255, 0.15) !important;
 }
 
 .google-logo {
