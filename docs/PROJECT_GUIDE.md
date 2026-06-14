@@ -1,6 +1,6 @@
 # WLPEF Youth Project Guide
 
-最後更新：2026-06-07
+最後更新：2026-06-14
 
 ## 1. 專案定位
 本專案是「領袖會社青團」的會員與活動管理平台，核心目標是整合：
@@ -25,6 +25,7 @@
 
 ### 3.1 驗證與帳號流程
 - Email/密碼登入、註冊、忘記密碼、重設密碼
+- **驗證介面優化**：統一使用 `AuthInputField.vue` 元件，提升視覺一致性並支援密碼顯示切換。
 - OAuth 登入：Google、Apple
 - 註冊時重複 Email 偵測：呼叫 Edge Function `check-user-registration`
 - OAuth callback (`/auth/confirm`) 會嘗試觸發 `merge-duplicate-account`，整併同 Email 重複帳號
@@ -45,15 +46,17 @@
 - 後台報名頁可查看活動報名名單與完整原始欄位（`raw_data`）
 - 管理員可手動觸發 `sync-google-sheet`，把試算表資料 upsert 到 `event_registrations`
 - 同步流程會更新 `events.participants`（以 email 去重）
+- **報名狀態追蹤**：支援 `invitation_sent_at` 欄位（未來擴充邀請機制使用）。
 
-### 3.4 點數
-- 會員端可看個人點數紀錄
-- 管理端可查全站點數交易（上限 1000 筆）與明細
-- 交易類型 UI 對照由 `app/config/pointTransactions.ts` 統一管理
+### 3.4 點數與簽到
+- 會員端可看個人點數紀錄。
+- 管理端可查全站點數交易與明細。
+- **簽到掃描權限**：`profiles` 新增 `scan_permission` 欄位。管理員可於「會員管理」中授權一般成員協助活動簽到。
+- 具備掃描權限的成員可進入管理介面進行 QR Code 掃描簽到。
 
 ### 3.5 公告
-- 目前首頁有內建「最新公告」區塊（前端靜態資料）
-- 「查看全部」尚未開放獨立公告列表頁
+- 目前首頁有內建「最新公告」區塊（前端靜態資料）。
+- 「查看全部」尚未開放獨立公告列表頁。
 
 ## 4. 路由、Layout、權限規則
 
@@ -64,7 +67,7 @@
 
 ### 4.2 Middleware
 - `auth`: 驗證登入狀態、密碼重設流程導向、確保 profile 存在
-- `admin`: 限制管理頁僅 `role === 'admin'`
+- `admin`: 限制管理頁僅 `role === 'admin'` (部分簽到功能則額外檢查 `scan_permission`)
 
 ### 4.3 Tabbar 規則
 - 顯示與 active 狀態透過 `definePageMeta` 的 `showTabbar`、`tabbarKey` 控制
@@ -73,12 +76,13 @@
   - 管理員：首頁、管理設定
 
 ## 5. 資料模型重點
-主要表格以 `supabase/full_schema.sql` 為準，常用資料表如下：
+主要表格以 `supabase/full_schema.sql` 與 `supabase/migrations` 為準：
 
-- `profiles`: 會員資料（name、role、points、avatar_url、email）
+- `profiles`: 會員資料（name、role、points、avatar_url、email、**scan_permission**）
 - `events`: 活動主檔（時間、狀態、外部整合欄位、點數規則）
-- `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data...）
+- `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data、**invitation_sent_at**）
 - `point_transactions`: 點數異動紀錄
+- `checkin_records`: 簽到紀錄
 
 ## 6. Edge Functions
 
