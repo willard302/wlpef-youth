@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { LoginFormData } from '~/types/auth'
 import AuthInputField from './AuthInputField.vue'
+import AuthButton from './AuthButton.vue'
 
 const emit = defineEmits(['switchMode'])
 
@@ -41,17 +42,13 @@ const fields = [
 
 <template>
   <div class="flex flex-col gap-4">
-    <van-button
+    <AuthButton
+      google
+      :loading="loading"
       @click="loginWithGoogle"
-      :disabled="loading"
-      block
-      class="google-login-btn !h-14 !rounded-2xl !bg-white/10 !backdrop-blur-md !text-white !font-bold !border !border-white/20"
     >
-      <div class="flex items-center justify-center gap-3">
-        <div class="google-logo size-6" />
-        <span class="tracking-wide">使用 Google 登入</span>
-      </div>
-    </van-button>
+      使用 Google 登入
+    </AuthButton>
 
     <div class="text-center">
       <button 
@@ -63,7 +60,13 @@ const fields = [
       </button>
     </div>
 
-    <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(formData)" class="flex flex-col gap-3 mt-2 animate-fade-in">
+    <div v-if="showMoreOptions" class="flex items-center gap-4 py-2 animate-fade-in">
+      <div class="h-px flex-1 bg-white/10"></div>
+      <span class="text-[10px] text-white/30 uppercase tracking-widest font-bold">或使用 Email</span>
+      <div class="h-px flex-1 bg-white/10"></div>
+    </div>
+
+    <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(formData)" class="flex flex-col gap-3 animate-fade-in">
       <AuthInputField
         v-for="field in fields"
         :key="field.id"
@@ -73,14 +76,14 @@ const fields = [
         :placeholder="field.placeholder"
         :autocomplete="field.autocomplete"
       />
-      <van-button
-        @click="loginWithEmail(formData)"
+      <AuthButton
+        type="submit"
+        variant="primary"
         :loading="loading"
-        block
-        class="!h-12 !rounded-xl !bg-primary !text-white !font-bold !border-none"
+        class="!h-12 !rounded-xl mt-1"
       >
         登入
-      </van-button>
+      </AuthButton>
       
       <div class="flex justify-between items-center px-1 mt-1">
         <button
@@ -103,28 +106,6 @@ const fields = [
 </template>
 
 <style scoped>
-.google-login-btn {
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.google-login-btn:hover {
-  background-color: rgba(255, 255, 255, 0.2) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.3);
-}
-
-.google-login-btn:active {
-  transform: translateY(0);
-  background-color: rgba(255, 255, 255, 0.15) !important;
-}
-
-.google-logo {
-  background-image: url('/images/google-logo.svg');
-  background-size: cover;
-  background-position: center;
-}
-
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }

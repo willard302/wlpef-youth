@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { RegisterFormData } from '~/types/auth'
 import AuthInputField from './AuthInputField.vue'
+import AuthButton from './AuthButton.vue'
 
 const emit = defineEmits(['switchMode'])
 const {
   loading,
   errorMessage,
+  loginWithGoogle,
   signupWithEmail
 } = useAuth()
 
@@ -55,36 +57,52 @@ const fields = [
 </script>
 
 <template>
-  <form @submit.prevent="signupWithEmail(registerData)" class="flex flex-col gap-3 animate-fade-in">
-    <AuthInputField
-      v-for="field in fields"
-      :key="field.id"
-      v-model="registerData[field.id as keyof RegisterFormData]"
-      :type="field.type"
-      :icon="field.icon"
-      :placeholder="field.placeholder"
-      :autocomplete="field.autocomplete"
-    />
-    
-    <van-button
-      @click="signupWithEmail(registerData)"
+  <div class="flex flex-col gap-4 animate-fade-in">
+    <AuthButton
+      google
       :loading="loading"
-      block
-      class="!h-12 !rounded-xl !bg-primary !text-white !font-bold !border-none mt-2"
+      @click="loginWithGoogle"
     >
-      立即註冊
-    </van-button>
+      使用 Google 快速註冊
+    </AuthButton>
 
-    <button
-      type="button" 
-      @click="emit('switchMode', 'login')" 
-      class="text-xs text-white/80 hover:text-white mt-1"
-    >已有帳號？返回登入</button>
-
-    <div v-if="errorMessage" class="rounded-xl border border-red-300/40 bg-red-500/20 px-4 py-3 text-center text-xs text-red-100 mt-2">
-      {{ errorMessage }}
+    <div class="flex items-center gap-4 py-2">
+      <div class="h-px flex-1 bg-white/10"></div>
+      <span class="text-[10px] text-white/30 uppercase tracking-widest font-bold">或使用 Email</span>
+      <div class="h-px flex-1 bg-white/10"></div>
     </div>
-  </form>
+
+    <form @submit.prevent="signupWithEmail(registerData)" class="flex flex-col gap-3">
+      <AuthInputField
+        v-for="field in fields"
+        :key="field.id"
+        v-model="registerData[field.id as keyof RegisterFormData]"
+        :type="field.type"
+        :icon="field.icon"
+        :placeholder="field.placeholder"
+        :autocomplete="field.autocomplete"
+      />
+      
+      <AuthButton
+        type="submit"
+        variant="primary"
+        :loading="loading"
+        class="!h-12 !rounded-xl mt-2"
+      >
+        立即註冊
+      </AuthButton>
+
+      <button
+        type="button" 
+        @click="emit('switchMode', 'login')" 
+        class="text-xs text-white/80 hover:text-white mt-1"
+      >已有帳號？返回登入</button>
+
+      <div v-if="errorMessage" class="rounded-xl border border-red-300/40 bg-red-500/20 px-4 py-3 text-center text-xs text-red-100 mt-2">
+        {{ errorMessage }}
+      </div>
+    </form>
+  </div>
 </template>
 
 <style scoped>

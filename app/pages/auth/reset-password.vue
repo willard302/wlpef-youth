@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Database } from '@/types/database.types'
 import AuthInputField from './components/AuthInputField.vue'
+import AuthButton from './components/AuthButton.vue'
 
 definePageMeta({
   layout: 'auth'
@@ -126,14 +127,13 @@ const handleResetPassword = async () => {
           {{ successMessage }}
         </p>
 
-        <button 
+        <AuthButton
           type="submit"
-          :disabled="loading"
-          class="w-full py-3 bg-white text-gray-900 font-bold rounded-xl hover:bg-white/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:active:scale-100"
+          variant="glass"
+          :loading="loading"
         >
-          <van-loading v-if="loading" type="spinner" size="20px" color="#111827" />
-          <span>{{ loading ? '更新密碼中...' : '確認修改' }}</span>
-        </button>
+          {{ loading ? '更新密碼中...' : '確認修改' }}
+        </AuthButton>
       </form>
 
       <div class="pt-2 text-center">
