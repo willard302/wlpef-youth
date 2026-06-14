@@ -3,6 +3,7 @@ import { format as fnsFormat } from 'date-fns'
 import { eventService } from '@/services/eventService'
 import type { Event } from '@/types'
 import EventForm from './components/EventForm.vue'
+import PointsBreakdownModal from './components/PointsBreakdownModal.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -32,7 +33,7 @@ const isLoading = ref(true)
 const events = ref<Event[]>([])
 const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
-const showPointsBreakdown = ref(false)
+const pointsBreakdownVisible = ref(false)
 const eventFormVisible = ref(false)
 const editingEventId = ref<string | null>(null)
 
@@ -82,7 +83,6 @@ const loadEvents = async () => {
     isLoading.value = false
   }
 }
-
 
 const selectEvent = (event: Event) => {
   selectedEvent.value = event
@@ -137,7 +137,7 @@ const displayStats = computed(() => [
     color: 'text-amber-500', 
     bg: 'bg-amber-50',
     clickable: true,
-    action: () => { showPointsBreakdown.value = true }
+    action: () => { pointsBreakdownVisible.value = true }
   },
 ])
 
@@ -248,39 +248,11 @@ onMounted(() => {
     />
 
     <!-- Points Breakdown Modal -->
-    <van-action-sheet v-model:show="showPointsBreakdown" title="點數發放詳情" class="rounded-t-[2.5rem]">
-      <div class="px-6 pb-12 pt-6 space-y-6">
-        <div class="text-center space-y-1">
-          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">活動總發放</p>
-          <p class="text-4xl font-black text-amber-500 tracking-tighter">{{ stats.totalPoints }} <span class="text-sm font-bold text-slate-400">PTS</span></p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div class="bg-slate-50 rounded-3xl p-5 space-y-2">
-            <div class="size-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-              <span class="material-symbols-outlined text-lg">how_to_reg</span>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">報名獎勵</p>
-              <p class="text-xl font-black text-slate-800">{{ stats.pointsBreakdown.registration }}</p>
-            </div>
-          </div>
-          <div class="bg-slate-50 rounded-3xl p-5 space-y-2">
-            <div class="size-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-              <span class="material-symbols-outlined text-lg">check_circle</span>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">簽到獎勵</p>
-              <p class="text-xl font-black text-slate-800">{{ stats.pointsBreakdown.checkin }}</p>
-            </div>
-          </div>
-        </div>
-
-        <p class="text-[10px] text-center text-slate-400 font-medium">
-          * 僅顯示該活動（ID: {{ selectedEvent?.id.substring(0, 8) }}...）相關的點數發放
-        </p>
-      </div>
-    </van-action-sheet>
+    <PointsBreakdownModal 
+      v-model:show="pointsBreakdownVisible"
+      :event-id="selectedEvent?.id || ''"
+      :stats="stats"
+    />
   </div>
 </template>
 
