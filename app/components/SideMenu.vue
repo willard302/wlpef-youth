@@ -168,7 +168,7 @@ const handleItemClick = (action: MenuAction) => {
         @click="handleItemClick(item.action)"
       >
         <div class="size-10 rounded-xl bg-white flex items-center justify-center shadow-sm">
-          <span class="material-symbols-outlined">{{ item.icon }}</span>
+          <AppIcon :name="item.icon" :weight="500" />
         </div>
         <span>{{ item.label }}</span>
       </button>
@@ -180,9 +180,5 @@ const handleItemClick = (action: MenuAction) => {
 .menu-content {
   /* Handle iPhone safe area (home indicator) */
   padding-bottom: calc(3rem + env(safe-area-inset-bottom));
-}
-
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 500, 'GRAD' 0, 'opsz' 24;
 }
 </style>

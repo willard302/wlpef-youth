@@ -32,9 +32,12 @@ const inputType = computed(() => {
   <div class="space-y-1">
     <label v-if="label" class="text-white/80 text-sm font-medium pl-1">{{ label }}</label>
     <div class="relative">
-      <span v-if="icon" class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">
-        {{ icon }}
-      </span>
+      <AppIcon 
+        v-if="icon" 
+        :name="icon"
+        size="sm"
+        class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50"
+      />
       <input 
         :value="modelValue"
         @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
@@ -56,9 +59,10 @@ const inputType = computed(() => {
         @click="showPassword = !showPassword"
         class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors flex items-center justify-center"
       >
-        <span class="material-symbols-outlined text-xl">
-          {{ showPassword ? 'visibility_off' : 'visibility' }}
-        </span>
+        <AppIcon 
+          :name="showPassword ? 'visibility_off' : 'visibility'"
+          size="sm"
+        />
       </button>
     </div>
   </div>

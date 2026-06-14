@@ -37,7 +37,7 @@ const emit = defineEmits<{
     
     <template v-else>
       <div v-if="google" class="google-logo size-6 shrink-0" />
-      <span v-else-if="icon" class="material-symbols-outlined text-2xl shrink-0">{{ icon }}</span>
+      <AppIcon v-else-if="icon" size="md" class="shrink-0">{{ icon }}</AppIcon>
       <span class="tracking-wide"><slot /></span>
     </template>
   </button>

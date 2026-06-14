@@ -48,12 +48,11 @@ const handleItemClick = (item: TabbarItem, event: Event) => {
           </span>
         </button>
         <template v-else>
-          <span
-            class="material-symbols-outlined text-2xl"
-            :style="{ fontVariationSettings: item.fill ? `'FILL' 1` : `'FILL' 0` }"
-          >
-            {{ item.icon }}
-          </span>
+          <AppIcon
+            :name="item.icon"
+            size="md"
+            :fill="item.fill"
+          />
           <span class="text-[9px] font-bold uppercase tracking-tighter">{{ item.label }}</span>
         </template>
       </NuxtLink>

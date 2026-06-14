@@ -42,7 +42,7 @@ onMounted(() => {
   >
     <div class="absolute top-6 right-6 animate-bounce">
       <div class="flex flex-col items-center">
-        <span class="material-symbols-outlined text-4xl text-sky-400">arrow_upward</span>
+        <AppIcon name="arrow_upward" size="xl" class="text-sky-400" />
         <p class="text-[10px] font-bold mt-1 uppercase tracking-widest text-sky-400">點擊上方選單</p>
       </div>
     </div>
@@ -50,10 +50,10 @@ onMounted(() => {
     <div class="w-full max-w-xs space-y-8 text-center">
       <div class="relative inline-block">
         <div class="size-24 rounded-[2.5rem] bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-2xl shadow-sky-500/20">
-          <span class="material-symbols-outlined text-5xl">language</span>
+          <AppIcon name="language" :size="48" fill class="text-white" />
         </div>
         <div class="absolute -bottom-2 -right-2 size-10 bg-emerald-500 rounded-full flex items-center justify-center border-4 border-slate-900">
-          <span class="material-symbols-outlined text-xl">check</span>
+          <AppIcon name="check" size="sm" fill class="text-white" />
         </div>
       </div>
 
@@ -89,8 +89,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-</style>
+<style scoped></style>

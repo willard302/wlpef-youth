@@ -35,7 +35,7 @@ const handleBack = () => {
         class="shrink-0 text-slate-900 flex items-center justify-center p-2 rounded-lg hover:bg-sky-500/10 transition-colors"
         aria-label="返回上一頁"
       >
-        <span class="material-symbols-outlined">arrow_back</span>
+        <AppIcon name="arrow_back" size="sm" />
       </button>
       <div class="flex flex-col min-w-0">
         <span class="text-xs font-bold text-sky-500 tracking-wider uppercase truncate">
@@ -71,7 +71,7 @@ const handleBack = () => {
             class="mr-2 -ml-2 size-10 shrink-0 rounded-full flex items-center justify-center hover:bg-white/20 transition-all active:scale-90"
             aria-label="返回上一頁"
           >
-            <span class="material-symbols-outlined text-2xl">arrow_back</span>
+            <AppIcon name="arrow_back" size="md" />
           </button>
 
           <LogoIcon v-else size="sm" />
@@ -102,9 +102,5 @@ const handleBack = () => {
 .pattern-dots {
   background-image: radial-gradient(circle, #fff 1px, transparent 1px);
   background-size: 20px 20px;
-}
-
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
 }
 </style>

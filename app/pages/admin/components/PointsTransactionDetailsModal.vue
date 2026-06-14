@@ -33,19 +33,19 @@ const visible = computed({
           class="size-9 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center active:scale-95 transition-transform"
           @click="visible = false"
         >
-          <span class="material-symbols-outlined text-xl">close</span>
+          <AppIcon name="close" size="sm" />
         </button>
       </div>
 
       <!-- Transaction Type & Date -->
       <div class="flex items-center gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100">
         <div :class="['size-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm', getPointTransactionMeta(transaction.type).colorClass]">
-          <span class="material-symbols-outlined text-2xl">{{ getPointTransactionMeta(transaction.type).icon }}</span>
+          <AppIcon :name="getPointTransactionMeta(transaction.type).icon" size="md" />
         </div>
         <div class="min-w-0">
           <p class="text-base font-bold text-slate-900 truncate">{{ transaction.eventTitle || getPointTransactionMeta(transaction.type).label }}</p>
           <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm">calendar_today</span>
+            <AppIcon name="calendar_today" :size="14" />
             {{ fnsFormat(new Date(transaction.createdAt), 'yyyy/MM/dd HH:mm') }}
           </p>
         </div>
@@ -94,8 +94,4 @@ const visible = computed({
   </van-action-sheet>
 </template>
 
-<style scoped>
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-</style>
+<style scoped></style>

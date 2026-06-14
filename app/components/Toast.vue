@@ -65,15 +65,18 @@ const getIcon = () => {
     leave-to-class="opacity-0 transform translate-x-full"
   >
     <div v-if="isVisible" :class="getToastClasses()">
-      <span class="material-symbols-outlined text-xl flex-shrink-0">
-        {{ getIcon() }}
-      </span>
+      <AppIcon 
+        :name="getIcon()" 
+        fill 
+        size="sm"
+        class="flex-shrink-0"
+      />
       <p class="text-sm font-medium flex-1">{{ message }}</p>
       <button
         @click="close"
         class="flex-shrink-0 hover:bg-white/20 rounded-full p-1 transition-colors"
       >
-        <span class="material-symbols-outlined text-sm">close</span>
+        <AppIcon name="close" :size="16" />
       </button>
     </div>
   </Transition>
