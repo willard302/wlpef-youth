@@ -54,7 +54,8 @@ export default defineNuxtConfig({
     types: '~/types/database.types.ts',
     cookieOptions: {
       secure:process.env.NODE_ENV === 'production',
-      sameSite: 'lax'
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7 // 7 days
     }
   },
 
