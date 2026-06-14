@@ -145,7 +145,6 @@ onMounted(async () => {
   <div class="flex flex-col items-center justify-center flex-1 px-8 text-center">
     <div class="w-full max-w-sm glass-effect rounded-[2.5rem] p-10 shadow-2xl space-y-8 border border-white/20 bg-white/10 backdrop-blur-xl">
       <div class="size-24 rounded-3xl flex items-center justify-center mx-auto text-primary">
-        <!-- <span v-if="loading" class="status-spinner" aria-label="載入中"></span> -->
         <van-loading v-if="loading" type="spinner" />
         <svg
           v-else-if="errorMessage"
