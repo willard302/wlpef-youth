@@ -85,7 +85,6 @@ export type Database = {
       event_registrations: {
         Row: {
           created_at: string | null
-          demo_user: boolean | null
           email: string
           event_id: string | null
           form_submitted_at: string | null
@@ -100,7 +99,6 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          demo_user?: boolean | null
           email: string
           event_id?: string | null
           form_submitted_at?: string | null
@@ -115,7 +113,6 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
-          demo_user?: boolean | null
           email?: string
           event_id?: string | null
           form_submitted_at?: string | null
