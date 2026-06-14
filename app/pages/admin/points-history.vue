@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { getPointTransactionMeta } from '@/config/pointTransactions'
 import { userService } from '@/services/userService'
-import { format as fnsFormat } from 'date-fns'
 import type { PointTransaction } from '@/types'
+import PointsTransactionDetailsModal from './components/PointsTransactionDetailsModal.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -51,11 +50,6 @@ const openDetails = (tx: PointTransaction) => {
   detailsDialogOpen.value = true
 }
 
-const closeDetails = () => {
-  detailsDialogOpen.value = false
-  selectedTransaction.value = null
-}
-
 onMounted(() => {
   fetchTransactions()
 })
@@ -95,7 +89,7 @@ onMounted(() => {
           @click="openDetails(tx)"
         >
           <!-- User Info Header -->
-          <div class="flex items-center justify-between pb-3 border-b border-slate-50">
+          <div class="flex items-center justify-between">
             <div class="flex items-center gap-2">
               <div class="size-8 rounded-full bg-slate-100 flex items-center justify-center">
                 <span class="material-symbols-outlined text-sm text-slate-400">person</span>
@@ -109,11 +103,9 @@ onMounted(() => {
               <span :class="['text-lg font-black', tx.points >= 0 ? 'text-emerald-500' : 'text-red-500']">
                 {{ tx.points >= 0 ? '+' : '' }}{{ tx.points }}
               </span>
-              <p class="text-[9px] font-bold text-slate-300 uppercase tracking-tighter">PTS</p>
             </div>
           </div>
 
-          <p class="text-[11px] text-slate-400">點擊查看交易明細</p>
         </div>
 
         <div v-if="filteredTransactions.length > itemsPerPage" class="pt-4 pb-8">
@@ -127,55 +119,12 @@ onMounted(() => {
         </div>
       </div>
 
-      <div
-        v-if="detailsDialogOpen && selectedTransaction"
-        class="fixed inset-0 z-50 bg-slate-900/45 p-4 flex items-end sm:items-center justify-center"
-        @click.self="closeDetails"
-      >
-        <div class="w-full max-w-md bg-white rounded-3xl p-5 shadow-xl space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-base font-black text-slate-900">交易明細</h3>
-            <button
-              type="button"
-              class="size-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"
-              @click="closeDetails"
-            >
-              <span class="material-symbols-outlined text-lg">close</span>
-            </button>
-          </div>
+      <!-- Points Transaction Details Dialog -->
+      <PointsTransactionDetailsModal 
+        v-model:show="detailsDialogOpen"
+        :transaction="selectedTransaction"
+      />
 
-          <div class="flex items-center gap-3 p-3 rounded-2xl bg-slate-50">
-            <div :class="['size-10 rounded-xl flex items-center justify-center shrink-0', getPointTransactionMeta(selectedTransaction.type).colorClass]">
-              <span class="material-symbols-outlined text-xl">{{ getPointTransactionMeta(selectedTransaction.type).icon }}</span>
-            </div>
-            <div class="min-w-0">
-              <p class="text-sm font-bold text-slate-900 truncate">{{ selectedTransaction.eventTitle || getPointTransactionMeta(selectedTransaction.type).label }}</p>
-              <p class="text-[11px] text-slate-500 mt-0.5">{{ fnsFormat(new Date(selectedTransaction.createdAt), 'yyyy/MM/dd HH:mm') }}</p>
-            </div>
-          </div>
-
-          <div class="space-y-2 text-sm">
-            <div class="flex items-center justify-between text-slate-600">
-              <span>姓名</span>
-              <span class="font-semibold text-slate-900">{{ selectedTransaction.userName || '未知用戶' }}</span>
-            </div>
-            <div class="flex items-center justify-between text-slate-600 gap-3">
-              <span>Email</span>
-              <span class="font-semibold text-slate-900 truncate">{{ selectedTransaction.userEmail || '-' }}</span>
-            </div>
-            <div class="flex items-center justify-between text-slate-600">
-              <span>點數</span>
-              <span :class="['font-black', selectedTransaction.points >= 0 ? 'text-emerald-500' : 'text-red-500']">
-                {{ selectedTransaction.points >= 0 ? '+' : '' }}{{ selectedTransaction.points }}
-              </span>
-            </div>
-          </div>
-
-          <div v-if="selectedTransaction.description" class="bg-slate-50 p-3 rounded-xl">
-            <p class="text-[12px] text-slate-700 leading-relaxed">{{ selectedTransaction.description }}</p>
-          </div>
-        </div>
-      </div>
     </main>
   </div>
 </template>
