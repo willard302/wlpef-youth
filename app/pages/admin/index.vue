@@ -132,7 +132,7 @@ const displayStats = computed(() => [
   { 
     id: 'points',
     label: '點數發放', 
-    value: stats.value.totalPoints >= 1000 ? `${(stats.value.totalPoints / 1000).toFixed(1)}k` : stats.value.totalPoints.toString(), 
+    value: stats.value.totalPoints >= 1000 ? `${(stats.value.totalPoints / 1000).toFixed(0)}k` : stats.value.totalPoints.toString(), 
     icon: 'database', 
     color: 'text-amber-500', 
     bg: 'bg-amber-50',
