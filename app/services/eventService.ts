@@ -440,10 +440,11 @@ export const eventService = {
   async fetchAdminDashboardStats(eventId?: string) {
     const supabase = useSupabaseClient<Database>()
     
-    // 1. 完成註冊人數 (profiles 總數)
+    // 1. 完成註冊人數 (僅計算 role 為 member 的 profiles)
     const { count: totalProfiles, error: profileError } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
+      .eq('role', 'member')
     
     if (profileError) throw profileError
 

@@ -154,7 +154,7 @@ onMounted(async () => {
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm relative group">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總報名人數</p>
           <div class="flex items-end justify-between">
-            <p class="text-2xl font-black text-slate-800">{{ registrations.length - 1 }}</p>
+            <p class="text-2xl font-black text-slate-800">{{ registrations.length }}</p>
             <button
               @click="handleSync"
               :disabled="isSyncing || !selectedEvent.googleSheetId"
@@ -170,7 +170,7 @@ onMounted(async () => {
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Google 同步</p>
           <p class="text-2xl font-black text-sky-500">
-            {{ registrations.filter(r => !!r.googleSheetRowId).length - 1 }}
+            {{ registrations.filter(r => !!r.googleSheetRowId).length }}
           </p>
         </div>
       </div>
