@@ -2,6 +2,7 @@
 import { format as fnsFormat } from 'date-fns'
 import { eventService } from '@/services/eventService'
 import type { Event, EventRegistration } from '@/types'
+import RegistrationDetailModal from './components/RegistrationDetailModal.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -21,13 +22,15 @@ const searchQuery = ref('')
 const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const isSyncing = ref(false)
+const currentPage = ref(1)
+const itemsPerPage = 20
 
 const selectedRegistration = ref<EventRegistration | null>(null)
-const showRegistrationDetail = ref(false)
+const registrationDetailVisible = ref(false)
 
 const openRegistrationDetail = (reg: EventRegistration) => {
   selectedRegistration.value = reg
-  showRegistrationDetail.value = true
+  registrationDetailVisible.value = true
 }
 
 const loadEvents = async () => {
@@ -49,6 +52,7 @@ const selectEvent = async (event: Event) => {
   selectedEvent.value = event
   showEventPicker.value = false
   isLoading.value = true
+  currentPage.value = 1
   try {
     registrations.value = await eventService.fetchRegistrationsByEventId(event.id)
   } catch (err: any) {
@@ -112,6 +116,17 @@ const filteredRegistrations = computed(() => {
 
     return searchableValues.some(value => value?.toLowerCase().includes(keyword))
   })
+})
+
+const paginatedRegistrations = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredRegistrations.value.slice(start, end)
+})
+
+// Reset to page 1 when searching
+watch(searchQuery, () => {
+  currentPage.value = 1
 })
 
 onMounted(async () => {
@@ -213,7 +228,7 @@ onMounted(async () => {
 
         <div v-else class="space-y-3">
           <div
-            v-for="reg in filteredRegistrations"
+            v-for="reg in paginatedRegistrations"
             :key="reg.id"
             @click="openRegistrationDetail(reg)"
             class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-all active:scale-[0.98] cursor-pointer"
@@ -240,6 +255,17 @@ onMounted(async () => {
             </div>
           </div>
         </div>
+
+        <!-- Pagination -->
+        <div v-if="filteredRegistrations.length > itemsPerPage" class="pt-4 pb-8">
+          <van-pagination
+            v-model="currentPage"
+            :total-items="filteredRegistrations.length"
+            :items-per-page="itemsPerPage"
+            force-ellipses
+            class="custom-pagination"
+          />
+        </div>
       </section>
     </main>
 
@@ -254,56 +280,37 @@ onMounted(async () => {
     />
 
     <!-- Registration Detail Modal -->
-    <van-action-sheet v-model:show="showRegistrationDetail" title="報名詳細資料" class="rounded-t-[2.5rem] overflow-hidden">
-      <div v-if="selectedRegistration" class="px-6 pb-12 pt-4 space-y-6 max-h-[70vh] overflow-y-auto">
-        <!-- Basic Info -->
-        <div class="flex items-center gap-4">
-          <div class="size-14 rounded-full bg-sky-500 flex items-center justify-center text-white shadow-lg">
-            <span class="material-symbols-outlined text-2xl">person</span>
-          </div>
-          <div>
-            <h3 class="text-xl font-bold text-slate-900">{{ selectedRegistration.name || '未提供姓名' }}</h3>
-            <p class="text-sm text-slate-500 font-medium">{{ selectedRegistration.email }}</p>
-          </div>
-        </div>
-
-        <!-- Points Info -->
-        <div class="bg-slate-50 rounded-2xl p-4">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">點數狀態</p>
-          <p class="text-sm font-bold text-slate-700">{{ getPointsStatus(selectedRegistration) }}</p>
-        </div>
-
-        <!-- Raw Data (Google Form Fields) -->
-        <div v-if="selectedRegistration.rawData && Object.keys(selectedRegistration.rawData).length > 0" class="space-y-4">
-          <div class="flex items-center gap-2 px-1">
-            <span class="w-1 h-4 bg-sky-500 rounded-full"></span>
-            <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">表單完整欄位</h4>
-          </div>
-          
-          <div class="bg-slate-50 rounded-3xl p-5 space-y-4">
-            <div 
-              v-for="(value, key) in selectedRegistration.rawData" 
-              :key="key"
-              class="border-b border-slate-200/50 last:border-0 pb-3 last:pb-0"
-            >
-              <p class="text-[10px] font-bold text-slate-400 mb-1">{{ key }}</p>
-              <p class="text-sm text-slate-700 font-medium break-words">{{ value || '(未填寫)' }}</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Meta -->
-        <div class="text-[10px] text-center text-slate-400 space-y-1">
-          <p>報名時間：{{ fnsFormat(selectedRegistration.formSubmittedAt, 'yyyy/MM/dd HH:mm:ss') }}</p>
-          <p v-if="selectedRegistration.googleSheetRowId">同步標記：{{ selectedRegistration.googleSheetRowId }}</p>
-        </div>
-      </div>
-    </van-action-sheet>
+    <RegistrationDetailModal 
+      v-model:show="registrationDetailVisible"
+      :selectedRegistration="selectedRegistration"
+    />
   </div>
 </template>
 
 <style scoped>
 .registrations-page {
   background-color: #f8fafc;
+}
+
+:deep(.custom-pagination) {
+  --van-pagination-item-default-color: #64748b;
+  --van-pagination-item-active-background: #0ea5e9;
+  --van-pagination-item-active-color: #ffffff;
+  --van-pagination-height: 44px;
+}
+
+:deep(.van-pagination__item) {
+  border-radius: 12px;
+  margin: 0 2px;
+  border: none;
+  background: white;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+:deep(.van-pagination__item--active) {
+  background: #0ea5e9;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.2);
 }
 </style>
