@@ -5,8 +5,17 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient<Database>()
   const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
 
-  // 💡 核心修正：改回使用 getUser() 繞過 useSupabaseUser() 的非同步更新延遲
-  const { data: { user } } = await supabase.auth.getUser()
+  let user = null
+
+  try {
+    const { data } = await supabase.auth.getUser()
+    user = data.user
+
+  } catch (error: any) {
+    console.warn('Supabase auth session expired, clearing local session...', error.message)
+    await supabase.auth.signOut()
+    return navigateTo('/auth')
+  }
 
   // 1. 未登入處理
   if (!user?.id) {
