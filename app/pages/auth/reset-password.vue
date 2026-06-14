@@ -17,14 +17,14 @@ const formData = ref({
 const fields = [
   { 
     id: 'password', 
-    label: '新密碼', 
+    icon: 'lock',
     type: 'password', 
     placeholder: '請輸入至少 6 位數密碼',
     autocomplete: 'new-password'
   },
   { 
     id: 'confirmPassword', 
-    label: '確認新密碼', 
+    icon: 'lock',
     type: 'password', 
     placeholder: '請再次輸入新密碼',
     autocomplete: 'new-password'
@@ -111,7 +111,7 @@ const handleResetPassword = async () => {
           v-for="field in fields"
           :key="field.id"
           v-model="formData[field.id as keyof typeof formData]"
-          :label="field.label"
+          :icon="field.icon"
           :type="field.type"
           :placeholder="field.placeholder"
           :autocomplete="field.autocomplete"

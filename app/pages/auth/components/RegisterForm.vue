@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RegisterFormData } from '~/types/auth'
+import AuthInputField from './AuthInputField.vue'
 
 const emit = defineEmits(['switchMode'])
 const {
@@ -16,50 +17,54 @@ const registerData = ref<RegisterFormData>({
   confirmPassword: ''
 })
 
+const fields = [
+  {
+    id: 'fullName',
+    label: '姓名',
+    icon: 'person',
+    type: 'text',
+    placeholder: '真實姓名 (必填)',
+    autocomplete: 'name'
+  },
+  {
+    id: 'email',
+    label: 'Email',
+    icon: 'mail',
+    type: 'email',
+    placeholder: 'Email (必填)',
+    autocomplete: 'username'
+  },
+  {
+    id: 'password',
+    label: '密碼',
+    icon: 'lock',
+    type: 'password',
+    placeholder: '設定密碼',
+    autocomplete: 'new-password'
+  },
+  {
+    id: 'confirmPassword',
+    label: '確認密碼',
+    icon: 'lock_reset',
+    type: 'password',
+    placeholder: '確認密碼',
+    autocomplete: 'new-password'
+  }
+]
+
 </script>
 
 <template>
   <form @submit.prevent="signupWithEmail(registerData)" class="flex flex-col gap-3 animate-fade-in">
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">person</span>
-      <input
-        v-model="registerData.fullName"
-        type="text"
-        placeholder="真實姓名 (必填)"
-        class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-        autocomplete="name"
-      />
-    </div>
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">mail</span>
-      <input
-        v-model="registerData.email"
-        type="email"
-        placeholder="Email (必填)"
-        class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-        autocomplete="username"
-      />
-    </div>
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">lock</span>
-      <input
-        v-model="registerData.password"
-        type="password"
-        placeholder="設定密碼"
-        class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-        autocomplete="new-password"
-      />
-    </div>
-    <div class="relative">
-      <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">lock_reset</span>
-      <input
-        v-model="registerData.confirmPassword"
-        type="password"
-        placeholder="確認密碼"
-        class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-        autocomplete="new-password"
-      />
-    </div>
+    <AuthInputField
+      v-for="field in fields"
+      :key="field.id"
+      v-model="registerData[field.id as keyof RegisterFormData]"
+      :type="field.type"
+      :icon="field.icon"
+      :placeholder="field.placeholder"
+      :autocomplete="field.autocomplete"
+    />
     
     <van-button
       @click="signupWithEmail(registerData)"

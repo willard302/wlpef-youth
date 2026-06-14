@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { LoginFormData } from '~/types/auth'
+import AuthInputField from './AuthInputField.vue'
 
 const emit = defineEmits(['switchMode'])
 
@@ -16,6 +17,25 @@ const formData = ref<LoginFormData>({
   email: '',
   password: ''
 })
+
+const fields = [
+  {
+    id: 'email',
+    label: '帳號',
+    icon: 'mail',
+    type: 'text',
+    placeholder: '請輸入帳號(Email)',
+    autocomplete: 'username'
+  },
+  {
+    id: 'password',
+    label: '密碼',
+    icon: 'lock',
+    type: 'password',
+    placeholder: '請輸入密碼',
+    autocomplete: 'current-password'
+  }
+]
 
 </script>
 
@@ -44,26 +64,15 @@ const formData = ref<LoginFormData>({
     </div>
 
     <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(formData)" class="flex flex-col gap-3 mt-2 animate-fade-in">
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">mail</span>
-        <input
-          v-model="formData.email"
-          type="email"
-          placeholder="Email"
-          class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-          autocomplete="username"
-        />
-      </div>
-      <div class="relative">
-        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-white/50 text-xl">lock</span>
-        <input
-          v-model="formData.password"
-          type="password"
-          placeholder="密碼"
-          class="w-full h-12 bg-white/10 border border-white/20 rounded-xl pl-12 pr-4 text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 transition-all"
-          autocomplete="current-password"
-        />
-      </div>
+      <AuthInputField
+        v-for="field in fields"
+        :key="field.id"
+        v-model="formData[field.id as keyof LoginFormData]"
+        :type="field.type"
+        :icon="field.icon"
+        :placeholder="field.placeholder"
+        :autocomplete="field.autocomplete"
+      />
       <van-button
         @click="loginWithEmail(formData)"
         :loading="loading"
