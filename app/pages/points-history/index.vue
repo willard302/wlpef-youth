@@ -41,7 +41,7 @@ onMounted(() => {
       </div>
 
       <div v-else-if="transactions.length === 0" class="flex flex-col items-center py-20 text-slate-400 text-center">
-        <span class="material-symbols-outlined text-6xl opacity-20 mb-4">history_toggle_off</span>
+        <AppIcon name="history_toggle_off" class="text-6xl opacity-20 mb-4" />
         <p class="font-medium">尚無點數紀錄</p>
       </div>
 
@@ -52,7 +52,7 @@ onMounted(() => {
           class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 flex items-center gap-4"
         >
           <div :class="['size-12 rounded-2xl flex items-center justify-center', getPointTransactionMeta(tx.type).colorClass]">
-            <span class="material-symbols-outlined">{{ getPointTransactionMeta(tx.type).icon }}</span>
+            <AppIcon :name="getPointTransactionMeta(tx.type).icon" />
           </div>
           
           <div class="flex-1 min-w-0">
@@ -73,8 +73,3 @@ onMounted(() => {
   </div>
 </template>
 
-<style scoped>
-.material-symbols-outlined {
-  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-}
-</style>

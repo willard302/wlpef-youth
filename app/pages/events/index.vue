@@ -273,11 +273,11 @@ onMounted(async () => {
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-2">
             <button @click="previousMonth" class="size-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center hover:bg-sky-100 transition-colors">
-              <span class="material-symbols-outlined text-lg">chevron_left</span>
+              <AppIcon name="chevron_left" class="text-lg" />
             </button>
             <h3 class="text-lg font-bold text-slate-800 min-w-[120px] text-center">{{ monthYear }}</h3>
             <button @click="nextMonth" class="size-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center hover:bg-sky-100 transition-colors">
-              <span class="material-symbols-outlined text-lg">chevron_right</span>
+              <AppIcon name="chevron_right" class="text-lg" />
             </button>
           </div>
           <button @click="goToToday" class="px-4 py-1.5 rounded-full bg-sky-500 text-white text-[11px] font-bold hover:bg-sky-600 transition-all shadow-lg shadow-sky-200">
@@ -330,7 +330,7 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="eventsForSelectedDate.length === 0" class="bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <span class="material-symbols-outlined text-4xl text-slate-200 mb-2">event_busy</span>
+          <AppIcon name="event_busy" class="text-4xl text-slate-200 mb-2" />
           <p class="text-slate-400 text-sm font-medium">這天還沒有活動</p>
         </div>
 
@@ -359,7 +359,7 @@ onMounted(async () => {
                 <p v-if="event.description" class="text-xs text-slate-500 line-clamp-2 mb-2">{{ event.description }}</p>
                 <div class="flex flex-wrap items-center gap-y-1 gap-x-3">
                   <span class="text-[11px] text-slate-500 flex items-center gap-1 font-medium">
-                    <span class="material-symbols-outlined text-[14px] text-sky-500">location_on</span>
+                    <AppIcon name="location_on" :size="14" class="text-sky-500" />
                     {{ event.location || '未指定地點' }}
                   </span>
                 </div>
@@ -371,7 +371,7 @@ onMounted(async () => {
                   @click="handleDeleteEvent(event.id)"
                   class="size-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all"
                 >
-                  <span class="material-symbols-outlined text-md">delete</span>
+                  <AppIcon name="delete" class="text-md" />
                 </button>
               </div>
             </div>
@@ -405,14 +405,14 @@ onMounted(async () => {
 
         <div class="space-y-4 bg-slate-50 rounded-3xl p-5">
           <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-sky-500">location_on</span>
+            <AppIcon name="location_on" class="text-sky-500" />
             <div class="flex-1">
               <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">地點</p>
               <p class="text-sm text-slate-700 font-medium">{{ selectedEvent.location || '未指定地點' }}</p>
             </div>
           </div>
           <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-indigo-400">schedule</span>
+            <AppIcon name="schedule" class="text-indigo-400" />
             <div class="flex-1">
               <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">時間</p>
               <p class="text-sm text-slate-700 font-medium">
@@ -441,7 +441,7 @@ onMounted(async () => {
                   : (selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
             ]"
           >
-            <span class="material-symbols-outlined">{{ isCheckedIn ? 'task_alt' : (isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'open_in_new')) }}</span>
+            <AppIcon :name="isCheckedIn ? 'task_alt' : (isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'open_in_new'))" />
             <span>
               {{ isCheckedIn ? '已完成活動報到' : (isRegistered ? '已完成報名' : (selectedEvent.status === 'closed' ? '報名已截止' : (!selectedEvent.googleFormUrl ? '尚未開放報名' : '前往 Google 表單報名'))) }}
             </span>

@@ -76,7 +76,7 @@ const getRoleName = (role?: string) => {
           @click="openMenu"
           class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all"
         >
-          <span class="material-symbols-outlined text-2xl">menu</span>
+          <AppIcon name="menu" class="text-2xl" />
         </button>
       </template>
     </AppHeaderHero>
@@ -105,7 +105,7 @@ const getRoleName = (role?: string) => {
 
             <!-- Upload hint -->
             <div class="absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors">
-              <span class="material-symbols-outlined text-white opacity-0 hover:opacity-100 transition-opacity">photo_camera</span>
+              <AppIcon name="photo_camera" class="text-white opacity-0 hover:opacity-100 transition-opacity" />
             </div>
           </div>
         </div>
@@ -134,7 +134,7 @@ const getRoleName = (role?: string) => {
         <div class="w-full bg-slate-50 rounded-2xl p-4 flex items-center justify-between border border-slate-100">
           <div class="flex items-center gap-3">
             <div class="size-10 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center">
-              <span class="material-symbols-outlined font-variation-settings-fill-1">database</span>
+              <AppIcon name="database" :fill="true" />
             </div>
             <div class="text-left">
               <p class="font-black text-slate-800 leading-none mt-0.5">累積點數</p>
@@ -154,15 +154,15 @@ const getRoleName = (role?: string) => {
           <NuxtLink
             v-for="(item, index) in menuItems"
             :key="item.label"
-            :to="item.path || '#'"
+            :to="item.path"
             @click="handleItemClick(item, $event)"
             class="flex items-center justify-between p-4 hover:bg-primary/5 transition-colors border-b border-slate-50"
           >
             <div class="flex items-center gap-3">
-              <span class="material-symbols-outlined text-slate-400">{{ item.icon }}</span>
+              <AppIcon :name="item.icon" class="text-slate-400" />
               <span class="font-medium">{{ item.label }}</span>
             </div>
-            <span class="material-symbols-outlined text-slate-300">chevron_right</span>
+            <AppIcon name="chevron_right" class="text-slate-300" />
           </NuxtLink>
           
           <!-- 登出按鈕：呼叫 handleLogout 正確清除 session -->
@@ -171,7 +171,7 @@ const getRoleName = (role?: string) => {
             class="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors border-b border-slate-50"
           >
             <div class="flex items-center gap-3 text-red-500">
-              <span class="material-symbols-outlined">logout</span>
+              <AppIcon name="logout" />
               <span class="font-bold">登出帳號</span>
             </div>
           </button>
@@ -183,8 +183,3 @@ const getRoleName = (role?: string) => {
   </div>
 </template>
 
-<style scoped>
-.font-variation-settings-fill-1 {
-  font-variation-settings: 'FILL' 1;
-}
-</style>
