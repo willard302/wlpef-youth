@@ -26,13 +26,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
 </script>
 
 <template>
-  <van-popup
-    v-model:show="isVisible"
-    position="bottom"
-    round
-    closeable
-    class="qr-code-popup"
-  >
+  <van-action-sheet v-model:show="isVisible">
     <div class="px-6 pt-10 pb-12 bg-slate-50 min-h-[500px]">
       <div class="text-center mb-8">
         <h3 class="text-xl font-bold text-slate-900">我的 QR Code</h3>
@@ -84,7 +78,5 @@ const qrValue = computed(() => userProfile.value?.id || '')
         </div>
       </div>
     </div>
-  </van-popup>
+  </van-action-sheet>
 </template>
-
-<style scoped></style>
