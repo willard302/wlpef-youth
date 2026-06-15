@@ -257,8 +257,7 @@ onMounted(async () => {
                   : 'border-white/25 bg-white/15 text-white')
             ]"
           >
-            <AppIcon 
-              :name="canViewAllEventStatus ? 'sell' : (isUpcomingCheckedIn ? 'task_alt' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg'))" 
+            <AppIcon :name="canViewAllEventStatus ? 'sell' : (isUpcomingCheckedIn ? 'task_alt' : (isUpcomingRegistered ? 'check_circle' : 'how_to_reg'))" 
               :size="14" 
             />
             {{ upcomingRegistrationStatus }}
@@ -341,7 +340,7 @@ onMounted(async () => {
             @click="openEventDetail(event)"
             class="group bg-white p-5 rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-md transition-all relative overflow-hidden cursor-pointer active:scale-[0.98]"
           >
-            <div class="absolute top-0 left-0 w-1.5 h-full" :style="{ backgroundColor: event.color || '#0EA5E9' }"></div>
+            <div class="absolute top-0 left-0 w-1.5 h-full" :style="{ backgroundColor: '#0EA5E9' }"></div>
             <div class="flex items-start gap-4">
               <div class="flex flex-col items-center min-w-[50px] pt-1">
                 <span class="text-lg font-black text-slate-800 leading-none">{{ event.time }}</span>
@@ -384,7 +383,7 @@ onMounted(async () => {
     <van-action-sheet v-model:show="eventDetailVisible" title="活動詳情" class="rounded-t-[2.5rem] overflow-hidden">
       <div v-if="selectedEvent" class="px-6 pb-12 pt-4 space-y-6">
         <div class="flex items-start gap-4">
-          <div class="size-14 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg" :style="{ backgroundColor: selectedEvent.color || '#0EA5E9' }">
+          <div class="size-14 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg" :style="{ backgroundColor: '#0EA5E9' }">
             <span class="text-[10px] font-bold uppercase opacity-80">{{ format(selectedEvent.startAt, 'MMM') }}</span>
             <span class="text-xl font-black">{{ format(selectedEvent.startAt, 'd') }}</span>
           </div>

@@ -56,7 +56,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
             :margin="2"
           />
           <div class="mt-4 flex items-center justify-center gap-2 text-slate-400">
-            <AppIcon :size="14">verified_user</AppIcon>
+            <AppIcon name="verified_user" :size="14" />
             <span class="text-[11px] font-bold uppercase tracking-wider">{{ userProfile.name }}</span>
           </div>
         </div>
@@ -64,7 +64,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
         <!-- Instructions -->
         <div class="bg-white/60 backdrop-blur-sm rounded-[2rem] p-6 border border-white shadow-sm">
           <h3 class="text-slate-800 font-bold text-sm mb-4 flex items-center gap-2">
-            <AppIcon class="text-sky-500">info</AppIcon>
+            <AppIcon class="text-sky-500" name="info" />
             報到說明
           </h3>
           <ul class="space-y-3">

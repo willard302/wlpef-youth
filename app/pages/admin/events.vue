@@ -56,7 +56,7 @@ onMounted(() => {
           @click="openEditor()"
           class="size-10 rounded-full bg-sky-500 text-white flex items-center justify-center shadow-lg active:scale-90 transition-all"
         >
-          <AppIcon>add</AppIcon>
+          <AppIcon name="add" />
         </button>
       </template>
     </AppHeaderPage>
@@ -64,7 +64,7 @@ onMounted(() => {
     <main class="px-4 mt-4 space-y-6">
       <!-- Search -->
       <div class="relative">
-        <AppIcon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</AppIcon>
+        <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           v-model="searchQuery"
           type="text"
@@ -80,7 +80,7 @@ onMounted(() => {
       </div>
 
       <div v-else-if="filteredEvents.length === 0" class="bg-white rounded-[2rem] py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200">
-        <AppIcon :size="36" class="text-slate-200 mb-2">event_busy</AppIcon>
+        <AppIcon name="event_busy" :size="36" class="text-slate-200 mb-2" />
         <p class="text-slate-400 text-sm font-medium">尚無活動資料</p>
       </div>
 
@@ -117,13 +117,13 @@ onMounted(() => {
               </span>
             </div>
             <p class="text-xs text-slate-400 truncate flex items-center gap-1">
-              <AppIcon :size="14">location_on</AppIcon>
+              <AppIcon name="location_on" :size="14" />
               {{ event.location || '未設定地點' }}
             </p>
           </div>
 
           <div class="shrink-0 text-slate-300">
-            <AppIcon>chevron_right</AppIcon>
+            <AppIcon name="chevron_right" />
           </div>
         </div>
       </div>

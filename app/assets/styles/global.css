@@ -19,10 +19,6 @@
     box-shadow: 0 0 20px rgba(43, 157, 238, 0.4);
   }
 
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-
   .form-input {
     @apply block w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all outline-none;
   }

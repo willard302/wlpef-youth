@@ -133,7 +133,7 @@ onMounted(async () => {
       <!-- Search and Add -->
       <section class="flex gap-2">
         <div class="relative flex-1">
-          <AppIcon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</AppIcon>
+          <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             v-model="searchQuery"
             type="text"
@@ -145,7 +145,7 @@ onMounted(async () => {
           @click="showAddModal = true"
           class="size-12 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
         >
-          <AppIcon>person_add</AppIcon>
+          <AppIcon name="person_add" />
         </button>
       </section>
 
@@ -175,7 +175,7 @@ onMounted(async () => {
         </div>
 
         <div v-else-if="filteredProfiles.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
-          <AppIcon :size="36" class="text-slate-200 mb-2">group_off</AppIcon>
+          <AppIcon name="group_off" :size="36" class="text-slate-200 mb-2" />
           <p class="text-slate-400 text-sm font-medium">尚無符合條件的會員</p>
         </div>
 
@@ -191,7 +191,7 @@ onMounted(async () => {
               :style="{ backgroundImage: profile.avatar ? `url(${profile.avatar})` : 'none' }"
             >
               <div v-if="!profile.avatar" class="w-full h-full flex items-center justify-center text-slate-400">
-                <AppIcon>person</AppIcon>
+                <AppIcon name="person" />
               </div>
             </div>
             

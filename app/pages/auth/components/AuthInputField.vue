@@ -32,9 +32,7 @@ const inputType = computed(() => {
   <div class="space-y-1">
     <label v-if="label" class="text-white/80 text-sm font-medium pl-1">{{ label }}</label>
     <div class="relative">
-      <AppIcon 
-        v-if="icon" 
-        :name="icon"
+      <AppIcon v-if="icon" :name="icon"
         size="sm"
         class="absolute left-4 top-1/2 -translate-y-1/2 text-white/50"
       />
@@ -59,10 +57,7 @@ const inputType = computed(() => {
         @click="showPassword = !showPassword"
         class="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors flex items-center justify-center"
       >
-        <AppIcon 
-          :name="showPassword ? 'visibility_off' : 'visibility'"
-          size="sm"
-        />
+        <AppIcon :name="showPassword ? 'visibility_off' : 'visibility'" size="sm" />
       </button>
     </div>
   </div>

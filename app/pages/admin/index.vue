@@ -25,7 +25,7 @@ const quickActions = [
 ]
 
 const headerActions = [
-  { label: 'checkin', icon: 'qr_code', action: () => router.push('/admin/checkin') },
+  { label: 'checkin', icon: 'qr_code_scanner', action: () => router.push('/admin/checkin') },
   { label: 'menu', icon: 'menu', action: openMenu }
 ]
 
@@ -161,7 +161,7 @@ onMounted(() => {
             @click="button.action"
             class="size-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center hover:bg-white/30 transition-all ml-2"
           >
-            <AppIcon size="md">{{ button.icon }}</AppIcon>
+            <AppIcon :name="button.icon" size="md" />
           </button>
         </div>
       </template>
@@ -184,7 +184,7 @@ onMounted(() => {
             @click="showEventPicker = true"
             class="shrink-0 size-8 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white hover:bg-white/30 transition-all"
           >
-            <AppIcon :size="18">swap_horiz</AppIcon>
+            <AppIcon name="swap_horiz" :size="18" />
           </button>
         </div>
       </div>
@@ -201,7 +201,7 @@ onMounted(() => {
           @click="stat.clickable && (stat.path ? router.push(stat.path) : stat.action?.())"
         >
           <div :class="[stat.bg, stat.color, 'size-10 rounded-2xl flex items-center justify-center']">
-            <AppIcon size="md">{{ stat.icon }}</AppIcon>
+            <AppIcon :name="stat.icon" size="md" />
           </div>
           <div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ stat.label }}</p>
@@ -224,7 +224,7 @@ onMounted(() => {
             class="flex flex-col items-center gap-2"
           >
             <div :class="[action.color, 'size-14 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-sky-100 active:scale-95 transition-transform']">
-              <AppIcon size="md">{{ action.icon }}</AppIcon>
+              <AppIcon :name="action.icon" size="md" />
             </div>
             <span class="text-[10px] font-bold text-slate-600">{{ action.label }}</span>
           </button>

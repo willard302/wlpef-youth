@@ -101,7 +101,7 @@ const onReset = async () => {
           :style="{ backgroundImage: profile.avatar ? `url(${profile.avatar})` : 'none' }"
         >
           <div v-if="!profile.avatar" class="w-full h-full flex items-center justify-center text-slate-300">
-            <AppIcon :size="30">person</AppIcon>
+            <AppIcon name="person" :size="30" />
           </div>
         </div>
         <div>
@@ -151,7 +151,7 @@ const onReset = async () => {
         <!-- Scanner Permission Toggle -->
         <div class="flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl">
           <div class="flex items-center gap-3">
-            <AppIcon class="text-slate-400">qr_code_scanner</AppIcon>
+            <AppIcon name="qr_code_scanner" class="text-slate-400" />
             <div class="flex flex-col">
               <span class="text-sm font-medium text-slate-700">簽到掃描權限</span>
               <span class="text-[10px] text-slate-400">開通後該用戶可協助活動簽到</span>
@@ -171,6 +171,7 @@ const onReset = async () => {
           class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
         >
           <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+          <AppIcon v-else :name="mode === 'edit' ? 'save' : 'send'" :size="18" />
           <span>{{ loading ? '處理中...' : (mode === 'edit' ? '儲存變更' : '建立並發送邀請') }}</span>
         </button>
 
@@ -181,7 +182,7 @@ const onReset = async () => {
           class="w-full h-12 bg-white text-red-500 border border-red-100 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
         >
           <span v-if="isResetting" class="size-4 border-2 border-red-500 border-t-transparent rounded-full animate-spin"></span>
-          <AppIcon v-else :size="18">delete_forever</AppIcon>
+          <AppIcon v-else name="delete_forever" :size="18" />
           <span>刪除帳號</span>
         </button>
       </div>

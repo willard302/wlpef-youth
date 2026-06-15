@@ -11,7 +11,6 @@ const props = defineProps<{
   label?: string
   required?: boolean
   options?: { label: string; value: string }[] // For select type
-  rows?: number // For textarea type
 }>()
 
 const emit = defineEmits<{
@@ -30,7 +29,12 @@ const inputType = computed(() => {
 <template>
   <div class="space-y-2">
     <label v-if="label" class="text-sm font-semibold text-slate-700 ml-1 flex items-center gap-2">
-      <AppIcon v-if="icon && (type === 'textarea' || type === 'select')" :size="18" class="text-slate-400">{{ icon }}</AppIcon>
+      <AppIcon 
+        v-if="icon && (type === 'textarea' || type === 'select')" 
+        :name="icon"
+        class="text-slate-400" 
+        :size="18" 
+      />
       {{ label }}
       <span v-if="required" class="text-red-500">*</span>
     </label>
@@ -39,13 +43,13 @@ const inputType = computed(() => {
 
       <template v-else>
       <!-- Icon for standard inputs (centered) -->
-      <AppIcon v-if="icon && type !== 'textarea' && type !== 'select'" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
-        {{ icon }}
-      </AppIcon>
+      <AppIcon 
+        :name="icon"
+        class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors"
+      />
 
       <!-- Standard Input -->
       <input
-        v-if="type !== 'textarea' && type !== 'select'"
         :value="modelValue"
         @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
         :type="inputType"
@@ -56,24 +60,6 @@ const inputType = computed(() => {
         :class="type === 'password' ? 'pr-12' : 'pr-4'"
       />
 
-      <!-- Select -->
-      <div v-else-if="type === 'select'" class="relative">
-        <select
-          :value="modelValue"
-          @change="emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
-          :disabled="disabled"
-          class="block w-full px-4 h-12 rounded-2xl border-none bg-white/80 text-slate-900 focus:ring-2 focus:ring-primary/50 shadow-sm transition-all outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <option value="" disabled selected v-if="placeholder">{{ placeholder }}</option>
-          <option v-for="opt in options" :key="opt.value" :value="opt.value">
-            {{ opt.label }}
-          </option>
-        </select>
-        <AppIcon class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-          expand_more
-        </AppIcon>
-      </div>
-
       <!-- Password Toggle Button -->
       <button
         v-if="type === 'password'"
@@ -82,7 +68,7 @@ const inputType = computed(() => {
         class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
         :aria-label="showPassword ? '隱藏密碼' : '顯示密碼'"
       >
-        <AppIcon>{{ showPassword ? 'visibility_off' : 'visibility' }}</AppIcon>
+        <AppIcon :name="showPassword ? 'visibility_off' : 'visibility'" />
       </button>
       </template>
     </div>

@@ -32,7 +32,7 @@ const pointsBreakdownVisible = computed({
       <div class="grid grid-cols-2 gap-4">
         <div class="bg-slate-50 rounded-3xl p-5 space-y-2">
           <div class="size-8 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
-            <AppIcon :size="18">how_to_reg</AppIcon>
+            <AppIcon name="how_to_reg" :size="18" />
           </div>
           <div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">報名獎勵</p>
@@ -41,7 +41,7 @@ const pointsBreakdownVisible = computed({
         </div>
         <div class="bg-slate-50 rounded-3xl p-5 space-y-2">
           <div class="size-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center">
-            <AppIcon :size="18">check_circle</AppIcon>
+            <AppIcon name="check_circle" :size="18" />
           </div>
           <div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">簽到獎勵</p>
