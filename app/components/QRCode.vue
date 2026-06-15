@@ -9,6 +9,12 @@ const emit = defineEmits<{
   'update:show': [value: boolean]
 }>()
 
+const directions: {text: string}[] = [
+  { text: "請於活動報到處主動出示此 QR Code。" },
+  { text: "工作人員掃描成功後，系統將自動記錄參與。" },
+  { text: "若無法掃描，請提供報名時使用的 Email。" }
+]
+
 const isVisible = computed({
   get: () => props.show,
   set: (val) => emit('update:show', val)
@@ -27,7 +33,7 @@ const qrValue = computed(() => userProfile.value?.id || '')
 
 <template>
   <van-action-sheet v-model:show="isVisible">
-    <div class="px-6 pt-10 pb-12 bg-slate-50 min-h-[500px]">
+    <div class="px-6 pt-6 pb-10 bg-slate-50 min-h-[500px]">
       <div class="text-center mb-8">
         <h3 class="text-xl font-bold text-slate-900">我的 QR Code</h3>
         <p class="text-sm text-slate-500 mt-1">出示此碼以完成活動報到</p>
@@ -55,24 +61,15 @@ const qrValue = computed(() => userProfile.value?.id || '')
           </div>
         </div>
 
-        <!-- Instructions -->
         <div class="bg-white/60 backdrop-blur-sm rounded-[2rem] p-6 border border-white shadow-sm">
           <h3 class="text-slate-800 font-bold text-sm mb-4 flex items-center gap-2">
-            <AppIcon class="text-sky-500" name="info" />
+            <AppIcon name="info" class="text-sky-500" />
             報到說明
           </h3>
           <ul class="space-y-3">
-            <li class="flex gap-3 items-start">
-              <span class="size-5 rounded-full bg-sky-100 text-sky-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">1</span>
-              <span class="text-xs text-slate-600 leading-relaxed font-medium">請於活動報到處主動出示此 QR Code。</span>
-            </li>
-            <li class="flex gap-3 items-start">
-              <span class="size-5 rounded-full bg-sky-100 text-sky-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">2</span>
-              <span class="text-xs text-slate-600 leading-relaxed font-medium">工作人員掃描成功後，系統將自動記錄參與。</span>
-            </li>
-            <li class="flex gap-3 items-start">
-              <span class="size-5 rounded-full bg-sky-100 text-sky-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">3</span>
-              <span class="text-xs text-slate-600 leading-relaxed font-medium">若無法掃描，請提供報名時使用的 Email。</span>
+            <li v-for="(direct, idx) in directions" :key="idx" class="flex gap-3 items-start">
+              <span class="size-5 rounded-full bg-sky-100 text-sky-600 text-[10px] font-bold flex items-center justify-center flex-shrink-0 mt-0.5">{{ idx + 1 }}</span>
+              <span class="text-xs text-slate-600 leading-relaxed font-medium">{{ direct.text }}</span>
             </li>
           </ul>
         </div>
