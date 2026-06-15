@@ -1,9 +1,5 @@
-export default defineNuxtRouteMiddleware(async () => {
-  const { userProfile, loadUserData } = useUser()
-
-  if (!userProfile.value) {
-    await loadUserData()
-  }
+export default defineNuxtRouteMiddleware(() => {
+  const { userProfile } = useUser()
 
   const canUseScanner =
     userProfile.value?.role === 'admin' || userProfile.value?.scanPermission === true

@@ -130,12 +130,6 @@ watch(searchQuery, () => {
 })
 
 onMounted(async () => {
-  await loadUserData()
-  if (userProfile.value?.role !== 'admin') {
-    addToast('權限不足', 'error')
-    router.replace('/home')
-    return
-  }
   await loadEvents()
 })
 </script>

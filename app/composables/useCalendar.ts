@@ -26,31 +26,11 @@ export function useCalendar() {
   const currentDate = ref(new Date())
   const selectedDate = ref(today.value)
 
-  const currentUserId = ref<string | null>(null)
-  const currentRole = ref<Role | null>(null)
-
-  const loadCurrentUserRole = async () => {
-    if (!userProfile.value) {
-      await loadUserData()
-    }
-
-    if (userProfile.value) {
-      currentUserId.value = userProfile.value.id
-      currentRole.value = userProfile.value.role
-      return
-    }
-
-    try {
-      const profile = await userService.fetchUserProfile()
-      currentUserId.value = profile.id
-      currentRole.value = profile.role
-    } catch {
-      currentUserId.value = null
-      currentRole.value = null
-    }
-  }
+  const currentUserId = computed(() => userProfile.value?.id || null)
+  const currentRole = computed(() => (userProfile.value?.role as Role) || null)
 
   const isAdmin = computed(() => currentRole.value === 'admin')
+
   const canViewAllEventStatus = computed(() => currentRole.value === 'admin')
 
   const canEditEvent = (createdBy: string): boolean => {
@@ -173,7 +153,6 @@ export function useCalendar() {
     eventsInMonth,
     format,
     loadEvents,
-    loadCurrentUserRole,
     isCalendarLoading,
     isAdmin,
     canEditEvent,

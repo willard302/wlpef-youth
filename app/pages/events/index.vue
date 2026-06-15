@@ -30,7 +30,6 @@ const {
   eventsInMonth,
   format,
   loadEvents,
-  loadCurrentUserRole,
   isCalendarLoading,
   isAdmin,
   canEditEvent,
@@ -209,7 +208,6 @@ const handleRegister = async () => {
 }
 
 onMounted(async () => {
-  await loadCurrentUserRole()
   await Promise.all([loadEvents(), loadUpcomingEvent()])
 })
 </script>

@@ -1,21 +1,10 @@
-import type { UserProfile } from '@/types'
 import type { Database } from '@/types/database.types'
 
 export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient<Database>()
-  const cachedUserProfile = useState<UserProfile | null>('user-profile', () => null)
+  const { userProfile, loadUserData } = useUser()
 
-  let user = null
-
-  try {
-    const { data } = await supabase.auth.getUser()
-    user = data.user
-
-  } catch (error: any) {
-    console.warn('Supabase auth session expired, clearing local session...', error.message)
-    await supabase.auth.signOut()
-    return navigateTo('/auth')
-  }
+  const { data: { user } } = await supabase.auth.getUser()
 
   // 1. 未登入處理
   if (!user?.id) {
@@ -25,58 +14,35 @@ export default defineNuxtRouteMiddleware(async (to) => {
     return
   }
 
-  const userId = user.id
+  // 確保用戶資料已載入
+  if (!userProfile.value) {
+    await loadUserData()
+  }
 
-  // 💡 抽出重複的角色導向邏輯
-  const getRedirectDestination = async (): Promise<string> => {
-    // 優先使用快取
-    if (cachedUserProfile.value?.id === userId && cachedUserProfile.value?.role) {
-      return cachedUserProfile.value.role === 'admin' ? '/admin' : '/home'
-    }
-
-    // 無快取則查詢資料庫
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .maybeSingle()
-    
-    return profile?.role === 'admin' ? '/admin' : '/home'
+  // 💡 角色導向邏輯
+  const getRedirectDestination = (): string => {
+    return userProfile.value?.role === 'admin' ? '/admin' : '/home'
   }
 
   // 2. 已登入但訪問登入頁
   if (to.path === '/auth') {
-    const dest = await getRedirectDestination()
-    return navigateTo(dest)
+    return navigateTo(getRedirectDestination())
   }
 
   // 3. 檢查資料完整性 (排除 auth 相關頁面)
   const isAuthPage = to.path.startsWith('/auth')
-  if (!isAuthPage) {
-    const hasCachedProfile = cachedUserProfile.value?.id === userId
+  if (!isAuthPage && !userProfile.value) {
+    // 如果 loadUserData 失敗且沒資料，可能需要補填資料
+    const metadata = user.user_metadata || {}
+    const isCompleted = metadata.social_signup_completed || metadata.google_signup_completed
     
-    if (!hasCachedProfile) {
-      // 檢查 metadata 是否標記已完成註冊
-      const metadata = user.user_metadata || {}
-      const isCompleted = metadata.social_signup_completed || metadata.google_signup_completed
-
-      if (!isCompleted) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', userId)
-          .maybeSingle()
-
-        if (!profile) {
-          return navigateTo('/auth/social-signup')
-        }
-      }
+    if (!isCompleted) {
+      return navigateTo('/auth/social-signup')
     }
   }
 
   // 4. 根目錄跳轉
   if (to.path === '/') {
-    const dest = await getRedirectDestination()
-    return navigateTo(dest, { replace: true })
+    return navigateTo(getRedirectDestination(), { replace: true })
   }
 })

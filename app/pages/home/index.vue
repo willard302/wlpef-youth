@@ -12,7 +12,6 @@ const {
   userProfile,
   isLoading: isUserLoading,
   isUploadingAvatar,
-  loadUserData,
   handleLogout
 } = useUser()
 
@@ -29,11 +28,6 @@ const qrPopupVisible = ref(false)
 
 const canUseScanner = computed(() => {
   return userProfile.value?.role === 'admin' || userProfile.value?.scanPermission === true
-})
-
-// 載入用戶資料
-onMounted(() => {
-  loadUserData(true)
 })
 
 // 統計數據
@@ -163,7 +157,6 @@ const getRoleName = (role?: string) => {
             <AppIcon name="chevron_right" class="text-slate-300" />
           </NuxtLink>
           
-          <!-- 登出按鈕：呼叫 handleLogout 正確清除 session -->
           <button
             @click="handleLogout"
             class="w-full flex items-center justify-between p-4 hover:bg-red-50 transition-colors border-b border-slate-50"

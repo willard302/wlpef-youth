@@ -17,12 +17,6 @@ const directions: {text: string}[] = [
   { text: "若無法掃描，請提供報名時使用的 Email。" }
 ]
 
-onMounted(async () => {
-  if (!userProfile.value) {
-    await loadUserData()
-  }
-})
-
 const qrValue = computed(() => userProfile.value?.id || '')
 
 const isVisible = computed({

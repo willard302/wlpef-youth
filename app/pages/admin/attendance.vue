@@ -9,9 +9,7 @@ definePageMeta({
   showTabbar: false,
 })
 
-const router = useRouter()
 const { addToast } = useToast()
-const { userProfile, loadUserData } = useUser()
 
 const isLoading = ref(false)
 const isEventsLoading = ref(false)
@@ -83,12 +81,6 @@ const filteredAttendance = computed(() => {
 })
 
 onMounted(async () => {
-  await loadUserData()
-  if (userProfile.value?.role !== 'admin') {
-    addToast('權限不足', 'error')
-    router.replace('/home')
-    return
-  }
   await loadEvents()
 })
 </script>
@@ -111,8 +103,7 @@ onMounted(async () => {
             @click="showEventPicker = true"
             class="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 text-xs font-bold hover:bg-sky-100 transition-all flex items-center gap-2"
           >
-            <AppIcon name="swap_hotiz" :size="14" />
-            切換活動
+            <AppIcon name="swap_horiz" :size="18" />
           </button>
         </div>
       </section>

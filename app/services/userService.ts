@@ -42,10 +42,11 @@ export const userService = {
         avatar: profile?.avatar_url || metadata.avatar_url || undefined
       }
     } catch (error: any) {
-      console.error('Error fetching user profile:', error)
-      if (error?.message === 'User not authenticated') {
+      // 如果只是未登入，不報錯也不 console.error，讓呼叫端自己決定如何處理
+      if (error?.message === 'User not authenticated' || error?.name === 'AuthSessionMissingError') {
         throw error
       }
+      console.error('Error fetching user profile:', error)
       throw new Error(error?.message || '載入用戶資料失敗')
     }
   },

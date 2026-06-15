@@ -12,27 +12,25 @@ export function useUser() {
   // 全域狀態 (Global State)
   const userProfile = useState<UserProfile | null>('user-profile', () => null)
   const recentActivities = useState<Activity[]>('recent-activities', () => [])
-  const isLoading = useState('user-loading', () => false)
-  const isUploadingAvatar = useState('user-avatar-loading', () => false)
-  const isUpdatingProfile = useState('user-updating', () => false)
-  const error = useState<string | null>('user-error', () => null)
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
   const profileSubscription = useState<any>('user-profile-subscription', () => null)
   const isSettingUpListener = useState('user-profile-listener-loading', () => false)
 
+  // 狀態物件化：合併原本分散的 loading 與 error
+  const status = useState('user-status', () => ({
+    loading: false,
+    uploading: false,
+    updating: false,
+    error: null as string | null
+  }))
+
   // 動作 (Actions)
   const setupProfileListener = async () => {
-    // ✨ 檢查：如果已經有監聽器，或者「正在建立中」，就直接返回，避免重複觸發
     if (profileSubscription.value || isSettingUpListener.value) return
-
     isSettingUpListener.value = true
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
-      // ⚠️ 關鍵二次檢查：
-      // 因為在 await user 的期間（非同步空檔），可能另一個並行的呼叫已經把訂閱建立好了。
-      // 如果這裡發現別人已經建立好了，就默默退出
       if (!user || profileSubscription.value) return
       
       const channel = supabase
@@ -47,7 +45,6 @@ export function useUser() {
           },
           (payload) => {
             if (userProfile.value) {
-              // 將資料庫的 snake_case 映射回 UserProfile 的 camelCase
               userProfile.value = {
                 ...userProfile.value,
                 points: payload.new.points ?? userProfile.value.points,
@@ -72,21 +69,19 @@ export function useUser() {
   const loadUserData = async (force = false) => {
     // 如果已經有資料且不是強制更新，則跳過
     if (userProfile.value && !force) {
-      setupProfileListener() // 確保監聽器有啟動
+      setupProfileListener()
       return
     }
 
-    // 若已有進行中的請求，等待既有請求完成，避免重複打 API
+    // 若已有進行中的請求，等待完成即可，不重複發送
     if (loadingPromise.value && !force) {
-      await loadingPromise.value
-      return
+      return await loadingPromise.value
     }
 
     const request = (async () => {
-      isLoading.value = true
-      error.value = null
+      status.value.loading = true
+      status.value.error = null
       try {
-        // 呼叫 Data Layer
         const [profileData, activitiesData] = await Promise.all([
           userService.fetchUserProfile(),
           userService.fetchRecentActivities()
@@ -94,18 +89,14 @@ export function useUser() {
 
         userProfile.value = profileData
         recentActivities.value = activitiesData
-        
-        // 成功載入後啟動監聽器
         setupProfileListener()
       } catch (err: any) {
-        error.value = err.message || '載入用戶資料失敗'
-        console.error(err)
-        // 只有在真的沒權限時才跳轉
+        status.value.error = err.message || '載入用戶資料失敗'
         if (err.message === 'User not authenticated') {
           router.push('/auth')
         }
       } finally {
-        isLoading.value = false
+        status.value.loading = false
       }
     })()
 
@@ -119,69 +110,45 @@ export function useUser() {
 
   const uploadAvatar = async (file: File) => {
     if (!userProfile.value) return
-
-    isUploadingAvatar.value = true
-    error.value = null
+    status.value.uploading = true
+    status.value.error = null
 
     try {
-      // 上傳新大頭照
       const avatarUrl = await userService.uploadAvatar(file, supabase)
-
-      // 更新本地狀態
       userProfile.value.avatar = avatarUrl
-
-      // 重新載入用戶資料確保資料一致性
       await loadUserData(true)
     } catch (err: any) {
-      error.value = err.message || '上傳大頭照失敗'
-      console.error(err)
+      status.value.error = err.message || '上傳大頭照失敗'
       throw err
     } finally {
-      isUploadingAvatar.value = false
+      status.value.uploading = false
     }
   }
 
-  /**
-   * 更新使用者的個人資訊
-   */
-  const updateUserProfile = async (
-    profileData: {
-      email: string
-      name?: string
-      points?: number
-      role?: string
-      scanPermission?: boolean
-    }
-  ) => {
+  const updateUserProfile = async (profileData: any) => {
     if (!userProfile.value) return
-
-    isUpdatingProfile.value = true
-    error.value = null
+    status.value.updating = true
+    status.value.error = null
 
     try {
-      // 呼叫 userService 更新資料 (包含 profiles 表與 auth metadata)
       await userService.updateUserProfile(supabase, profileData)
-
-      // 重新載入用戶資料確保資料一致性
       await loadUserData(true)
     } catch (err: any) {
-      error.value = err.message || '更新個人資料失敗'
-      console.error(err)
+      status.value.error = err.message || '更新個人資料失敗'
       throw err
     } finally {
-      isUpdatingProfile.value = false
+      status.value.updating = false
     }
   }
 
   const clearUserData = () => {
-    // 清除監聽器
     if (profileSubscription.value) {
       supabase.removeChannel(profileSubscription.value)
       profileSubscription.value = null
     }
     userProfile.value = null
     recentActivities.value = []
-    error.value = null
+    status.value.error = null
   }
 
   const handleLogout = async () => {
@@ -190,54 +157,41 @@ export function useUser() {
       clearUserData()
       router.push('/auth')
     } catch (err) {
-      console.error('Logout error:', err)
       clearUserData()
       router.push('/auth')
     }
   }
 
-  /**
-   * 重置帳號
-   */
   const handleResetAccount = async (userId?: string) => {
     try {
-      isLoading.value = true
+      status.value.loading = true
       await userService.resetUserAccount(userId)
-      
-      // 只有在重置的是「當前登入者」自己時，才需要清除資料並導向登入頁
-      // 如果沒有傳 userId，預設也是重置自己
       const { data: { user } } = await supabase.auth.getUser()
       if (!userId || userId === user?.id) {
         clearUserData()
         router.push('/auth')
       }
     } catch (err: any) {
-      console.error('Reset account error:', err)
-      error.value = err.message || '重置帳號失敗'
+      status.value.error = err.message || '重置帳號失敗'
       throw err
     } finally {
-      isLoading.value = false
+      status.value.loading = false
     }
   }
 
-  /**
-   * 完成社群 OAuth 用戶註冊
-   */
   const completeSocialSignup = async (socialSignupData: {
     fullName: string
     points: number
   }) => {
-    isUpdatingProfile.value = true
-    error.value = null
+    status.value.updating = true
+    status.value.error = null
 
     try {
-      // 更新用戶個人資料
       await userService.updateUserProfile(supabase, {
         name: socialSignupData.fullName,
         points: socialSignupData.points
       })
 
-      // 標記社群登入首次資料補填已完成
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('User not authenticated')
 
@@ -249,24 +203,34 @@ export function useUser() {
         }
       })
 
-      // 重新載入用戶資料
       await loadUserData(true)
     } catch (err: any) {
-      error.value = err.message || '完成註冊失敗'
-      console.error(err)
+      status.value.error = err.message || '完成註冊失敗'
       throw err
     } finally {
-      isUpdatingProfile.value = false
+      status.value.updating = false
     }
+  }
+
+  // ✨ 自動初始化：只要在 Client 端調用 useUser，就確保資料有在載入
+  if (process.client && getCurrentInstance()) {
+    onMounted(() => {
+      const isAuthPage = router.currentRoute.value.path.startsWith('/auth')
+      if (!userProfile.value && !status.value.loading && !isAuthPage) {
+        loadUserData()
+      }
+    })
   }
 
   return {
     userProfile,
     recentActivities,
-    isLoading,
-    isUploadingAvatar,
-    isUpdatingProfile,
-    error,
+    status, // 暴露 status 物件取代多個 loading 變數
+    // 為了向下相容，可以選擇保留舊的變數(選配)，但在這裡我們依據建議進行精簡
+    isLoading: computed(() => status.value.loading),
+    isUploadingAvatar: computed(() => status.value.uploading),
+    isUpdatingProfile: computed(() => status.value.updating),
+    error: computed(() => status.value.error),
     loadUserData,
     clearUserData,
     uploadAvatar,
