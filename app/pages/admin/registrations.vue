@@ -23,7 +23,7 @@ const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const isSyncing = ref(false)
 const currentPage = ref(1)
-const itemsPerPage = 20
+const itemsPerPage = 10
 
 const selectedRegistration = ref<EventRegistration | null>(null)
 const registrationDetailVisible = ref(false)
@@ -262,7 +262,14 @@ onMounted(async () => {
             :items-per-page="itemsPerPage"
             force-ellipses
             class="custom-pagination"
-          />
+          >
+            <template #prev-text>
+              <AppIcon name="chevron_left" :size="16" />
+            </template>
+            <template #next-text>
+              <AppIcon name="chevron_right" :size="16" />
+            </template>
+          </van-pagination>
         </div>
       </section>
     </main>
