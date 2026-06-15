@@ -16,8 +16,6 @@ const {
   handleLogout
 } = useUser()
 
-const { addToast } = useToast()
-
 const {
   fileInput,
   handleAvatarClick,
