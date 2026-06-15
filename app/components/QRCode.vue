@@ -9,18 +9,13 @@ const emit = defineEmits<{
   'update:show': [value: boolean]
 }>()
 
+const { userProfile, loadUserData, isLoading } = useUser()
+
 const directions: {text: string}[] = [
   { text: "請於活動報到處主動出示此 QR Code。" },
   { text: "工作人員掃描成功後，系統將自動記錄參與。" },
   { text: "若無法掃描，請提供報名時使用的 Email。" }
 ]
-
-const isVisible = computed({
-  get: () => props.show,
-  set: (val) => emit('update:show', val)
-})
-
-const { userProfile, loadUserData, isLoading } = useUser()
 
 onMounted(async () => {
   if (!userProfile.value) {
@@ -29,6 +24,11 @@ onMounted(async () => {
 })
 
 const qrValue = computed(() => userProfile.value?.id || '')
+
+const isVisible = computed({
+  get: () => props.show,
+  set: (val) => emit('update:show', val)
+})
 </script>
 
 <template>
