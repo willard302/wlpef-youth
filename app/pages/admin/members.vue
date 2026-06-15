@@ -130,6 +130,21 @@ onMounted(async () => {
     <AppHeaderPage title="會員管理" />
 
     <main class="px-4 mt-4 relative z-20 space-y-6">
+
+      <!-- Member Stats -->
+      <div v-if="!isLoading" class="grid grid-cols-2 gap-4">
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總會員數</p>
+          <p class="text-2xl font-black text-slate-800">{{ profiles.length }}</p>
+        </div>
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">管理員</p>
+          <p class="text-2xl font-black text-indigo-500">
+            {{ profiles.filter(p => p.role === 'admin').length }}
+          </p>
+        </div>
+      </div>
+
       <!-- Search and Add -->
       <section class="flex gap-2">
         <div class="relative flex-1">
@@ -148,20 +163,6 @@ onMounted(async () => {
           <AppIcon name="person_add" />
         </button>
       </section>
-
-      <!-- Member Stats -->
-      <div v-if="!isLoading" class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總會員數</p>
-          <p class="text-2xl font-black text-slate-800">{{ profiles.length }}</p>
-        </div>
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">管理員</p>
-          <p class="text-2xl font-black text-indigo-500">
-            {{ profiles.filter(p => p.role === 'admin').length }}
-          </p>
-        </div>
-      </div>
 
       <!-- Member List -->
       <section class="space-y-4">
