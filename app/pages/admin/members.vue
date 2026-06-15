@@ -24,6 +24,9 @@ const showAddModal = ref(false)
 const showEditModal = ref(false)
 const selectedProfile = ref<UserProfile | null>(null)
 
+const currentPage = ref(1)
+const itemsPerPage = 15
+
 const loadProfiles = async () => {
   isLoading.value = true
   try {
@@ -101,6 +104,12 @@ const filteredProfiles = computed(() => {
   })
 })
 
+const paginatedProfiles = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage
+  const end = start + itemsPerPage
+  return filteredProfiles.value.slice(start, end)
+})
+
 const getRoleLabel = (role: string) => {
   return role === 'admin' ? '管理員' : '一般成員'
 }
@@ -172,7 +181,7 @@ onMounted(async () => {
 
         <div v-else class="space-y-3">
           <div
-            v-for="profile in filteredProfiles"
+            v-for="profile in paginatedProfiles"
             :key="profile.id"
             @click="openEditModal(profile)"
             class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm flex items-center gap-4 active:scale-[0.98] transition-all cursor-pointer"
@@ -205,6 +214,23 @@ onMounted(async () => {
                 <span class="text-sm font-black text-slate-800">{{ profile.points }}</span>
               </div>
             </div>
+          </div>
+
+          <div v-if="filteredProfiles.length > itemsPerPage" class="pt-4 pb-8">
+            <van-pagination 
+              v-model="currentPage"
+              :total-items="filteredProfiles.length"
+              :items-per-page="itemsPerPage"
+              force-ellipses
+              class="custom-pagination"
+            >
+              <template #prev-text>
+                <AppIcon name="chevron_left" :size="16" />
+              </template>
+              <template #next-text>
+                <AppIcon name="chevron_right" :size="16" />
+              </template>
+            </van-pagination>
           </div>
         </div>
       </section>

@@ -15,7 +15,7 @@ const searchQuery = ref('')
 const detailsDialogOpen = ref(false)
 const selectedTransaction = ref<PointTransaction | null>(null)
 const currentPage = ref(1)
-const itemsPerPage = 20
+const itemsPerPage = 15
 
 const fetchTransactions = async () => {
   try {
@@ -105,7 +105,6 @@ onMounted(() => {
               </span>
             </div>
           </div>
-
         </div>
 
         <div v-if="filteredTransactions.length > itemsPerPage" class="pt-4 pb-8">
@@ -115,7 +114,14 @@ onMounted(() => {
             :items-per-page="itemsPerPage"
             force-ellipses
             class="custom-pagination"
-          />
+          >
+            <template #prev-text>
+              <AppIcon name="chevron_left" :size="16" />
+            </template>
+            <template #next-text>
+              <AppIcon name="chevron_right" :size="16" />
+            </template>
+          </van-pagination>
         </div>
       </div>
 

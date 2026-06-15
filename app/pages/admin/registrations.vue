@@ -23,7 +23,7 @@ const selectedEvent = ref<Event | null>(null)
 const showEventPicker = ref(false)
 const isSyncing = ref(false)
 const currentPage = ref(1)
-const itemsPerPage = 10
+const itemsPerPage = 15
 
 const selectedRegistration = ref<EventRegistration | null>(null)
 const registrationDetailVisible = ref(false)
