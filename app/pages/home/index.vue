@@ -16,9 +16,7 @@ const {
 } = useUser()
 
 const {
-  fileInput,
-  handleAvatarClick,
-  handleFileSelect,
+  handleAfterRead,
   getAvatarUrl
 } = useProfileAvatarUpload()
 
@@ -77,39 +75,43 @@ const getRoleName = (role?: string) => {
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
       <!-- Profile Info Card -->
       <div class="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center text-center mb-6">
-        <div class="relative -mt-16 mb-4 p-2 bg-white rounded-full shadow-lg">
-          <div
-            class="w-28 h-28 rounded-full border-4 border-dashed border-primary/30 p-1 overflow-hidden cursor-pointer transition-transform hover:scale-105 relative"
-            @click="handleAvatarClick"
-          >
-            <!-- Loading overlay -->
+      <div class="relative -mt-16 mb-4">
+        <van-uploader 
+          :after-read="handleAfterRead" 
+          :disabled="isUploadingAvatar"
+          result-type="file"
+        >
+          <div class="relative group cursor-pointer">
+            <!-- Main Avatar Container -->
             <div
-              v-if="isUploadingAvatar"
-              class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center z-10"
+              class="w-28 h-28 rounded-full bg-white p-1 shadow-xl ring-4 ring-white relative overflow-hidden transition-transform active:scale-95"
             >
-              <div class="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <!-- Loading overlay -->
+              <div
+                v-if="isUploadingAvatar"
+                class="absolute inset-0 bg-white/60 backdrop-blur-sm rounded-full flex items-center justify-center z-10"
+              >
+                <van-loading type="spinner" size="24px" color="#0EA5E9" />
+              </div>
+
+              <img
+                :src="getAvatarUrl()"
+                class="w-full h-full rounded-full object-cover"
+                fetchpriority="high"
+                loading="eager"
+                alt="Profile Avatar"
+              />
             </div>
 
-            <div
-              class="w-full h-full rounded-full bg-cover bg-center"
-              :style="{ backgroundImage: `url('${getAvatarUrl()}')` }"
-            ></div>
-
-            <!-- Upload hint -->
-            <div class="absolute inset-0 bg-black/0 hover:bg-black/20 rounded-full flex items-center justify-center transition-colors">
-              <AppIcon name="photo_camera" class="text-white opacity-0 hover:opacity-100 transition-opacity" />
+            <!-- Edit Badge -->
+            <div 
+              class="absolute bottom-0 right-0 size-8 bg-primary text-white rounded-full border-4 border-white shadow-lg flex items-center justify-center z-20 transition-transform group-hover:scale-110"
+            >
+              <AppIcon name="photo_camera" :size="16" />
             </div>
           </div>
-        </div>
-
-        <!-- Hidden file input -->
-        <input
-          ref="fileInput"
-          type="file"
-          accept="image/*"
-          class="hidden"
-          @change="handleFileSelect"
-        />
+        </van-uploader>
+      </div>
 
         <div class="mb-6">
           <h2 class="text-3xl font-black text-slate-900 tracking-tight">

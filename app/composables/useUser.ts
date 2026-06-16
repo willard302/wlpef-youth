@@ -66,6 +66,34 @@ export function useUser() {
     }
   }
 
+  const loadUserProfile = async (force = false) => {
+    if (userProfile.value && !force) return
+    
+    try {
+      const profileData = await userService.fetchUserProfile()
+      userProfile.value = profileData
+      setupProfileListener()
+    } catch (err: any) {
+      status.value.error = err.message || '載入用戶資料失敗'
+      if (err.message === 'User not authenticated') {
+        router.push('/auth')
+      }
+      throw err
+    }
+  }
+
+  const loadRecentActivities = async (force = false) => {
+    if (recentActivities.value.length > 0 && !force) return
+    
+    try {
+      const activitiesData = await userService.fetchRecentActivities()
+      recentActivities.value = activitiesData
+    } catch (err: any) {
+      console.error('載入近期活動失敗:', err)
+      // 活動載入失敗不一定要中斷整個流程
+    }
+  }
+
   const loadUserData = async (force = false) => {
     // 如果已經有資料且不是強制更新，則跳過
     if (userProfile.value && !force) {
@@ -82,19 +110,12 @@ export function useUser() {
       status.value.loading = true
       status.value.error = null
       try {
-        const [profileData, activitiesData] = await Promise.all([
-          userService.fetchUserProfile(),
-          userService.fetchRecentActivities()
+        await Promise.all([
+          loadUserProfile(force),
+          loadRecentActivities(force)
         ])
-
-        userProfile.value = profileData
-        recentActivities.value = activitiesData
-        setupProfileListener()
       } catch (err: any) {
-        status.value.error = err.message || '載入用戶資料失敗'
-        if (err.message === 'User not authenticated') {
-          router.push('/auth')
-        }
+        // Error already handled in loadUserProfile
       } finally {
         status.value.loading = false
       }
@@ -115,8 +136,11 @@ export function useUser() {
 
     try {
       const avatarUrl = await userService.uploadAvatar(file, supabase)
-      userProfile.value.avatar = avatarUrl
-      await loadUserData(true)
+      // 1. 上傳成功後先只更新本地 avatar，不立刻全量 loadUserData
+      userProfile.value = {
+        ...userProfile.value,
+        avatar: avatarUrl
+      }
     } catch (err: any) {
       status.value.error = err.message || '上傳大頭照失敗'
       throw err
@@ -132,7 +156,8 @@ export function useUser() {
 
     try {
       await userService.updateUserProfile(supabase, profileData)
-      await loadUserData(true)
+      // 更新成功後僅更新個人資料，不重抓活動列表
+      await loadUserProfile(true)
     } catch (err: any) {
       status.value.error = err.message || '更新個人資料失敗'
       throw err

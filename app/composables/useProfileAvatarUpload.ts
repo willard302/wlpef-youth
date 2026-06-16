@@ -1,48 +1,34 @@
 export const useProfileAvatarUpload = () => {
-
   const { uploadAvatar, userProfile } = useUser()
-
   const { error: showErrorToast } = useToast()
 
-  // 檔案輸入引用
-  const fileInput = ref<HTMLInputElement | null>(null)
-
-  // 處理大頭照點擊
-  const handleAvatarClick = () => {
-    fileInput.value?.click()
-  }
-
-  // 處理檔案選擇
-  const handleFileSelect = async (event: Event) => {
-    const target = event.target as HTMLInputElement
-    const file = target.files?.[0]
-
+  // 處理 Vant Uploader 的檔案讀取後回調
+  const handleAfterRead = async (fileItem: any) => {
+    // Vant 傳入的可能是單個對象或數組，這裡處理單個對象
+    const file = fileItem.file
     if (!file) return
 
     try {
       await uploadAvatar(file)
-      // 成功上傳後清除檔案輸入
-      if (fileInput.value) {
-        fileInput.value.value = ''
-      }
     } catch (err: any) {
-      // 顯示錯誤Toast
       showErrorToast(err.message || '上傳大頭照失敗')
-      // 清除檔案輸入
-      if (fileInput.value) {
-        fileInput.value.value = ''
-      }
     }
   }
 
   // 獲取大頭照URL，如果沒有則使用預設圖片
   const getAvatarUrl = () => {
-    return userProfile.value?.avatar || '/images/avatar_default.png'
+    const rawUrl = userProfile.value?.avatar
+    if (!rawUrl) return '/apple-touch-icon.png'
+    
+    // 如果是 Supabase 的圖片，加入縮放參數優化加載速度 (LCP 優化)
+    if (rawUrl.includes('.supabase.co')) {
+      return `${rawUrl}?width=200&height=200&resize=cover`
+    }
+    return rawUrl
   }
+
   return {
-    fileInput,
-    handleAvatarClick,
-    handleFileSelect,
+    handleAfterRead,
     getAvatarUrl
   }
 }
