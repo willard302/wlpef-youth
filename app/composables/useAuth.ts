@@ -8,6 +8,9 @@ export const useAuth = () => {
   const router = useRouter()
 
   const loading = ref(false)
+  const isGoogleLoading = ref(false)
+  const isEmailLoading = ref(false)
+  const isSignupLoading = ref(false)
   const errorMessage = ref('')
 
   const handleAuthError = (error: any, fallbackMessage: string) => {
@@ -28,6 +31,7 @@ export const useAuth = () => {
   const loginWithGoogle = async () => {
     try {
       loading.value = true
+      isGoogleLoading.value = true
       errorMessage.value = ''
 
       const { error } = await supabase.auth.signInWithOAuth({
@@ -40,7 +44,9 @@ export const useAuth = () => {
     } catch (error) {
       handleAuthError(error, 'Google 登入時發生錯誤。')
       loading.value = false
+      isGoogleLoading.value = false
     }
+    // 注意：成功時會進行頁面跳轉，不需手動關閉 loading
   }
 
   const loginWithEmail = async (formData: LoginFormData) => {
@@ -51,6 +57,7 @@ export const useAuth = () => {
 
     try {
       loading.value = true
+      isEmailLoading.value = true
       errorMessage.value = ''
 
       const { error } = await supabase.auth.signInWithPassword({
@@ -68,6 +75,7 @@ export const useAuth = () => {
       handleAuthError(error, '登入失敗，請檢查您的帳號密碼。')
     } finally {
       loading.value = false
+      isEmailLoading.value = false
     }
   }
 
@@ -83,6 +91,7 @@ export const useAuth = () => {
 
     try {
       loading.value = true
+      isSignupLoading.value = true
       errorMessage.value = ''
 
       const { data, error } = await supabase.auth.signUp({
@@ -111,11 +120,15 @@ export const useAuth = () => {
       handleAuthError(error, '註冊失敗')
     } finally {
       loading.value = false
+      isSignupLoading.value = false
     }
   }
 
   return {
     loading,
+    isGoogleLoading,
+    isEmailLoading,
+    isSignupLoading,
     errorMessage,
     loginWithGoogle,
     loginWithEmail,

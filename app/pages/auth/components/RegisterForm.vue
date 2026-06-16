@@ -5,7 +5,8 @@ import AuthButton from './AuthButton.vue'
 
 const emit = defineEmits(['switchMode'])
 const {
-  loading,
+  isGoogleLoading,
+  isSignupLoading,
   errorMessage,
   loginWithGoogle,
   signupWithEmail
@@ -60,7 +61,7 @@ const fields = [
   <div class="flex flex-col gap-4 animate-fade-in">
     <AuthButton
       google
-      :loading="loading"
+      :loading="isGoogleLoading"
       @click="loginWithGoogle"
     >
       使用 Google 快速註冊
@@ -86,7 +87,7 @@ const fields = [
       <AuthButton
         type="submit"
         variant="primary"
-        :loading="loading"
+        :loading="isSignupLoading"
         class="!h-12 !rounded-xl mt-2"
       >
         立即註冊
