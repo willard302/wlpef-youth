@@ -123,7 +123,7 @@ onMounted(() => {
 
 <template>
   <div class="flex flex-col items-center justify-center flex-1 px-6 py-10 sm:py-14">
-    <div class="w-full max-w-sm rounded-3xl border border-white/20 bg-white/10 p-7 shadow-2xl backdrop-blur-xl space-y-8">
+    <div class="glass-card w-full max-w-sm p-7 space-y-8">
       
       <!-- Header -->
       <div class="text-center space-y-4">

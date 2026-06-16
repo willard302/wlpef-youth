@@ -9,7 +9,7 @@ const email = ref(route.query.email as string || '')
 
 <template>
   <div class="flex flex-col items-center justify-center flex-1 px-8 text-center">
-    <div class="w-full max-w-sm glass-effect rounded-[2.5rem] p-10 shadow-2xl space-y-8 border border-white/20 bg-white/10 backdrop-blur-xl animate-fade-in">
+    <div class="glass-card w-full max-w-sm p-10 space-y-8 animate-fade-in">
       <div class="size-24 rounded-3xl bg-green-500/20 flex items-center justify-center mx-auto text-green-500">
         <AppIcon name="mark_email_read" :size="48" />
       </div>

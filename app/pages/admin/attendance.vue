@@ -91,7 +91,7 @@ onMounted(async () => {
 
     <main class="px-4 -mt-6 relative z-20 space-y-6">
       <!-- Event Selector -->
-      <section class="bg-white/95 backdrop-blur-xl rounded-3xl p-5 mt-8 shadow-xl border border-white">
+      <section class="white-glass-card p-5 mt-8">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目前檢視活動</p>
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">
@@ -110,14 +110,14 @@ onMounted(async () => {
 
       <!-- Stats Summary -->
       <div v-if="selectedEvent && !isLoading" class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div class="stat-card">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總出席人數</p>
           <div class="flex items-end justify-between">
             <p class="text-2xl font-black text-slate-800">{{ attendance.length }}</p>
             <AppIcon name="verified" class="text-emerald-500" />
           </div>
         </div>
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div class="stat-card">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">完成報名且報到</p>
           <p class="text-2xl font-black text-emerald-500">100%</p>
         </div>
@@ -141,7 +141,7 @@ onMounted(async () => {
             v-model="searchQuery"
             type="text"
             placeholder="搜尋姓名、Email..."
-            class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
+            class="search-input"
           />
         </div>
 

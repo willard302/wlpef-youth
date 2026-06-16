@@ -127,11 +127,11 @@ onMounted(async () => {
 
       <!-- Member Stats -->
       <div v-if="!isLoading" class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div class="stat-card">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總會員數</p>
           <p class="text-2xl font-black text-slate-800">{{ profiles.length }}</p>
         </div>
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+        <div class="stat-card">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">管理員</p>
           <p class="text-2xl font-black text-indigo-500">
             {{ profiles.filter(p => p.role === 'admin').length }}
@@ -147,7 +147,7 @@ onMounted(async () => {
             v-model="searchQuery"
             type="text"
             placeholder="搜尋姓名、Email..."
-            class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
+            class="search-input"
           />
         </div>
         <button

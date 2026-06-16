@@ -74,7 +74,7 @@ const getRoleName = (role?: string) => {
     <!-- Main Content -->
     <main class="flex-1 -mt-8 px-4 pb-24 relative z-20">
       <!-- Profile Info Card -->
-      <div class="bg-white rounded-3xl shadow-xl p-6 flex flex-col items-center text-center mb-6">
+      <div class="content-card p-6 flex flex-col items-center text-center mb-6">
       <div class="relative -mt-16 mb-4">
         <van-uploader 
           :after-read="handleAfterRead" 
@@ -144,7 +144,7 @@ const getRoleName = (role?: string) => {
       <!-- Action Items List -->
       <div class="space-y-3 mb-8">
         <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ '帳戶設定' }}</h3>
-        <div class="bg-white/80 rounded-2xl overflow-hidden shadow-sm">
+        <div class="action-list-container">
           <NuxtLink
             v-for="(item, index) in menuItems"
             :key="item.label"

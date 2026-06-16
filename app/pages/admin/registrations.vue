@@ -138,9 +138,9 @@ onMounted(async () => {
   <div class="registrations-page pb-24 min-h-screen bg-slate-50">
     <AppHeaderPage title="活動報名狀況" />
 
-    <main class="px-4 -mt-6 relative z-20 space-y-6">
+    <main class="px-4 -mt-6 relative z-20 space-y-6 pb-24">
       <!-- Event Selector -->
-      <section class="bg-white/95 backdrop-blur-xl rounded-3xl p-5 mt-8 shadow-xl border border-white">
+      <section class="white-glass-card p-5 mt-8">
         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目前檢視活動</p>
         <div class="flex items-center justify-between">
           <div class="flex-1 min-w-0">

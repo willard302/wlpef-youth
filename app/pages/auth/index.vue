@@ -20,7 +20,7 @@ const switchMode = (newMode: 'login' | 'register') => {
 
 <template>
   <div class="flex flex-1 flex-col items-center justify-center px-6 py-10 sm:py-14">
-    <div class="w-full max-w-sm rounded-3xl border border-white/20 bg-white/10 p-7 shadow-2xl backdrop-blur-xl">
+    <div class="glass-card w-full max-w-sm p-7">
       <div class="flex flex-col items-center gap-4 text-center">
         <LogoIcon size="lg" />
         <h1 class="text-white text-3xl font-bold tracking-widest drop-shadow-md">領袖會社青團</h1>

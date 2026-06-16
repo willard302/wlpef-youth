@@ -96,7 +96,7 @@ const handleResetPassword = async () => {
 
 <template>
   <div class="flex flex-col items-center justify-center flex-1 px-8 text-center">
-    <div class="w-full max-w-sm glass-effect rounded-[2.5rem] p-10 shadow-2xl space-y-6 border border-white/20 bg-white/10 backdrop-blur-xl text-left">
+    <div class="glass-card w-full max-w-sm p-10 space-y-6 text-left">
       
       <div class="space-y-2 text-center">
         <h1 class="text-white text-2xl font-bold tracking-tight">

@@ -266,7 +266,7 @@ onMounted(async () => {
     </AppHeaderHero>
 
     <main class="px-4 -mt-8 relative z-20 space-y-6">
-      <section class="bg-white/95 backdrop-blur-xl rounded-[2.5rem] p-6 shadow-xl border border-white">
+      <section class="white-glass-card p-6">
         <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-2">
             <button @click="previousMonth" class="size-8 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center hover:bg-sky-100 transition-colors">
