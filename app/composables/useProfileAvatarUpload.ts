@@ -22,7 +22,8 @@ export const useProfileAvatarUpload = () => {
     
     // 如果是 Supabase 的圖片，加入縮放參數優化加載速度 (LCP 優化)
     if (rawUrl.includes('.supabase.co')) {
-      return `${rawUrl}?width=200&height=200&resize=cover`
+      const separator = rawUrl.includes('?') ? '&' : '?'
+      return `${rawUrl}${separator}width=200&height=200&resize=cover`
     }
     return rawUrl
   }

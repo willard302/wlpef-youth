@@ -70,22 +70,15 @@ export const userService = {
         throw new Error('請選擇圖片檔案')
       }
 
-      // 生成檔案名稱 (user_id + timestamp + extension)
-      const fileExt = file.name.split('.').pop()
-      const fileName = `${user.id}_${Date.now()}.${fileExt}`
+      // 固定使用 user.id 作為檔案名稱，不含副檔名，確保一個帳號在 storage 中只有一個檔案
+      const fileName = `${user.id}`
 
-      // 如果有舊的大頭照，先刪除
-      const currentMetadata = user.user_metadata || {}
-      if (currentMetadata.avatar_path) {
-        await userService.deleteOldAvatar(currentMetadata.avatar_path, supabase)
-      }
-
-      // 上傳到 Supabase Storage
-      const { data, error } = await supabase.storage
+      // 上傳到 Supabase Storage，開啟 upsert: true 以自動覆蓋舊檔
+      const { error } = await supabase.storage
         .from('icc_avatar')
         .upload(fileName, file, {
-          cacheControl: '3600',
-          upsert: false
+          cacheControl: '0', // 設為 0 避免 CDN 強力快取
+          upsert: true
         })
 
       if (error) throw error
@@ -94,7 +87,10 @@ export const userService = {
       const { data: urlData } = supabase.storage
         .from('icc_avatar')
         .getPublicUrl(fileName)
-      const publicUrl = urlData.publicUrl
+
+      // 在 URL 後加上時間戳記版本號，確保瀏覽器能即時抓到更新後的圖片
+      const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`
+
 
       // 1. 更新 profiles 表
       await supabase
