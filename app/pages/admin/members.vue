@@ -109,10 +109,6 @@ const paginatedProfiles = computed(() => {
   return filteredProfiles.value.slice(start, end)
 })
 
-const getRoleLabel = (role: string) => {
-  return role === 'admin' ? '管理員' : '一般成員'
-}
-
 onMounted(async () => {
   await loadProfiles()
 })

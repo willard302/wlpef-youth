@@ -4,7 +4,7 @@ export type Role = 'admin' | 'member'
 
 export const ROLE_LABEL: Record<Role, string> = {
   admin: '管理員',
-  member: '一般成員',
+  member: '會員'
 }
 
 export interface PointTransaction {

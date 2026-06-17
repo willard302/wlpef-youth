@@ -48,12 +48,6 @@ const handleItemClick = (item: any, event: Event) => {
     qrPopupVisible.value = true
   }
 }
-
-const getRoleName = (role?: string | null) => {
-  if (role === 'guest') return '訪客'
-  if (role === 'admin') return '管理員'
-  return '會員'
-}
 </script>
 
 <template>
@@ -120,7 +114,7 @@ const getRoleName = (role?: string | null) => {
           </h2>
           <div class="flex items-center justify-center gap-2 mt-2">
             <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-widest">
-              {{ getRoleName(userProfile?.role) }}
+              {{ getRoleLabel(userProfile?.role) }}
             </span>
           </div>
         </div>
