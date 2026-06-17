@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import type { UserProfile, Role } from '@/types'
+import type { ProfileRow, Role } from '@/types'
 
 interface Props {
   show: boolean
   mode: 'add' | 'edit'
-  profile?: UserProfile | null
+  profile?: ProfileRow | null
   loading?: boolean
 }
 
@@ -33,11 +33,11 @@ watch(() => props.show, (newVal) => {
   if (newVal) {
     if (props.mode === 'edit' && props.profile) {
       formData.value = {
-        email: props.profile.email,
+        email: props.profile.email || '',
         name: props.profile.name,
-        role: props.profile.role,
-        points: props.profile.points,
-        scanPermission: props.profile.scanPermission
+        role: (props.profile.role as Role) || 'member',
+        points: props.profile.points ?? 0,
+        scanPermission: props.profile.scan_permission
       }
     } else {
       formData.value = {
@@ -98,9 +98,9 @@ const onReset = async () => {
       <div v-if="mode === 'edit' && profile" class="flex items-center gap-4 mb-2">
         <div
           class="size-16 rounded-2xl bg-slate-100 bg-cover bg-center shadow-inner"
-          :style="{ backgroundImage: profile.avatar ? `url(${profile.avatar})` : 'none' }"
+          :style="{ backgroundImage: profile.avatar_url ? `url(${profile.avatar_url})` : 'none' }"
         >
-          <div v-if="!profile.avatar" class="w-full h-full flex items-center justify-center text-slate-300">
+          <div v-if="!profile.avatar_url" class="w-full h-full flex items-center justify-center text-slate-300">
             <AppIcon name="person" :size="30" />
           </div>
         </div>

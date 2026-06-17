@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
 import { userService } from '@/services/userService'
-import type { UserProfile, Role } from '@/types'
+import type { ProfileRow } from '@/types'
 import MemberForm from './components/MemberForm.vue'
 
 definePageMeta({
@@ -10,19 +10,17 @@ definePageMeta({
   showTabbar: false,
 })
 
-const router = useRouter()
 const { addToast } = useToast()
-const { userProfile, loadUserData } = useUser()
 
 const isLoading = ref(true)
-const profiles = ref<UserProfile[]>([])
+const profiles = ref<ProfileRow[]>([])
 const searchQuery = ref('')
 const isCreating = ref(false)
 const isUpdating = ref(false)
 
 const showAddModal = ref(false)
 const showEditModal = ref(false)
-const selectedProfile = ref<UserProfile | null>(null)
+const selectedProfile = ref<ProfileRow | null>(null)
 
 const currentPage = ref(1)
 const itemsPerPage = 15
@@ -38,7 +36,7 @@ const loadProfiles = async () => {
   }
 }
 
-const openEditModal = (profile: UserProfile) => {
+const openEditModal = (profile: ProfileRow) => {
   selectedProfile.value = profile
   showEditModal.value = true
 }
@@ -52,7 +50,7 @@ const handleUpdateMember = async (formData: any) => {
       name: formData.name,
       role: formData.role,
       points: formData.points,
-      scanPermission: formData.scanPermission
+      scan_permission: formData.scanPermission
     })
     addToast('會員資料更新成功', 'success')
     showEditModal.value = false
@@ -73,11 +71,12 @@ const handleAddMember = async (formData: any) => {
   isCreating.value = true
   try {
     await userService.adminCreateMember({
+      id: '',
       email: formData.email,
       name: formData.name,
       role: formData.role,
       points: formData.points,
-      scanPermission: formData.scanPermission
+      scan_permission: formData.scanPermission
     })
     addToast('會員建立成功並已發送邀請', 'success')
     showAddModal.value = false
@@ -183,9 +182,9 @@ onMounted(async () => {
           >
             <div
               class="size-12 rounded-2xl bg-slate-100 bg-cover bg-center shrink-0"
-              :style="{ backgroundImage: profile.avatar ? `url(${profile.avatar})` : 'none' }"
+              :style="{ backgroundImage: profile.avatar_url ? `url(${profile.avatar_url})` : 'none' }"
             >
-              <div v-if="!profile.avatar" class="w-full h-full flex items-center justify-center text-slate-400">
+              <div v-if="!profile.avatar_url" class="w-full h-full flex items-center justify-center text-slate-400">
                 <AppIcon name="person" />
               </div>
             </div>

@@ -1,6 +1,6 @@
-import type { UserProfile, Activity, Role, PointTransaction } from '~/types'
+import type { Activity, Role, PointTransaction } from '~/types'
 import type { Database } from '~/types/database.types'
-import type { ProfileUpdate, ProfileInsert } from '~/types/database'
+import type { ProfileRow, ProfileUpdate, ProfileInsert } from '~/types/database'
 
 type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
 const getSupabase = () => useSupabaseClient<Database>()
@@ -8,7 +8,7 @@ const getSupabase = () => useSupabaseClient<Database>()
 // 使用者相關的 API 服務，負責網路請求 (Data Layer)
 export const userService = {
   // 取得使用者詳細資料
-  async fetchUserProfile(): Promise<UserProfile> {
+  async fetchUserProfile(): Promise<ProfileRow> {
     try {
       const supabase = getSupabase()
       const { data: { user }, error: userError } = await supabase.auth.getUser()
@@ -31,10 +31,11 @@ export const userService = {
         email: profile?.email || user.email || '',
         name: profile?.name || metadata.name || user.email?.split('@')[0] || 'User',
         role: (profile?.role as Role) || 'member',
-        scanPermission: profile?.scan_permission ?? false,
-        joinDate: profile?.created_at || metadata.join_date || 'Since 2024',
+        scan_permission: profile?.scan_permission ?? false,
+        created_at: profile?.created_at || metadata.join_date || 'Since 2024',
         points: profile?.points ?? 0,
-        avatar: profile?.avatar_url || metadata.avatar_url || undefined
+        avatar_url: profile?.avatar_url || metadata.avatar_url || null,
+        updated_at: profile?.updated_at || null
       }
     } catch (error: any) {
       if (error?.message === 'User not authenticated' || error?.name === 'AuthSessionMissingError') {
@@ -194,7 +195,7 @@ export const userService = {
   /**
    * (管理員) 取得系統中所有的會員資料
    */
-  async fetchAllProfiles(): Promise<UserProfile[]> {
+  async fetchAllProfiles(): Promise<ProfileRow[]> {
     try {
       const supabase = getSupabase()
       const { data, error } = await supabase
@@ -209,10 +210,11 @@ export const userService = {
         email: profile.email || '',
         name: profile.name || 'User',
         role: (profile.role as Role) || 'member',
-        scanPermission: profile.scan_permission ?? false,
-        joinDate: profile.created_at || 'Since 2026',
+        scan_permission: profile.scan_permission ?? false,
+        created_at: profile.created_at || 'Since 2026',
         points: profile.points ?? 0,
-        avatar: profile.avatar_url || undefined
+        avatar_url: profile.avatar_url || null,
+        updated_at: profile.updated_at || null
       }))
     } catch (error: any) {
       console.error('Error fetching all profiles:', error)

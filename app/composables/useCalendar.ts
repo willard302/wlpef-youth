@@ -14,10 +14,9 @@ import {
 import type { Event } from '@/types'
 import type { Role } from '@/types/user'
 import { eventService } from '~/services/event'
-import { userService } from '@/services/userService'
 
 export function useCalendar() {
-  const { userProfile, loadUserData } = useUser()
+  const { userProfile } = useUser()
 
   const isCalendarLoading = ref(false)
   const allEvents = ref<Event[]>([])

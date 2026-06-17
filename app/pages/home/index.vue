@@ -25,7 +25,7 @@ const { openMenu } = useSideMenu()
 const qrPopupVisible = ref(false)
 
 const canUseScanner = computed(() => {
-  return userProfile.value?.role === 'admin' || userProfile.value?.scanPermission === true
+  return userProfile.value?.role === 'admin' || userProfile.value?.scan_permission === true
 })
 
 // 統計數據

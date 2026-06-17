@@ -1,5 +1,5 @@
 import { userService } from '@/services/userService'
-import type { UserProfile, Activity } from '@/types'
+import type { ProfileRow, Activity } from '@/types'
 import type { Database } from '@/types/database.types'
 
 /**
@@ -10,7 +10,7 @@ export function useUser() {
   const supabase = useSupabaseClient<Database>()
 
   // 全域狀態 (Global State)
-  const userProfile = useState<UserProfile | null>('user-profile', () => null)
+  const userProfile = useState<ProfileRow | null>('user-profile', () => null)
   const recentActivities = useState<Activity[]>('recent-activities', () => [])
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
   const profileSubscription = useState<any>('user-profile-subscription', () => null)
@@ -49,9 +49,9 @@ export function useUser() {
                 ...userProfile.value,
                 points: payload.new.points ?? userProfile.value.points,
                 name: payload.new.name ?? userProfile.value.name,
-                avatar: payload.new.avatar_url ?? userProfile.value.avatar,
+                avatar_url: payload.new.avatar_url ?? userProfile.value.avatar_url,
                 role: payload.new.role ?? userProfile.value.role,
-                scanPermission: payload.new.scan_permission ?? userProfile.value.scanPermission
+                scan_permission: payload.new.scan_permission ?? userProfile.value.scan_permission
               }
             }
           }
@@ -139,7 +139,7 @@ export function useUser() {
       // 1. 上傳成功後先只更新本地 avatar，不立刻全量 loadUserData
       userProfile.value = {
         ...userProfile.value,
-        avatar: avatarUrl
+        avatar_url: avatarUrl
       }
     } catch (err: any) {
       status.value.error = err.message || '上傳大頭照失敗'

@@ -17,7 +17,7 @@ export const useProfileAvatarUpload = () => {
 
   // 獲取大頭照URL，如果沒有則使用預設圖片
   const getAvatarUrl = () => {
-    const rawUrl = userProfile.value?.avatar
+    const rawUrl = userProfile.value?.avatar_url
     if (!rawUrl) return '/apple-touch-icon.png'
     
     // 如果是 Supabase 的圖片，加入縮放參數優化加載速度 (LCP 優化)
