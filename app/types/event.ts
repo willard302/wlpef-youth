@@ -1,26 +1,24 @@
 export type EventStatus = 'draft' | 'published' | 'closed'
 
 export interface Event {
-  allDay: boolean
-  checkinBonus: number
-
-  createdBy: string
+  id: string
+  title: string
   description: string
+  location: string
+  startAt: Date
   endAt: Date
+  allDay: boolean
+  status: EventStatus
+  createdBy: string
   googleFormUrl?: string
   googleSheetId?: string
-  id: string
-  location: string
-  
-  raffleThreshold: number
   registrationBonus: number
-  startAt: Date
-  status: EventStatus
-  title: string
+  checkinBonus: number
+  raffleThreshold: number
   
   // Derived display fields
-  date: Date        // alias of startAt for calendar grid lookup
-  time: string      // 'HH:mm' formatted from startAt
+  date: Date
+  time: string
   period: 'AM' | 'PM'
   isRegistered?: boolean
   isCheckedIn?: boolean
@@ -66,7 +64,6 @@ export interface EventCheckin {
   checkedInAt: Date
   checkinPointsGrantedAt: Date | null
   createdAt: Date
-  // Joined fields
   userName?: string
   userAvatar?: string
 }

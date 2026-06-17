@@ -1,8 +1,11 @@
-/**
- * Tabbar Items
- */
-export type TabbarKey = 'home' | 'qr-code' | 'events' | 'scan'  
+export * from './database.types'
+export * from './database'
 
+export * from './auth'
+export * from './event'
+export * from './user'
+
+export type TabbarKey = 'home' | 'qr-code' | 'events' | 'scan'  
 export interface TabbarItem {
   key: TabbarKey
   label: string
@@ -11,11 +14,6 @@ export interface TabbarItem {
   fill?: boolean
 }
 
-/**
- * Common Data Types
- */
-export * from './event'
-
 export interface Activity {
   type: 'event'
   date: string
@@ -23,20 +21,6 @@ export interface Activity {
   duration: string
   icon: string
 }
-
-/**
- * Form Data
- */
-
-
-export interface GoogleSignupFormData {
-  fullName: string
-  points: number
-}
-
-/**
- * UI Components
- */
 
 export interface MenuAction {
   (): void
@@ -59,5 +43,3 @@ export interface Toast {
   type: 'success' | 'error' | 'info'
   duration: number
 }
-
-export * from './user'
