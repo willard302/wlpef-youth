@@ -1,21 +1,23 @@
 export type EventStatus = 'draft' | 'published' | 'closed'
 
 export interface Event {
-  id: string
-  title: string
-  description: string
-  location: string
-  startAt: Date
-  endAt: Date
   allDay: boolean
-  createdBy: string
-  attendees: number
-  status: EventStatus
-  googleSheetId?: string
-  googleFormUrl?: string
-  registrationBonus: number
   checkinBonus: number
+
+  createdBy: string
+  description: string
+  endAt: Date
+  googleFormUrl?: string
+  googleSheetId?: string
+  id: string
+  location: string
+  
   raffleThreshold: number
+  registrationBonus: number
+  startAt: Date
+  status: EventStatus
+  title: string
+  
   // Derived display fields
   date: Date        // alias of startAt for calendar grid lookup
   time: string      // 'HH:mm' formatted from startAt

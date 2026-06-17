@@ -37,23 +37,6 @@ export interface GoogleSignupFormData {
 /**
  * UI Components
  */
-export interface SettingItem {
-  icon: string
-  label: string
-  path?: string
-  action?: string
-}
-
-export interface MenuSection {
-  title: string
-  items: SettingItem[]
-}
-
-export interface StatCard {
-  icon: string
-  label: string
-  value: string
-}
 
 export interface MenuAction {
   (): void
