@@ -1,13 +1,7 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
 import type { CreateEventPayload, Event, EventCheckin, EventRegistration, EventStatus } from '@/types'
 import type { Database } from '@/types/database.types'
-
-type EventRow = Database['public']['Tables']['events']['Row']
-type EventInsert = Database['public']['Tables']['events']['Insert']
-type EventUpdate = Database['public']['Tables']['events']['Update']
-
-type RegistrationRow = Database['public']['Tables']['event_registrations']['Row']
-type CheckinRow = Database['public']['Tables']['checkin_records']['Row']
+import type { RegistrationRow, CheckinRow, EventRow, EventInsert, EventUpdate } from '~/types/database'
 
 function mapToRegistration(row: RegistrationRow): EventRegistration {
   return {

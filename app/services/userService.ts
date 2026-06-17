@@ -1,5 +1,6 @@
 import type { UserProfile, Activity, Role, PointTransaction } from '@/types'
 import type { Database } from '@/types/database.types'
+import type { ProfileUpdate } from '@/types/database'
 
 type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
 
@@ -293,7 +294,7 @@ export const userService = {
     try {
       const supabase = useSupabaseClient<Database>()
       
-      const dbUpdate: Database['public']['Tables']['profiles']['Update'] = {}
+      const dbUpdate: ProfileUpdate = {}
       if (profileData.name !== undefined) dbUpdate.name = profileData.name
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
       if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
