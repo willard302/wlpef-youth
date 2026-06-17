@@ -337,24 +337,50 @@ async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]>
 
   return (data || []).filter((event: EventRow) => !!event.google_sheet_id)
 }
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
   try {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
-    if (!serviceRoleKey) throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY")
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")
 
-    const authHeader = req.headers.get("Authorization") || ""
-    if (authHeader.replace(/^Bearer\s+/i, "").trim() !== serviceRoleKey) {
-      return Response.json({ error: "Unauthorized" }, { status: 401, headers: corsHeaders })
+    if (!serviceRoleKey || !supabaseUrl || !anonKey) {
+      throw new Error("Missing environment variables")
     }
 
+    const authHeader = req.headers.get("Authorization") || ""
+    const isServiceRole = authHeader.replace(/^Bearer\s+/i, "").trim() === serviceRoleKey
+
     const supabaseAdmin = createClient(
-      Deno.env.get("SUPABASE_URL")!,
+      supabaseUrl,
       serviceRoleKey,
       { auth: { persistSession: false, autoRefreshToken: false } }
     )
+
+    if (!isServiceRole) {
+      // 驗證請求者是否為 admin
+      const { data: { user: requester }, error: authError } = await createClient(
+        supabaseUrl,
+        anonKey,
+        { global: { headers: { Authorization: authHeader } } }
+      ).auth.getUser()
+
+      if (authError || !requester) {
+        return Response.json({ error: "Unauthorized", message: authError?.message }, { status: 401, headers: corsHeaders })
+      }
+
+      const { data: profile } = await supabaseAdmin
+        .from("profiles")
+        .select("role")
+        .eq("id", requester.id)
+        .single()
+
+      if (profile?.role !== "admin") {
+        return Response.json({ error: "Forbidden", message: "Admin access required" }, { status: 403, headers: corsHeaders })
+      }
+    }
+
 
     const body = await req.json().catch(() => ({}))
     const events = await resolveEvents(supabaseAdmin, body)
