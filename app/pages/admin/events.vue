@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import { eventService } from '@/services/eventService'
+import { eventAdminService } from '~/services/eventAdmin.js'
 import type { Event } from '@/types'
 import EventForm from './components/EventForm.vue'
 
@@ -21,7 +21,7 @@ const editingEventId = ref<string | null>(null)
 const loadEvents = async () => {
   isLoading.value = true
   try {
-    events.value = await eventService.fetchAllEventsForAdmin()
+    events.value = await eventAdminService.fetchAllEventsForAdmin()
   } catch (err: any) {
     addToast('載入活動列表失敗', 'error')
   } finally {

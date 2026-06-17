@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import { eventService } from '@/services/eventService'
+import { eventAdminService } from '~/services/eventAdmin'
 import type { Event, EventCheckin } from '@/types'
 
 definePageMeta({
@@ -30,7 +30,7 @@ const openAttendanceDetail = (item: EventCheckin) => {
 const loadEvents = async () => {
   isEventsLoading.value = true
   try {
-    events.value = await eventService.fetchAllEventsForAdmin()
+    events.value = await eventAdminService.fetchAllEventsForAdmin()
     if (events.value.length > 0) {
       // Default to the most recent event
       await selectEvent(events.value[0]!!)
@@ -47,7 +47,7 @@ const selectEvent = async (event: Event) => {
   showEventPicker.value = false
   isLoading.value = true
   try {
-    attendance.value = await eventService.fetchAttendanceByEventId(event.id)
+    attendance.value = await eventAdminService.fetchAttendanceByEventId(event.id)
   } catch (err: any) {
     addToast(err.message || '載入出席名單失敗', 'error')
     attendance.value = []

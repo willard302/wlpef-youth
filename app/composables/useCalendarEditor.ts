@@ -1,7 +1,8 @@
 import { addHours, format, parseISO, set } from 'date-fns'
 import { showDialog } from 'vant'
 import type { CreateEventPayload, Event } from '@/types'
-import { eventService } from '@/services/eventService'
+import { eventService } from '~/services/event'
+import { eventAdminService } from '~/services/eventAdmin'
 
 export function useCalendarEditor() {
   const router = useRouter()
@@ -167,10 +168,10 @@ export function useCalendarEditor() {
       }
 
       if (editingEventId.value) {
-        await eventService.updateEvent(editingEventId.value, payload)
+        await eventAdminService.updateEvent(editingEventId.value, payload)
         addToast('活動已更新', 'success')
       } else {
-        await eventService.createEvent(payload)
+        await eventAdminService.createEvent(payload)
         addToast('活動已建立', 'success')
       }
 
@@ -205,7 +206,7 @@ export function useCalendarEditor() {
     isDeleting.value = true
 
     try {
-      await eventService.deleteEvent(editingEventId.value)
+      await eventAdminService.deleteEvent(editingEventId.value)
       addToast('活動已刪除', 'success')
       
       if (onSuccess) {

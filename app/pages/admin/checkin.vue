@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
-import { eventService } from '@/services/eventService'
-import type { Event } from '@/types'
+import { eventService } from '~/services/event'
+import { eventAdminService } from '~/services/eventAdmin'
+import type { Event } from '~/types'
 
 definePageMeta({
   layout: 'admin',
@@ -56,7 +57,7 @@ const onScanSuccess = async (decodedText: string) => {
     lastScannedId.value = decodedText
     
     // 假設 decodedText 就是 memberId (UUID)
-    await eventService.checkInMember(selectedEventId.value, decodedText)
+    await eventAdminService.checkInMember(selectedEventId.value, decodedText)
     
     addToast('簽到成功！', 'success')
     

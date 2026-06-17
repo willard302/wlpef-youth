@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import { eventService } from '@/services/eventService'
+import { eventAdminService } from '~/services/eventAdmin.js'
 import type { Event, EventRegistration } from '@/types'
 import RegistrationDetailModal from './components/RegistrationDetailModal.vue'
 
@@ -10,9 +10,7 @@ definePageMeta({
   showTabbar: false,
 })
 
-const router = useRouter()
 const { addToast } = useToast()
-const { userProfile, loadUserData } = useUser()
 
 const isLoading = ref(false)
 const isEventsLoading = ref(false)
@@ -36,7 +34,7 @@ const openRegistrationDetail = (reg: EventRegistration) => {
 const loadEvents = async () => {
   isEventsLoading.value = true
   try {
-    events.value = await eventService.fetchAllEventsForAdmin()
+    events.value = await eventAdminService.fetchAllEventsForAdmin()
     if (events.value.length > 0) {
       // Default to the most recent event
       await selectEvent(events.value[0]!!)
@@ -54,7 +52,7 @@ const selectEvent = async (event: Event) => {
   isLoading.value = true
   currentPage.value = 1
   try {
-    registrations.value = await eventService.fetchRegistrationsByEventId(event.id)
+    registrations.value = await eventAdminService.fetchRegistrationsByEventId(event.id)
   } catch (err: any) {
     addToast(err.message || '載入報名名單失敗', 'error')
     registrations.value = []
@@ -71,7 +69,7 @@ const handleSync = async () => {
 
   isSyncing.value = true
   try {
-    const { results } = await eventService.syncGoogleSheet(
+    const { results } = await eventAdminService.syncGoogleSheet(
       selectedEvent.value.id,
       selectedEvent.value.googleSheetId
     )

@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
 import { showDialog } from 'vant'
-import { eventService } from '@/services/eventService'
+import { eventService } from '~/services/event'
+import { eventAdminService } from '~/services/eventAdmin'
 import type { Event } from '@/types'
 
 definePageMeta({
@@ -158,7 +159,7 @@ const handleDeleteEvent = async (eventId: string) => {
   }
 
   try {
-    await eventService.deleteEvent(eventId)
+    await eventAdminService.deleteEvent(eventId)
     addToast('活動已刪除', 'success')
     await Promise.all([loadEvents(), loadUpcomingEvent()])
   } catch (err: any) {

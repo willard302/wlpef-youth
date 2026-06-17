@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import { eventService } from '@/services/eventService'
+import { eventAdminService } from '~/services/eventAdmin.js'
 import type { Event } from '@/types'
 import EventForm from './components/EventForm.vue'
 import PointsBreakdownModal from './components/PointsBreakdownModal.vue'
@@ -55,7 +55,7 @@ const loadDashboardStats = async () => {
   
   isLoading.value = true
   try {
-    const data = await eventService.fetchAdminDashboardStats(selectedEvent.value.id)
+    const data = await eventAdminService.fetchAdminDashboardStats(selectedEvent.value.id)
     stats.value = data
   } catch (err: any) {
     addToast('載入統計數據失敗', 'error')
@@ -66,7 +66,7 @@ const loadDashboardStats = async () => {
 
 const loadEvents = async () => {
   try {
-    const data = await eventService.fetchAllEventsForAdmin()
+    const data = await eventAdminService.fetchAllEventsForAdmin()
     events.value = data
     if (data.length > 0 ) {
 
