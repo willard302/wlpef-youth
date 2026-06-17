@@ -2,12 +2,13 @@
 import type { Event, EventStatus } from '~/types'
 import type { Database } from '~/types/database.types'
 
+const getSupabase = () => useSupabaseClient<Database>()
+
 export const eventService = {
   async fetchEvents(yearMonth?: string): Promise<Event[]> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { start, end } = getMonthRange(yearMonth)
 
-    // Fetch events that overlap with the range or have no start_at (though they shouldn't)
     const { data, error } = await supabase
       .from('events')
       .select('*')
@@ -19,7 +20,7 @@ export const eventService = {
   },
 
   async fetchOngoingEvents(status?: EventStatus): Promise<Event[]> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const now = new Date().toISOString()
 
     let query = supabase
@@ -32,15 +33,14 @@ export const eventService = {
       query = query.eq('status', status)
     }
 
-    const { data, error } = await query
-      .order('start_at', { ascending: true })
+    const { data, error } = await query.order('start_at', { ascending: true })
 
     if (error) throw error
     return (data ?? []).map(mapToEvent)
   },
 
   async fetchUpcomingEvents(limit = 5, status?: EventStatus): Promise<Event[]> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
 
     let query = supabase
       .from('events')
@@ -63,7 +63,7 @@ export const eventService = {
    * 檢查使用者是否已報名特定活動
    */
   async checkRegistrationStatus(eventId: string): Promise<boolean> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return false
 
@@ -72,21 +72,21 @@ export const eventService = {
       .select('id')
       .eq('event_id', eventId)
       .eq('matched_user_id', user.id)
-      .maybeSingle()
+      .limit(1)
 
     if (error) {
       console.error('Error checking registration status:', error)
       return false
     }
 
-    return !!data
+    return (data && data.length > 0)
   },
 
   /**
    * 檢查使用者是否已完成活動簽到
    */
   async checkCheckinStatus(eventId: string): Promise<boolean> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return false
 
@@ -95,18 +95,18 @@ export const eventService = {
       .select('id')
       .eq('event_id', eventId)
       .eq('user_id', user.id)
-      .maybeSingle()
+      .limit(1)
 
     if (error) {
       console.error('Error checking checkin status:', error)
       return false
     }
 
-    return !!data
+    return (data && data.length > 0)
   },
 
   async fetchEventById(id: string): Promise<Event> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('events')
       .select('*')

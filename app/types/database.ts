@@ -13,4 +13,5 @@ export type RegistrationRow = Registration['Row']
 
 export type CheckinRow = Checkin['Row']
 
+export type ProfileInsert = Profile['Insert']
 export type ProfileUpdate = Profile['Update']

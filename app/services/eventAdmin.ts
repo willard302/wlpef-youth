@@ -3,12 +3,14 @@ import type { Event, EventCheckin, EventRegistration, CreateEventPayload } from 
 import type { Database } from '~/types/database.types'
 import type { EventInsert, EventUpdate } from '~/types/database'
 
+const getSupabase = () => useSupabaseClient<Database>()
+
 export const eventAdminService = {
 
   async createEvent(payload: CreateEventPayload): Promise<Event> {
     validateTimeRange(payload.start_at, payload.end_at)
 
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data: authData, error: authError } = await supabase.auth.getUser()
 
     if (authError) throw authError
@@ -34,7 +36,7 @@ export const eventAdminService = {
       validateTimeRange(payload.start_at, payload.end_at)
     }
 
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('events')
       .update(payload as EventUpdate)
@@ -47,7 +49,7 @@ export const eventAdminService = {
   },
 
   async deleteEvent(id: string): Promise<void> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { error } = await supabase
       .from('events')
       .delete()
@@ -58,7 +60,7 @@ export const eventAdminService = {
 
   // 獲取所有活動 (管理員專用，不分狀態)
   async fetchAllEventsForAdmin(): Promise<Event[]> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('events')
       .select('*')
@@ -70,7 +72,7 @@ export const eventAdminService = {
 
   // 獲取特定活動的報名名單  
   async fetchRegistrationsByEventId(eventId: string): Promise<EventRegistration[]> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('event_registrations')
       .select('*')
@@ -83,7 +85,7 @@ export const eventAdminService = {
 
   // 獲取特定活動的出席名單 (已完成報名且已簽到)
   async fetchAttendanceByEventId(eventId: string): Promise<EventCheckin[]> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data, error } = await supabase
       .from('checkin_records')
       .select('*, profiles!user_id(name, avatar_url)')
@@ -97,7 +99,7 @@ export const eventAdminService = {
 
   // 觸發 Google 試算表同步 (呼叫 Edge Function)
   async syncGoogleSheet(eventId: string, sheetId: string): Promise<any> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
       body: { eventId, sheetId }
     })
@@ -108,7 +110,7 @@ export const eventAdminService = {
 
   // 手動觸發點數結算 (RPC)
   async settleRegistrationPoints(registrationId?: string): Promise<void> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { error } = await supabase.rpc('process_event_registration_points', {
       reg_id: registrationId
     })
@@ -125,69 +127,41 @@ export const eventAdminService = {
    * @param memberId 會員 ID (來自 QR Code)
    */
   async checkInMember(eventId: string, memberId: string): Promise<void> {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     const { data: { user: operatorUser } } = await supabase.auth.getUser()
     
     if (!operatorUser) throw new Error('使用者未登入')
 
-    const { data: operatorProfile, error: operatorError } = await supabase
-      .from('profiles')
-      .select('role, scan_permission')
-      .eq('id', operatorUser.id)
-      .maybeSingle()
+    const [operatorRes, memberRes, existingCheckinRes, registrationRes] = await Promise.all([
+      supabase.from('profiles').select('role, scan_permission').eq('id', operatorUser.id).maybeSingle(),
+      supabase.from('profiles').select('email').eq('id', memberId).maybeSingle(),
+      supabase.from('checkin_records').select('id').eq('event_id', eventId).eq('user_id', memberId).maybeSingle(),
+      supabase.from('event_registrations').select('id').eq('event_id', eventId).eq('matched_user_id', memberId).maybeSingle()
+    ])
 
-    if (operatorError) throw operatorError
+    if (operatorRes.error) throw operatorRes.error
+    if (memberRes.error) throw memberRes.error
 
-    const canScan =
-      operatorProfile?.role === 'admin' || operatorProfile?.scan_permission === true
+    const canScan = operatorRes.data?.role === 'admin' || operatorRes.data?.scan_permission === true
+    if (!canScan) throw new Error('您沒有簽到掃描權限')
+    if (!memberRes.data) throw new Error('找不到該會員資料')
+    if (!existingCheckinRes.data) throw new Error('該會員已經完成簽到')
 
-    if (!canScan) {
-      throw new Error('您沒有簽到掃描權限')
-    }
-
-    // 1. 取得會員資料
-    const { data: memberProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('email')
-      .eq('id', memberId)
-      .maybeSingle()
-
-    if (profileError) throw profileError
-    if (!memberProfile) throw new Error('找不到該會員資料')
-
-    // 2. 檢查是否已經簽到過
-    const { data: existingCheckin } = await supabase
-      .from('checkin_records')
-      .select('id')
-      .eq('event_id', eventId)
-      .eq('user_id', memberId)
-      .maybeSingle()
-
-    if (existingCheckin) throw new Error('該會員已經完成簽到')
-
-    // 3. 嘗試找對應的報名紀錄
-    const { data: registration } = await supabase
-      .from('event_registrations')
-      .select('id')
-      .eq('event_id', eventId)
-      .eq('matched_user_id', memberId)
-      .maybeSingle()
-
-    // 4. 執行簽到
+    // 執行簽到
     const { error: checkinError } = await supabase
       .from('checkin_records')
       .insert({
         event_id: eventId,
         user_id: memberId,
-        registration_id: registration?.id || null,
-        email: memberProfile.email || '',
+        registration_id: registrationRes.data?.id || null,
+        email: memberRes.data.email || '',
         checkin_method: 'qr_code',
         checked_in_by: operatorUser.id
       })
 
     if (checkinError) throw checkinError
 
-    // 5. 立即觸發點數結算 (選用)
+    // 立即觸發點數結算 (選用)
     try {
       await supabase.rpc('process_pending_points')
     } catch (err) {
@@ -197,7 +171,7 @@ export const eventAdminService = {
 
   // 獲取管理後台統計數據
   async fetchAdminDashboardStats(eventId?: string) {
-    const supabase = useSupabaseClient<Database>()
+    const supabase = getSupabase()
     
     // 1. 完成註冊人數 (僅計算 role 為 member 的 profiles)
     const { count: totalProfiles, error: profileError } = await supabase
@@ -217,31 +191,17 @@ export const eventAdminService = {
       }
     }
 
-    // 2. 該活動報名人數
-    const { count: registrationCount, error: regError } = await supabase
-      .from('event_registrations')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_id', eventId)
-    
-    if (regError) throw regError
+    const [regRes, checkinRes, pointRes] = await Promise.all([
+      supabase.from('event_registrations').select('*', {count: 'exact', head: true}).eq('event_id', eventId),
+      supabase.from('checkin_records').select('*', {count: 'exact', head: true}).eq('event_id', eventId),
+      supabase.from('point_transactions').select('points, type').eq('event_id', eventId)
+    ])
 
-    // 3. 該活動報到人數
-    const { count: checkinCount, error: checkinError } = await supabase
-      .from('checkin_records')
-      .select('*', { count: 'exact', head: true })
-      .eq('event_id', eventId)
-    
-    if (checkinError) throw checkinError
+    if (regRes.error) throw regRes.error
+    if (checkinRes.error) throw checkinRes.error
+    if (pointRes.error) throw pointRes.error
 
-    // 4. 點數發放統計 (該活動下)
-    const { data: pointData, error: pointError } = await supabase
-      .from('point_transactions')
-      .select('points, type')
-      .eq('event_id', eventId)
-    
-    if (pointError) throw pointError
-
-    const pointsBreakdown = (pointData || []).reduce(
+    const pointsBreakdown = (pointRes.data || []).reduce(
       (acc, curr) => {
         if (curr.type === 'registration') acc.registration += curr.points
         else if (curr.type === 'checkin') acc.checkin += curr.points
@@ -252,8 +212,8 @@ export const eventAdminService = {
 
     return {
       totalProfiles: totalProfiles || 0,
-      eventRegistrations: registrationCount || 0,
-      eventCheckins: checkinCount || 0,
+      eventRegistrations: regRes.count || 0,
+      eventCheckins: checkinRes.count || 0,
       totalPoints: pointsBreakdown.registration + pointsBreakdown.checkin,
       pointsBreakdown
     }

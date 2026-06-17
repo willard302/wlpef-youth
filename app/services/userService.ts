@@ -1,26 +1,21 @@
-import type { UserProfile, Activity, Role, PointTransaction } from '@/types'
-import type { Database } from '@/types/database.types'
-import type { ProfileUpdate } from '@/types/database'
+import type { UserProfile, Activity, Role, PointTransaction } from '~/types'
+import type { Database } from '~/types/database.types'
+import type { ProfileUpdate, ProfileInsert } from '~/types/database'
 
 type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
+const getSupabase = () => useSupabaseClient<Database>()
 
-/**
- * 使用者相關的 API 服務，負責網路請求 (Data Layer)
- */
+// 使用者相關的 API 服務，負責網路請求 (Data Layer)
 export const userService = {
-  /**
-   * 取得使用者詳細資料
-   */
+  // 取得使用者詳細資料
   async fetchUserProfile(): Promise<UserProfile> {
     try {
-      const supabase = useSupabaseClient<Database>()
+      const supabase = getSupabase()
       const { data: { user }, error: userError } = await supabase.auth.getUser()
 
       if (userError) throw userError
-
       if (!user) throw new Error('User not authenticated')
 
-      // 優先從 profiles 表獲取最新的詳細資料
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -30,7 +25,6 @@ export const userService = {
       if (profileError) throw profileError
 
       const metadata = user.user_metadata || {}
-      const points = profile?.points ?? 0
 
       return {
         id: user.id,
@@ -39,15 +33,14 @@ export const userService = {
         role: (profile?.role as Role) || 'member',
         scanPermission: profile?.scan_permission ?? false,
         joinDate: profile?.created_at || metadata.join_date || 'Since 2024',
-        points,
+        points: profile?.points ?? 0,
         avatar: profile?.avatar_url || metadata.avatar_url || undefined
       }
     } catch (error: any) {
-      // 如果只是未登入，不報錯也不 console.error，讓呼叫端自己決定如何處理
       if (error?.message === 'User not authenticated' || error?.name === 'AuthSessionMissingError') {
         throw error
       }
-      console.error('Error fetching user profile:', error)
+      console.error('[userService] Error fetching user profile:', error)
       throw new Error(error?.message || '載入用戶資料失敗')
     }
   },
@@ -58,23 +51,13 @@ export const userService = {
   async uploadAvatar(file: File, supabase: TypedSupabaseClient): Promise<string> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
       if (!user) throw new Error('User not authenticated')
 
-      // 檢查檔案大小 (3MB)
-      if (file.size > 3 * 1024 * 1024) {
-        throw new Error('檔案大小不能超過 3MB')
-      }
+      if (file.size > 3 * 1024 * 1024) throw new Error('檔案大小不能超過 3MB')
+      if (!file.type.startsWith('image/')) throw new Error('請選擇圖片檔案')
 
-      // 檢查檔案類型
-      if (!file.type.startsWith('image/')) {
-        throw new Error('請選擇圖片檔案')
-      }
-
-      // 固定使用 user.id 作為檔案名稱，不含副檔名，確保一個帳號在 storage 中只有一個檔案
       const fileName = `${user.id}`
 
-      // 上傳到 Supabase Storage，開啟 upsert: true 以自動覆蓋舊檔
       const { error } = await supabase.storage
         .from('icc_avatar')
         .upload(fileName, file, {
@@ -84,22 +67,20 @@ export const userService = {
 
       if (error) throw error
 
-      // 取得公開 URL
       const { data: urlData } = supabase.storage
         .from('icc_avatar')
         .getPublicUrl(fileName)
 
-      // 在 URL 後加上時間戳記版本號，確保瀏覽器能即時抓到更新後的圖片
       const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`
 
-
-      // 1. 更新 profiles 表
-      await supabase
+      // 更新 profiles
+      const { error: updateError } = await supabase
         .from('profiles')
         .update({ avatar_url: publicUrl })
         .eq('id', user.id)
 
-      // 2. 更新 auth metadata
+      if (updateError) throw updateError
+
       return publicUrl
     } catch (error: any) {
       console.error('Error uploading avatar:', error)
@@ -112,14 +93,10 @@ export const userService = {
    */
   async deleteOldAvatar(avatarPath: string, supabase: TypedSupabaseClient): Promise<void> {
     try {
-      if (avatarPath) {
-        await supabase.storage
-          .from('icc_avatar')
-          .remove([avatarPath])
-      }
+      if (!avatarPath) return
+      await supabase.storage.from('icc_avatar').remove([avatarPath])
     } catch (error) {
-      console.error('Error deleting old avatar:', error)
-      // 不拋出錯誤，因為這不是關鍵操作
+      console.error('[userService] Error deleting old avatat:', error)
     }
   },
 
@@ -127,31 +104,24 @@ export const userService = {
    * 取得使用者的近期活動
    */
   async fetchRecentActivities(): Promise<Activity[]> {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          {
-            type: 'event',
-            date: 'Yesterday',
-            title: 'Weekly Gathering',
-            duration: '1 hour',
-            icon: 'groups'
-          }
-        ])
-      }, 300)
-    })
+    return [
+      {
+        type: 'event',
+        date: 'Yesterday',
+        title: 'Weekly Gathering',
+        duration: '1 hour',
+        icon: 'groups'
+      }
+    ]
   },
 
-  /**
-   * 初始化使用者 metadata（於註冊時調用）
-   */
+  // 初始化使用者 metadata（於註冊時調用）
   async initializeUserMetadata(
     supabase: TypedSupabaseClient,
     displayName: string
   ): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
       if (!user) throw new Error('User not authenticated')
 
       const currentMetadata = user.user_metadata || {}
@@ -190,10 +160,8 @@ export const userService = {
   ): Promise<void> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
-
       if (!user) throw new Error('User not authenticated')
 
-      // 1. 使用 upsert 更新或建立 profiles 表
       const dbData: any = {
         id: user.id,
         updated_at: new Date().toISOString()
@@ -204,10 +172,9 @@ export const userService = {
 
       if (profileData.name !== undefined) dbData.name = profileData.name
       if (profileData.points !== undefined) dbData.points = profileData.points
-      if (profileData.role !== undefined) dbData.role = profileData.role as Role
+      if (profileData.role !== undefined) dbData.role = profileData.role
       if (profileData.scanPermission !== undefined) dbData.scan_permission = profileData.scanPermission
 
-      // 如果是新建立且沒有名字，從 metadata 獲取預設值
       if (!dbData.name) {
         const metadata = user.user_metadata || {}
         dbData.name = metadata.name || metadata.full_name || user.email?.split('@')[0] || 'User'
@@ -229,8 +196,7 @@ export const userService = {
    */
   async fetchAllProfiles(): Promise<UserProfile[]> {
     try {
-      const supabase = useSupabaseClient<Database>()
-      
+      const supabase = getSupabase()
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -244,7 +210,7 @@ export const userService = {
         name: profile.name || 'User',
         role: (profile.role as Role) || 'member',
         scanPermission: profile.scan_permission ?? false,
-        joinDate: profile.created_at || 'Since 2024',
+        joinDate: profile.created_at || 'Since 2026',
         points: profile.points ?? 0,
         avatar: profile.avatar_url || undefined
       }))
@@ -254,16 +220,8 @@ export const userService = {
     }
   },
 
-  /**
-   * (管理員) 透過 Edge Function 建立新會員並發送邀請
-   */
-  async adminCreateMember(memberData: {
-    email: string
-    name: string
-    role?: string
-    points?: number
-    scanPermission?: boolean
-  }): Promise<void> {
+  // (管理員) 透過 Edge Function 建立新會員並發送邀請
+  async adminCreateMember(memberData: ProfileInsert): Promise<void> {
     try {
       const supabase = useSupabaseClient()
       const { data, error } = await supabase.functions.invoke('admin-create-user', {
@@ -279,26 +237,19 @@ export const userService = {
     }
   },
 
-  /**
-   * (管理員) 更新指定會員的資料
-   */
+  // (管理員) 更新指定會員的資料
   async adminUpdateProfile(
     userId: string,
-    profileData: {
-      name?: string
-      points?: number
-      role?: string
-      scanPermission?: boolean
-    }
+    profileData: ProfileUpdate
   ): Promise<void> {
     try {
-      const supabase = useSupabaseClient<Database>()
+      const supabase = getSupabase()
       
       const dbUpdate: ProfileUpdate = {}
       if (profileData.name !== undefined) dbUpdate.name = profileData.name
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
       if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
-      if (profileData.scanPermission !== undefined) dbUpdate.scan_permission = profileData.scanPermission
+      if (profileData.scan_permission !== undefined) dbUpdate.scan_permission = profileData.scan_permission
 
       const { error } = await supabase
         .from('profiles')
@@ -312,22 +263,16 @@ export const userService = {
     }
   },
 
-  /**
-   * 取得點數紀錄
-   */
+  // 取得點數紀錄
   async fetchPointTransactions(): Promise<PointTransaction[]> {
     try {
-      const supabase = useSupabaseClient<Database>()
+      const supabase = getSupabase()
       const { data: { user } } = await supabase.auth.getUser()
-
       if (!user) throw new Error('User not authenticated')
 
       const { data, error } = await supabase
         .from('point_transactions')
-        .select(`
-          *,
-          events(title)
-        `)
+        .select(`*, events(title)`)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
 
@@ -349,22 +294,15 @@ export const userService = {
     }
   },
 
-  /**
-   * (管理員) 取得系統中所有的點數交易紀錄
-   */
+  // (管理員) 取得系統中所有的點數交易紀錄
   async fetchAllPointTransactions(): Promise<PointTransaction[]> {
     try {
-      const supabase = useSupabaseClient<Database>()
-      
+      const supabase = getSupabase()
       const { data, error } = await supabase
         .from('point_transactions')
-        .select(`
-          *,
-          events(title),
-          profiles(name, email)
-        `)
+        .select(`*, events(title), profiles(name, email)`)
         .order('created_at', { ascending: false })
-        .limit(1000) // 限制筆數避免效能問題
+        .limit(1000)
 
       if (error) throw error
 
@@ -386,9 +324,7 @@ export const userService = {
     }
   },
 
-  /**
-   * 重置使用者帳號 (透過 Edge Function)
-   */
+  // 重置使用者帳號 (透過 Edge Function)
   async resetUserAccount(userId?: string): Promise<void> {
     try {
       const supabase = useSupabaseClient()
