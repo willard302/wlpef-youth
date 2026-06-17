@@ -98,7 +98,7 @@ const filteredProfiles = computed(() => {
   return profiles.value.filter((profile) => {
     return (
       profile.name.toLowerCase().includes(keyword) ||
-      profile.email.toLowerCase().includes(keyword)
+      (profile.email?.toLowerCase().includes(keyword) ?? false)
     )
   })
 })

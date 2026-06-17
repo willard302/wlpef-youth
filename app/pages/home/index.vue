@@ -49,8 +49,9 @@ const handleItemClick = (item: any, event: Event) => {
   }
 }
 
-const getRoleName = (role?: string) => {
+const getRoleName = (role?: string | null) => {
   if (role === 'guest') return '訪客'
+  if (role === 'admin') return '管理員'
   return '會員'
 }
 </script>
