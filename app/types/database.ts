@@ -1,23 +1,30 @@
-import type { Database } from '~/types/database.types'
+import type { Database as SupabaseDatabase } from './database.types'
+
+export type Database = SupabaseDatabase
 
 type PublicTables = Database['public']['Tables']
 
-export type EventRow = PublicTables['events']['Row']
-export type EventInsert = PublicTables['events']['Insert']
-export type EventUpdate = PublicTables['events']['Update']
+export type TableName = keyof PublicTables
+export type TableRow<T extends TableName> = PublicTables[T]['Row']
+export type TableInsert<T extends TableName> = PublicTables[T]['Insert']
+export type TableUpdate<T extends TableName> = PublicTables[T]['Update']
 
-export type RegistrationRow = PublicTables['event_registrations']['Row']
-export type RegistrationInsert = PublicTables['event_registrations']['Insert']
-export type RegistrationUpdate = PublicTables['event_registrations']['Update']
+export type EventRow = TableRow<'events'>
+export type EventInsert = TableInsert<'events'>
+export type EventUpdate = TableUpdate<'events'>
 
-export type CheckinRow = PublicTables['checkin_records']['Row']
-export type CheckinInsert = PublicTables['checkin_records']['Insert']
-export type CheckinUpdate = PublicTables['checkin_records']['Update']
+export type RegistrationRow = TableRow<'event_registrations'>
+export type RegistrationInsert = TableInsert<'event_registrations'>
+export type RegistrationUpdate = TableUpdate<'event_registrations'>
 
-export type ProfileRow = PublicTables['profiles']['Row']
-export type ProfileInsert = PublicTables['profiles']['Insert']
-export type ProfileUpdate = PublicTables['profiles']['Update']
+export type CheckinRow = TableRow<'checkin_records'>
+export type CheckinInsert = TableInsert<'checkin_records'>
+export type CheckinUpdate = TableUpdate<'checkin_records'>
 
-export type PointTransactionRow = PublicTables['point_transactions']['Row']
-export type PointTransactionInsert = PublicTables['point_transactions']['Insert']
-export type PointTransactionUpdate = PublicTables['point_transactions']['Update']
+export type ProfileRow = TableRow<'profiles'>
+export type ProfileInsert = TableInsert<'profiles'>
+export type ProfileUpdate = TableUpdate<'profiles'>
+
+export type PointTransactionRow = TableRow<'point_transactions'>
+export type PointTransactionInsert = TableInsert<'point_transactions'>
+export type PointTransactionUpdate = TableUpdate<'point_transactions'>

@@ -1,4 +1,4 @@
-import { ROLE_LABEL } from '~/types/user'
+import { ROLE_LABEL } from '~/types'
 
 /**
  * 取得角色的顯示名稱

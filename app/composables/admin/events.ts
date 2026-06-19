@@ -1,5 +1,5 @@
 import type { CreateEventPayload, Event, EventInsert, EventUpdate} from "~/types"
-import type { Database } from '~/types/database.types'
+import type { Database } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 

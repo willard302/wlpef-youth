@@ -1,6 +1,6 @@
 
 import type { Event, EventStatus } from '~/types'
-import type { Database } from '~/types/database.types'
+import type { Database } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 

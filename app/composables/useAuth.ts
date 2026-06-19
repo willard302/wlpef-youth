@@ -1,5 +1,5 @@
 import { userService } from "~/services/user"
-import type { Database } from "~/types/database.types"
+import type { Database } from "~/types"
 import type { LoginFormData, RegisterFormData } from "~/types/auth"
 import { getRoleDestination } from "~/utils/auth"
 

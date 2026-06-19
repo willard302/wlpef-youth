@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Database } from '~/types/database.types'
+import type { Database } from '~/types'
 import { getRoleDestination } from '~/utils/auth'
 
 definePageMeta({

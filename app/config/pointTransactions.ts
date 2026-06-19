@@ -1,10 +1,4 @@
-export type PointTransactionKind = 'registration' | 'checkin' | 'bonus' | 'manual'
-
-export interface PointTransactionMeta {
-  label: string
-  icon: string
-  colorClass: string
-}
+import type { PointTransactionKind, PointTransactionMeta } from '~/types'
 
 const POINT_TRANSACTION_META_MAP: Record<PointTransactionKind, PointTransactionMeta> = {
   registration: {

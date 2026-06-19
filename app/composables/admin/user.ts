@@ -1,5 +1,5 @@
 import { userService } from '~/services/user'
-import type { Database } from '~/types/database.types'
+import type { Database } from '~/types'
 
 export const useAdminUser = () => {
 
