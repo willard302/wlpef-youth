@@ -1,13 +1,15 @@
 import type { Database } from '@/types/database.types'
-
 export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient<Database>()
+
+  const user = useSupabaseUser()
   const { userProfile, loadUserData } = useUser()
 
-  const { data: { user } } = await supabase.auth.getUser()
-
   // 1. 未登入處理
-  if (!user?.id) {
+  if (!user.value?.sub) {
+
+    await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
+
     if (!to.path.startsWith('/auth')) {
       return navigateTo('/auth')
     }
@@ -33,7 +35,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
   const isAuthPage = to.path.startsWith('/auth')
   if (!isAuthPage && !userProfile.value) {
     // 如果 loadUserData 失敗且沒資料，可能需要補填資料
-    const metadata = user.user_metadata || {}
+    const metadata = user.value.user_metadata || {}
     const isCompleted = metadata.social_signup_completed || metadata.google_signup_completed
     
     if (!isCompleted) {
