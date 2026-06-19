@@ -2,7 +2,7 @@
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { eventService } from '~/services/event'
 import { eventAdminService } from '~/services/eventAdmin'
-import type { Event } from '~/types'
+import type { Event, CheckinScanResult } from '~/types'
 
 definePageMeta({
   layout: 'admin',
@@ -16,6 +16,8 @@ const isLoading = ref(true)
 const isScanning = ref(false)
 const isCameraActive = ref(false)
 const lastScannedId = ref('')
+const scanResult = ref<CheckinScanResult | null>(null)
+const scannedMemberId = ref('')
 const { addToast } = useToast()
 
 let html5QrCode: Html5Qrcode | null = null
@@ -55,11 +57,17 @@ const onScanSuccess = async (decodedText: string) => {
   try {
     isScanning.value = true
     lastScannedId.value = decodedText
+    scannedMemberId.value = decodedText
+    scanResult.value = null
     
     // 假設 decodedText 就是 memberId (UUID)
-    await eventAdminService.checkInMember(selectedEventId.value, decodedText)
+    const result = await eventAdminService.checkInMember(selectedEventId.value, decodedText)
+    scanResult.value = result
     
     addToast('簽到成功！', 'success')
+    if (!result.hasAnyPayment) {
+      addToast('未偵測到年度捐贈或活動報名費，請提醒繳費', 'error')
+    }
     
     // 震動回饋 (如果支援)
     if ('vibrate' in navigator) {
@@ -93,10 +101,7 @@ const startScanner = async () => {
   }
 
   try {
-    // 確保舊的實例已停止
-    if (html5QrCode) {
-      await stopScanner()
-    }
+    if (html5QrCode) await stopScanner()
 
     html5QrCode = new Html5Qrcode('reader', {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -197,6 +202,44 @@ onUnmounted(async () => {
             {{ isCameraActive ? '請將會員的 QR Code 對準掃描框。' : '點擊按鈕啟動相機開始掃描。' }}<br>掃描成功後系統會自動完成簽到。
           </p>
         </div>
+
+        <div v-if="scanResult" class="mt-6 rounded-3xl p-5 border-2" :class="scanResult.hasAnyPayment ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="size-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
+              :class="scanResult.hasAnyPayment ? 'bg-emerald-500 shadow-emerald-200' : 'bg-rose-500 shadow-rose-200'">
+              <AppIcon :name="scanResult.hasAnyPayment ? 'check_circle' : 'error'" />
+            </div>
+            <div>
+              <p class="text-sm font-bold" :class="scanResult.hasAnyPayment ? 'text-emerald-800' : 'text-rose-800'">
+                {{ scanResult.hasAnyPayment ? '繳費狀態正常' : '請提醒繳費' }}
+              </p>
+              <p class="text-xs font-medium" :class="scanResult.hasAnyPayment ? 'text-emerald-700' : 'text-rose-700'">
+                {{ scanResult.paymentMessage }}
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="rounded-2xl bg-white px-4 py-3 border"
+              :class="scanResult.donationYear ? 'border-emerald-200' : 'border-slate-200'">
+              <p class="text-[10px] font-bold text-slate-400 mb-1">年度捐贈</p>
+              <p class="text-sm font-bold" :class="scanResult.donationYear ? 'text-emerald-600' : 'text-slate-500'">
+                {{ scanResult.donationYear ? '已完成' : '未完成' }}
+              </p>
+            </div>
+            <div class="rounded-2xl bg-white px-4 py-3 border"
+              :class="scanResult.registrationFee ? 'border-emerald-200' : 'border-slate-200'">
+              <p class="text-[10px] font-bold text-slate-400 mb-1">活動報名費</p>
+              <p class="text-sm font-bold" :class="scanResult.registrationFee ? 'text-emerald-600' : 'text-slate-500'">
+                {{ scanResult.registrationFee ? '已完成' : '未完成' }}
+              </p>
+            </div>
+          </div>
+
+          <p class="mt-4 text-xs font-medium" :class="scanResult.hasAnyPayment ? 'text-emerald-700' : 'text-rose-700'">
+            會員 ID：{{ scannedMemberId }}
+          </p>
+        </div>
       </section>
 
       <!-- Status Info -->
@@ -205,7 +248,7 @@ onUnmounted(async () => {
           <AppIcon name="sync" :size="36" />
         </div>
         <h2 class="text-xl font-bold mb-2">簽到處理中...</h2>
-        <p class="text-white/60 text-sm">正在驗證會員資料並發放點數</p>
+        <p class="text-white/60 text-sm">正在驗證會員資料、報名與繳費狀態</p>
       </div>
     </main>
   </div>

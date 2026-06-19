@@ -1,6 +1,5 @@
 
-import type { Event, EventCheckin, EventRegistration, PointTransaction } from '~/types'
-import type { Database } from '~/types/database.types'
+import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 
@@ -74,7 +73,7 @@ export const eventAdminService = {
    * @param eventId 活動 ID
    * @param memberId 會員 ID (來自 QR Code)
    */
-  async checkInMember(eventId: string, memberId: string): Promise<void> {
+  async checkInMember(eventId: string, memberId: string): Promise<CheckinScanResult> {
     const supabase = getSupabase()
     const { data: { user: operatorUser } } = await supabase.auth.getUser()
     
@@ -84,7 +83,7 @@ export const eventAdminService = {
       supabase.from('profiles').select('role, scan_permission').eq('id', operatorUser.id).maybeSingle(),
       supabase.from('profiles').select('email').eq('id', memberId).maybeSingle(),
       supabase.from('checkin_records').select('id').eq('event_id', eventId).eq('user_id', memberId).maybeSingle(),
-      supabase.from('event_registrations').select('id').eq('event_id', eventId).eq('matched_user_id', memberId).maybeSingle()
+      supabase.from('event_registrations').select('id, donation_year, registration_fee').eq('event_id', eventId).eq('matched_user_id', memberId).maybeSingle()
     ])
 
     if (operatorRes.error) throw operatorRes.error
@@ -93,7 +92,11 @@ export const eventAdminService = {
     const canScan = operatorRes.data?.role === 'admin' || operatorRes.data?.scan_permission === true
     if (!canScan) throw new Error('您沒有簽到掃描權限')
     if (!memberRes.data) throw new Error('找不到該會員資料')
-    if (!existingCheckinRes.data) throw new Error('該會員已經完成簽到')
+    if (existingCheckinRes.data) throw new Error('該會員已經完成簽到')
+
+    const donationYear = registrationRes.data?.donation_year ?? false
+    const registrationFee = registrationRes.data?.registration_fee ?? false
+    const hasAnyPayment = donationYear || registrationFee
 
     // 執行簽到
     const { error: checkinError } = await supabase
@@ -114,6 +117,15 @@ export const eventAdminService = {
       await supabase.rpc('process_pending_points')
     } catch (err) {
       console.warn('Point processing skipped or failed:', err)
+    }
+
+    return {
+      registrationId: registrationRes.data?.id || null,
+      donationYear,
+      registrationFee,
+      hasAnyPayment,
+      paymentMessage: hasAnyPayment ? '已繳費，可通行' : '未繳費，請提醒繳費',
+      paymentLevel: hasAnyPayment ? 'success' : 'danger',
     }
   },
 

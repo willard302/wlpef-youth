@@ -4,6 +4,7 @@ export * from './database'
 export * from './auth'
 export * from './event'
 export * from './user'
+export * from './checkin'
 
 export type TabbarKey = 'home' | 'qr-code' | 'events' | 'scan'  
 export interface TabbarItem {
