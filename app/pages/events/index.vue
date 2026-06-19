@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import { showDialog } from 'vant'
 import { eventService } from '~/services/event'
 import { eventAdminService } from '~/services/eventAdmin'
 import type { Event } from '@/types'

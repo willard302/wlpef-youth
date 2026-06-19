@@ -1,5 +1,4 @@
 import { addHours, format, parseISO, set } from 'date-fns'
-import { showDialog } from 'vant'
 import type { CreateEventPayload, Event } from '@/types'
 import { eventService } from '~/services/event'
 import { eventAdminService } from '~/services/eventAdmin'
