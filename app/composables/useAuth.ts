@@ -13,6 +13,41 @@ export const useAuth = () => {
   const isSignupLoading = ref(false)
   const errorMessage = ref('')
 
+  const redirectUserByRole = async() => {
+    try {
+      const profile = await userService.fetchUserProfile()
+      const dest = profile?.role === 'admin' ? '/admin' : '/home'
+      return router.push(dest)
+    } catch (error) {
+      handleAuthError(error, '登入失敗，請重新登入')
+    }
+  }
+
+  const handleAuthError = (error: unknown, fallbackMessage: string) => {
+    console.error('Auth Error:', error)
+
+    if (!(error instanceof Error)) {
+      errorMessage.value = fallbackMessage
+      return
+    }
+
+    const msg = error.message
+
+    if (msg.includes('provider is not enabled')) {
+      errorMessage.value = '該登入方式（如 Google）尚未啟用，請聯絡管理員。'
+    } else if (msg.includes('Invalid login credentials')) {
+      errorMessage.value = '登入失敗，請檢查您的帳號密碼。'
+    } else if (msg.includes('User already registered')) {
+      errorMessage.value = '該 Email 已經被註冊，請直接登入'
+    } else if (msg.includes('Password should be')) {
+      errorMessage.value = '密碼強度不足或不符合伺服器規範'
+    } else if ((error as any)?.code === '22023' && msg.includes('role')) {
+      errorMessage.value = '帳號角色設定異常，請先登出後重新登入；若仍失敗請聯絡管理員'
+    } else {
+      errorMessage.value = msg || fallbackMessage
+    }
+  }
+
   const googleLoginLock = useAsyncLock(async () => {
     try {
       loading.value = true
@@ -32,7 +67,6 @@ export const useAuth = () => {
       isGoogleLoading.value = false
       throw error
     }
-    // 成功時會進行頁面跳轉，不需手動關閉 loading
   })
 
   const emailLoginLock = useAsyncLock(async (formData: LoginFormData) => {
@@ -79,14 +113,12 @@ export const useAuth = () => {
       if (error) throw error
 
       if (data.user && !data.session) {
-        router.push({
+        await router.push({
           path: '/auth/success',
           query: { email: registerData.email }
         })
       } else if (data.session) {
-        const profile = await userService.fetchUserProfile()
-        const dest = profile.role === 'admin' ? '/admin' : '/home'
-        router.push(dest)
+        await redirectUserByRole()
       }
     } catch (error) {
       handleAuthError(error, '註冊失敗')
@@ -97,27 +129,10 @@ export const useAuth = () => {
     }
   })
 
-  const handleAuthError = (error: any, fallbackMessage: string) => {
-    console.error('Auth Error:', error)
-    const msg = error?.message || ''
-
-    if (msg.includes('provider is not enabled')) {
-      errorMessage.value = '該登入方式（如 Google）尚未啟用，請聯絡管理員。'
-    } else if (msg.includes('Invalid login credentials')) {
-      errorMessage.value = '登入失敗，請檢查您的帳號密碼。'
-    } else if (error?.code === '22023' && msg.includes('role')) {
-      errorMessage.value = '帳號角色設定異常，請先登出後重新登入；若仍失敗請聯絡管理員。'
-    } else {
-      errorMessage.value = error.message || fallbackMessage
-    }
-  }
-
-  const loginWithGoogle = async () => {
-    return googleLoginLock.run()
-  }
+  const loginWithGoogle = async () => googleLoginLock.run()
 
   const loginWithEmail = async (formData: LoginFormData) => {
-    if (!formData.email || !formData.password) {
+    if (!formData.email.trim() || !formData.password) {
       errorMessage.value = '請輸入 Email 與密碼'
       return
     }
@@ -126,7 +141,7 @@ export const useAuth = () => {
   }
 
   const signupWithEmail = async (registerData: RegisterFormData) => {
-    if (!registerData.email || !registerData.password || !registerData.fullName) {
+    if (!registerData.email?.trim() || !registerData.password || !registerData.fullName?.trim()) {
       errorMessage.value = '請填寫所有欄位'
       return
     }
