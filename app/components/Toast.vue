@@ -29,7 +29,7 @@ if (props.duration > 0) {
 }
 
 const getToastClasses = () => {
-  const baseClasses = 'fixed top-4 right-4 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 max-w-sm'
+  const baseClasses = 'fixed top-4 right-4 z-[120] flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg transition-all duration-300 max-w-sm'
 
   switch (props.type) {
     case 'success':
