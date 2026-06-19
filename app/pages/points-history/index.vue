@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { userService } from '@/services/userService'
+import { userService } from '~/services/userService'
 import { format as fnsFormat } from 'date-fns'
-import { getPointTransactionMeta } from '@/config/pointTransactions'
+import { getPointTransactionMeta } from '~/config/pointTransactions'
 import type { PointTransaction } from '~/types'
 
 definePageMeta({

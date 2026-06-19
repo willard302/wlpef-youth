@@ -1,4 +1,4 @@
-import { userService } from '@/services/userService'
+import { userService } from '~/services/userService'
 import type { ProfileRow, Activity } from '~/types'
 import type { Database } from '~/types/database.types'
 

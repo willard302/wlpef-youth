@@ -1,5 +1,5 @@
 import type { Role, TabbarItem, TabbarKey } from '~/types'
-import { getTabbarItems } from '@/config/tabbar'
+import { getTabbarItems } from '~/config/tabbar'
 
 export const useTabbarConfig = () => {
   const route = useRoute()

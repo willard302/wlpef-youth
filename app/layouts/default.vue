@@ -1,7 +1,4 @@
 <script setup lang="ts">
-import { useTabbarConfig } from '@/composables/useTabbarConfig'
-import { useToast } from '@/composables/useToast'
-
 const route = useRoute()
 const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()

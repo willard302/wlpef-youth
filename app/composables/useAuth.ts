@@ -1,4 +1,4 @@
-import { userService } from "@/services/userService"
+import { userService } from "~/services/userService"
 import type { Database } from "~/types/database.types"
 import type { LoginFormData, RegisterFormData } from "~/types/auth"
 
