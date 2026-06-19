@@ -15,7 +15,7 @@ const emit = defineEmits<{
   'reset-success': []
 }>()
 
-const { handleResetAccount } = useUser()
+const { handleResetAccount } = useAdminUser()
 const { addToast } = useToast()
 
 const formData = ref({

@@ -2,9 +2,6 @@ import { userService } from '~/services/userService'
 import type { ProfileRow, Activity } from '~/types'
 import type { Database } from '~/types/database.types'
 
-/**
- * Logic Layer: 使用者的業務邏輯與狀態管理
- */
 export function useUser() {
   const router = useRouter()
   const supabase = useSupabaseClient<Database>()
@@ -187,23 +184,6 @@ export function useUser() {
     }
   }
 
-  const handleResetAccount = async (userId?: string) => {
-    try {
-      status.value.loading = true
-      await userService.resetUserAccount(userId)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!userId || userId === user?.id) {
-        clearUserData()
-        router.push('/auth')
-      }
-    } catch (err: any) {
-      status.value.error = err.message || '重置帳號失敗'
-      throw err
-    } finally {
-      status.value.loading = false
-    }
-  }
-
   const completeSocialSignup = async (socialSignupData: {
     fullName: string
     points: number
@@ -261,7 +241,6 @@ export function useUser() {
     uploadAvatar,
     updateUserProfile,
     completeSocialSignup,
-    handleLogout,
-    handleResetAccount
+    handleLogout
   }
 }
