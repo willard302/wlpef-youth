@@ -9,7 +9,7 @@ const emit = defineEmits<{
   'update:show': [value: boolean]
 }>()
 
-const { userProfile, loadUserData, isLoading } = useUser()
+const { userProfile, isLoading } = useUser()
 
 const directions: {text: string}[] = [
   { text: "請於活動報到處主動出示此 QR Code。" },
