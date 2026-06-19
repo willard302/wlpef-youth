@@ -1,6 +1,6 @@
 import { userService } from '@/services/userService'
-import type { ProfileRow, Activity } from '@/types'
-import type { Database } from '@/types/database.types'
+import type { ProfileRow, Activity } from '~/types'
+import type { Database } from '~/types/database.types'
 
 /**
  * Logic Layer: 使用者的業務邏輯與狀態管理

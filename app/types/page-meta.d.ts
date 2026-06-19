@@ -1,4 +1,4 @@
-import type { TabbarKey } from '@/types'
+import type { TabbarKey } from '~/types'
 
 declare module '#app' {
   interface PageMeta {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TabbarItem } from '@/types'
+import type { TabbarItem } from '~/types'
 
 interface Props {
   items: TabbarItem[]

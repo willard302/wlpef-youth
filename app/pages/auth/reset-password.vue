@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Database } from '@/types/database.types'
+import type { Database } from '~/types/database.types'
 import AuthInputField from './components/AuthInputField.vue'
 import AuthButton from './components/AuthButton.vue'
 

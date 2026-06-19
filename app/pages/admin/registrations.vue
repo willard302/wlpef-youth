@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
 import { eventAdminService } from '~/services/eventAdmin.js'
-import type { Event, EventRegistration } from '@/types'
+import type { Event, EventRegistration } from '~/types'
 import RegistrationDetailModal from './components/RegistrationDetailModal.vue'
 
 definePageMeta({

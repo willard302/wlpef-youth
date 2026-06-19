@@ -1,4 +1,4 @@
-import type { Role, TabbarItem } from '@/types'
+import type { Role, TabbarItem } from '~/types'
 
 export const getTabbarItems = (role?: Role): Omit<TabbarItem, 'fill'>[] => {
   const items: Omit<TabbarItem, 'fill'>[] = []

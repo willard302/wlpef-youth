@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { userService } from '@/services/userService'
-import type { PointTransaction } from '@/types'
+import type { PointTransaction } from '~/types'
 import PointsTransactionDetailsModal from './components/PointsTransactionDetailsModal.vue'
 
 definePageMeta({

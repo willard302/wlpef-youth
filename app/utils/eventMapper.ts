@@ -1,6 +1,6 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
-import type { EventRegistration, EventCheckin, Event } from '@/types'
-import type { RegistrationRow, CheckinRow, EventRow  } from '@/types/database'
+import type { EventRegistration, EventCheckin, Event } from '~/types'
+import type { RegistrationRow, CheckinRow, EventRow  } from '~/types/database'
 
 export const mapToRegistration = (row: RegistrationRow): EventRegistration => {
   return {

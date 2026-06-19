@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
 import { eventAdminService } from '~/services/eventAdmin'
-import type { Event, EventCheckin } from '@/types'
+import type { Event, EventCheckin } from '~/types'
 
 definePageMeta({
   layout: 'admin',

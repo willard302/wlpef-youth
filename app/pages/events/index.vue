@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
 import { eventService } from '~/services/event'
-import type { Event } from '@/types'
+import type { Event } from '~/types'
 
 definePageMeta({
   layout: 'default',

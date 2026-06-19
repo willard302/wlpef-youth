@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { ProfileRow, Role } from '@/types'
+import type { ProfileRow, Role } from '~/types'
 
 interface Props {
   show: boolean

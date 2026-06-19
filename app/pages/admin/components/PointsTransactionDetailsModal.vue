@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getPointTransactionMeta } from '@/config/pointTransactions'
 import { format as fnsFormat } from 'date-fns'
-import type { PointTransaction } from '@/types'
+import type { PointTransaction } from '~/types'
 
 const props = defineProps<{
   show: boolean

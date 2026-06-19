@@ -1,4 +1,4 @@
-import type { Role, TabbarItem, TabbarKey } from '@/types'
+import type { Role, TabbarItem, TabbarKey } from '~/types'
 import { getTabbarItems } from '@/config/tabbar'
 
 export const useTabbarConfig = () => {

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import type { EventRegistration } from '@/types'
+import type { EventRegistration } from '~/types'
 
 const props = defineProps<{
   show: boolean

@@ -1,5 +1,5 @@
 import { addHours, format, parseISO, set } from 'date-fns'
-import type { CreateEventPayload, Event } from '@/types'
+import type { CreateEventPayload, Event } from '~/types'
 import { eventService } from '~/services/event'
 
 export function useCalendarEditor() {

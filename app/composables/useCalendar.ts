@@ -11,8 +11,8 @@ import {
   startOfWeek,
   sub,
 } from 'date-fns'
-import type { Event } from '@/types'
-import type { Role } from '@/types/user'
+import type { Event } from '~/types'
+import type { Role } from '~/types/user'
 import { eventService } from '~/services/event'
 
 export function useCalendar() {
