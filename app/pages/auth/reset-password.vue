@@ -36,7 +36,7 @@ const loading = ref(false)
 const errorMessage = ref('')
 const successMessage = ref('')
 
-const handleResetPassword = async () => {
+const resetPasswordLock = useAsyncLock(async () => {
   // 基礎驗證
   if (!formData.value.password) {
     errorMessage.value = '請輸入新密碼'
@@ -91,7 +91,9 @@ const handleResetPassword = async () => {
   } finally {
     loading.value = false
   }
-}
+})
+
+const handleResetPassword = () => resetPasswordLock.run()
 </script>
 
 <template>
