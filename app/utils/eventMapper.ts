@@ -1,6 +1,6 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
-import type { EventRegistration, EventCheckin, Event } from '~/types'
-import type { RegistrationRow, CheckinRow, EventRow  } from '~/types/database'
+import type { EventRegistration, EventCheckin, Event, Role } from '~/types'
+import type { RegistrationRow, CheckinRow, EventRow, ProfileRow  } from '~/types/database'
 
 export const mapToRegistration = (row: RegistrationRow): EventRegistration => {
   return {
@@ -76,4 +76,19 @@ export const getMonthRange = (yearMonth?: string) => {
   const end = endOfMonth(addMonths(pivot, 1)).toISOString()
 
   return { start, end }
+}
+
+export const mapProfileRow = (profile: any, user: any = null): ProfileRow => {
+  const metadata = user?.user_metadata || {}
+  return {
+    id: profile?.id || user?.id,
+    email: profile?.email || user?.mail,
+    name: profile?.name || metadata.name || user?.email?.split('@')[0] || 'User',
+    role: (profile?.role as Role) || 'member',
+    scan_permission: profile?.scan_permission ?? false,
+    created_at: profile?.created_at || metadata.join_date || 'Since 2024',
+    points: profile?.points ?? 0,
+    avatar_url: profile?.avatar_url || metadata.avatar_url || null,
+    updated_at: profile?.updated_at || null
+  }
 }

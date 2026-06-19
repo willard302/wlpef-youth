@@ -1,4 +1,4 @@
-import { userService } from '~/services/userService'
+import { userService } from '~/services/user'
 import type { ProfileRow, Activity } from '~/types'
 import type { Database } from '~/types/database.types'
 
@@ -92,6 +92,9 @@ export function useUser() {
   }
 
   const loadUserData = async (force = false) => {
+    const isAuthPage = router.currentRoute.value.path.startsWith('/auth')
+    if (isAuthPage && !force) return
+
     // 如果已經有資料且不是強制更新，則跳過
     if (userProfile.value && !force) {
       setupProfileListener()
@@ -207,8 +210,6 @@ export function useUser() {
           google_signup_completed: true
         }
       })
-
-      await loadUserData(true)
     } catch (err: any) {
       status.value.error = err.message || '完成註冊失敗'
       throw err
@@ -220,18 +221,14 @@ export function useUser() {
   // ✨ 自動初始化：只要在 Client 端調用 useUser，就確保資料有在載入
   if (process.client && getCurrentInstance()) {
     onMounted(() => {
-      const isAuthPage = router.currentRoute.value.path.startsWith('/auth')
-      if (!userProfile.value && !status.value.loading && !isAuthPage) {
-        loadUserData()
-      }
+      loadUserData()
     })
   }
 
   return {
     userProfile,
     recentActivities,
-    status, // 暴露 status 物件取代多個 loading 變數
-    // 為了向下相容，可以選擇保留舊的變數(選配)，但在這裡我們依據建議進行精簡
+    status,
     isLoading: computed(() => status.value.loading),
     isUploadingAvatar: computed(() => status.value.uploading),
     isUpdatingProfile: computed(() => status.value.updating),

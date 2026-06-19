@@ -8,7 +8,7 @@ definePageMeta({
 
 const router = useRouter()
 const supabase = useSupabaseClient()
-const { userProfile, completeSocialSignup } = useUser()
+const { userProfile, completeSocialSignup, loadUserData } = useUser()
 
 const { loading, errorMessage, handleAuthError } = useAuth()
 const initializing = ref(true)
@@ -106,9 +106,11 @@ const handleCompleteRegistration = async () => {
       points: 0
     })
 
+    await loadUserData(true)
+
     // 根據角色導向
     const dest = userProfile.value?.role === 'admin' ? '/admin' : '/home'
-    router.push(dest)
+    await router.replace(dest)
   } catch (err: any) {
     handleAuthError(err, '完成註冊失敗，請稍後再試')
   } finally {

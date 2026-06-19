@@ -1,4 +1,4 @@
-import { userService } from "~/services/userService"
+import { userService } from "~/services/user"
 import type { Database } from "~/types/database.types"
 import type { LoginFormData, RegisterFormData } from "~/types/auth"
 
@@ -6,6 +6,7 @@ export const useAuth = () => {
   
   const supabase = useSupabaseClient<Database>()
   const router = useRouter()
+  const { loadUserData } = useUser()
 
   const loading = ref(false)
   const isGoogleLoading = ref(false)
@@ -17,6 +18,7 @@ export const useAuth = () => {
     try {
       const profile = await userService.fetchUserProfile()
       const dest = profile?.role === 'admin' ? '/admin' : '/home'
+      await loadUserData(true)
       return router.push(dest)
     } catch (error) {
       handleAuthError(error, '登入失敗，請重新登入')
@@ -80,10 +82,7 @@ export const useAuth = () => {
       })
       if (error) throw error
 
-      const profile = await userService.fetchUserProfile()
-      const dest = profile.role === 'admin' ? '/admin' : '/home'
-
-      router.push(dest)
+      await redirectUserByRole()
     } catch (error) {
       handleAuthError(error, '登入失敗，請檢查您的帳號密碼。')
     } finally {

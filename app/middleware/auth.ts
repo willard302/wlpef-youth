@@ -7,9 +7,7 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   // 1. 未登入處理
   if (!user.value?.sub) {
-
     await supabase.auth.signOut({ scope: 'local' }).catch(() => {})
-
     if (!to.path.startsWith('/auth')) {
       return navigateTo('/auth')
     }

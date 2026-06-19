@@ -1,4 +1,4 @@
-import { userService } from '~/services/userService'
+import { userService } from '~/services/user'
 import type { Database } from '~/types/database.types'
 
 export const useAdminUser = () => {
@@ -7,7 +7,7 @@ export const useAdminUser = () => {
   const { clearUserData } = useUser()
   const supabase = useSupabaseClient<Database>()
 
-  const status = useState('user-status', () => ({
+  const status = useState('admin-user-status', () => ({
     loading: false,
     uploading: false,
     updating: false,
@@ -32,6 +32,9 @@ export const useAdminUser = () => {
   }
 
   return {
+    status,
+    isAdminLoading: computed(() => status.value.loading),
+    adminError: computed(() => status.value.error),
     handleResetAccount
   }
 }

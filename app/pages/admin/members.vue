@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { userService } from '~/services/userService'
 import type { ProfileRow } from '~/types'
+import { userAdminService } from '~/services/userAdmin.js'
 import MemberForm from './components/MemberForm.vue'
 
 definePageMeta({
@@ -27,7 +27,7 @@ const itemsPerPage = 15
 const loadProfiles = async () => {
   isLoading.value = true
   try {
-    profiles.value = await userService.fetchAllProfiles()
+    profiles.value = await userAdminService.fetchAllProfiles()
   } catch (err: any) {
     addToast(err.message || '載入會員列表失敗', 'error')
   } finally {
@@ -45,7 +45,7 @@ const handleUpdateMember = async (formData: any) => {
 
   isUpdating.value = true
   try {
-    await userService.adminUpdateProfile(selectedProfile.value.id, {
+    await userAdminService.adminUpdateProfile(selectedProfile.value.id, {
       name: formData.name,
       role: formData.role,
       points: formData.points,
@@ -69,7 +69,7 @@ const handleAddMember = async (formData: any) => {
 
   isCreating.value = true
   try {
-    await userService.adminCreateMember({
+    await userAdminService.adminCreateMember({
       id: '',
       email: formData.email,
       name: formData.name,
