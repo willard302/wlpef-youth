@@ -85,6 +85,7 @@ export type Database = {
       event_registrations: {
         Row: {
           created_at: string | null
+          donation_year: boolean
           email: string
           event_id: string | null
           form_submitted_at: string | null
@@ -94,11 +95,13 @@ export type Database = {
           matched_user_id: string | null
           name: string | null
           raw_data: Json | null
+          registration_fee: boolean
           registration_points_granted_at: string | null
           synced_at: string | null
         }
         Insert: {
           created_at?: string | null
+          donation_year?: boolean
           email: string
           event_id?: string | null
           form_submitted_at?: string | null
@@ -108,11 +111,13 @@ export type Database = {
           matched_user_id?: string | null
           name?: string | null
           raw_data?: Json | null
+          registration_fee?: boolean
           registration_points_granted_at?: string | null
           synced_at?: string | null
         }
         Update: {
           created_at?: string | null
+          donation_year?: boolean
           email?: string
           event_id?: string | null
           form_submitted_at?: string | null
@@ -122,6 +127,7 @@ export type Database = {
           matched_user_id?: string | null
           name?: string | null
           raw_data?: Json | null
+          registration_fee?: boolean
           registration_points_granted_at?: string | null
           synced_at?: string | null
         }

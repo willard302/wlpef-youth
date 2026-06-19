@@ -22,6 +22,8 @@ type SheetRegistration = {
   form_submitted_at: string
   synced_at: string
   raw_data?: Record<string, any>
+  donation_year?: boolean
+  registration_fee?: boolean
 }
 
 type SyncResult = {
@@ -47,7 +49,9 @@ const corsHeaders = {
 const HEADER_ALIASES = {
   timestamp: ["timestamp", "time", "submittedat", "submittedtime", "時間戳記", "提交時間", "報名時間"],
   email: ["email", "mail", "e-mail", "電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
-  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"]
+  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"],
+  donation_year: ["年度捐贈", "donation_year", "donation year"],
+  registration_fee: ["活動報名費", "報名費", "registration_fee", "registration fee"]
 }
 
 const normalizeEmail = (value?: string | null) => (value || "").trim().toLowerCase()
@@ -61,6 +65,58 @@ const normalizeHeader = (value?: string | null) =>
 const pickString = (value: unknown) => {
   if (typeof value !== "string") return ""
   return value.trim()
+}
+
+const parseBooleanField = (value: unknown) => {
+  if (typeof value === "boolean") return value
+
+  const normalized = pickString(value)
+    .toLowerCase()
+    .replace(/\s+/g, "")
+
+  if (!normalized) return false
+
+  const falseValues = new Set([
+    "false",
+    "0",
+    "no",
+    "n",
+    "否",
+    "無",
+    "未",
+    "未繳",
+    "未繳交",
+    "未付款",
+    "未支付",
+    "未完成",
+    "未勾選",
+    "unchecked",
+    "off",
+  ])
+
+  const trueValues = new Set([
+    "true",
+    "1",
+    "yes",
+    "y",
+    "是",
+    "有",
+    "已繳",
+    "已繳交",
+    "已付款",
+    "已支付",
+    "已完成",
+    "勾選",
+    "checked",
+    "on",
+    "v",
+    "✓",
+  ])
+
+  if (falseValues.has(normalized)) return false
+  if (trueValues.has(normalized)) return true
+
+  return false
 }
 
 const toBase64Url = (input: string | ArrayBuffer) => {
@@ -212,6 +268,8 @@ function toRegistrations(
   const timestampIndex = findHeaderIndex(headers, HEADER_ALIASES.timestamp, 0)
   const emailIndex = findHeaderIndex(headers, HEADER_ALIASES.email, 1)
   const nameIndex = findHeaderIndex(headers, HEADER_ALIASES.name, 2)
+  const donationIndex = findHeaderIndex(headers, HEADER_ALIASES.donation_year, 3)
+  const registrationFeeIndex = findHeaderIndex(headers, HEADER_ALIASES.registration_fee, 4)
   const syncedAt = new Date().toISOString()
   let skippedCount = 0
   let duplicateCount = 0
@@ -235,6 +293,8 @@ function toRegistrations(
     const matchedProfile = profilesByEmail.get(email)
     const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
+    const donationYear = parseBooleanField(row[donationIndex])
+    const registrationFee = parseBooleanField(row[registrationFeeIndex])
     
     const rawData: Record<string, any> = {}
     headers.forEach((header, i) => {
@@ -250,7 +310,9 @@ function toRegistrations(
       google_sheet_row_id: `${event.id}:row_${index + 2}`,
       form_submitted_at: submittedAt,
       synced_at: syncedAt,
-      raw_data: rawData,
+      donation_year: donationYear,
+      registration_fee: registrationFee,
+      raw_data: rawData
     }
 
     return [registration] as SheetRegistration[]

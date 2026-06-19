@@ -48,6 +48,8 @@ export interface EventRegistration {
   googleSheetRowId: string | null
   formSubmittedAt: Date
   syncedAt: Date | null
+  donationYear: boolean
+  registrationFee: boolean
   registrationPointsGrantedAt: Date | null
   rawData?: Record<string, any>
   createdAt: Date

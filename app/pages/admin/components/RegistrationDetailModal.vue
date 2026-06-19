@@ -41,6 +41,25 @@ const getPointsStatus = (reg: EventRegistration) => {
         <p class="text-sm font-bold text-slate-700">{{ getPointsStatus(selectedRegistration) }}</p>
       </div>
 
+      <!-- Payment Info -->
+      <div class="bg-slate-50 rounded-2xl p-4 space-y-3">
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">繳費狀態</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="rounded-2xl bg-white px-4 py-3 border border-slate-200">
+            <p class="text-[10px] font-bold text-slate-400 mb-1">年度捐贈</p>
+            <p class="text-sm font-bold" :class="selectedRegistration.donationYear ? 'text-emerald-600' : 'text-slate-500'">
+              {{ selectedRegistration.donationYear ? '已完成' : '未完成' }}
+            </p>
+          </div>
+          <div class="rounded-2xl bg-white px-4 py-3 border border-slate-200">
+            <p class="text-[10px] font-bold text-slate-400 mb-1">活動報名費</p>
+            <p class="text-sm font-bold" :class="selectedRegistration.registrationFee ? 'text-emerald-600' : 'text-slate-500'">
+              {{ selectedRegistration.registrationFee ? '已完成' : '未完成' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
       <!-- Raw Data (Google Form Fields) -->
       <div v-if="selectedRegistration.rawData && Object.keys(selectedRegistration.rawData).length > 0" class="space-y-4">
         <div class="flex items-center gap-2 px-1">
