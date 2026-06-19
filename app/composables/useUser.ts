@@ -30,19 +30,18 @@ export function useUser() {
     isSettingUpListener.value = true
 
     try {
-      // const { data: { user } } = await supabase.auth.getUser()
-      const user = useSupabaseUser()
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user || profileSubscription.value) return
       
       const channel = supabase
-        .channel(`profile-updates-${user.value?.id}`)
+        .channel(`profile-updates-${user.id}`)
         .on(
           'postgres_changes',
           {
             event: 'UPDATE',
             schema: 'public',
             table: 'profiles',
-            filter: `id=eq.${user.value?.id}`
+            filter: `id=eq.${user.id}`
           },
           (payload) => {
             if (userProfile.value) {
