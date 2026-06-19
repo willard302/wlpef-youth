@@ -56,35 +56,35 @@ const handleResetPassword = async () => {
   successMessage.value = ''
 
   try {
+    const { data: { user }, error: userError } = await supabase.auth.getUser() 
+
+    if (userError || !user ) {
+      throw new Error('重設連結已失效或過期')
+    }
+
+    let destination = '/home'
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+    
+    if (profile?.role === 'admin') {
+      destination = '/admin'
+    }
+
     // 調用 Supabase API 更新當前登入用戶的密碼
-    const { error } = await supabase.auth.updateUser({
+    const { error: updateError } = await supabase.auth.updateUser({
       password: formData.value.password
     })
 
-    if (error) throw error
+    if (updateError) throw updateError
 
     successMessage.value = '密碼重設成功！即將為您登入...'
     
-    // 檢查用戶角色以決定跳轉去哪裡
-    const { data: { user } } = await supabase.auth.getUser()
-    let destination = '/home'
-    
-    if (user?.id) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
-        
-      if (profile?.role === 'admin') {
-        destination = '/admin'
-      }
-    }
-
     setTimeout(() => {
       router.push(destination)
     }, 2000)
-
   } catch (err: any) {
     console.error('Reset password error:', err)
     errorMessage.value = err.message || '重設密碼失敗，請稍後再試或重新申請連結'
