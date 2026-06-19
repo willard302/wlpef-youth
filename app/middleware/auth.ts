@@ -1,4 +1,5 @@
 import type { Database } from '~/types/database.types'
+import { getRoleDestination } from '~/utils/auth'
 export default defineNuxtRouteMiddleware(async (to) => {
   const supabase = useSupabaseClient<Database>()
 
@@ -19,14 +20,9 @@ export default defineNuxtRouteMiddleware(async (to) => {
     await loadUserData()
   }
 
-  // 💡 角色導向邏輯
-  const getRedirectDestination = (): string => {
-    return userProfile.value?.role === 'admin' ? '/admin' : '/home'
-  }
-
   // 2. 已登入但訪問登入頁
   if (to.path === '/auth') {
-    return navigateTo(getRedirectDestination())
+    return navigateTo(getRoleDestination(userProfile.value?.role))
   }
 
   // 3. 檢查資料完整性 (排除 auth 相關頁面)
@@ -43,6 +39,6 @@ export default defineNuxtRouteMiddleware(async (to) => {
 
   // 4. 根目錄跳轉
   if (to.path === '/') {
-    return navigateTo(getRedirectDestination(), { replace: true })
+    return navigateTo(getRoleDestination(userProfile.value?.role), { replace: true })
   }
 })

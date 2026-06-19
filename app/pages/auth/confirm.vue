@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Database } from '~/types/database.types'
+import { getRoleDestination } from '~/utils/auth'
 
 definePageMeta({
   layout: 'auth'
@@ -20,7 +21,7 @@ const resolveDestination = async (userId: string): Promise<'/admin' | '/home'> =
     .eq('id', userId)
     .maybeSingle()
 
-  return profile?.role === 'admin' ? '/admin' : '/home'
+  return getRoleDestination(profile?.role)
 }
 
 const redirectWithSuccess = (message: string, path: '/admin' | '/home') => {

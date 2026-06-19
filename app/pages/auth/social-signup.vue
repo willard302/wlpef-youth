@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AuthInputField from './components/AuthInputField.vue'
 import AuthButton from './components/AuthButton.vue'
+import { getRoleDestination } from '~/utils/auth'
 
 definePageMeta({
   layout: 'auth'
@@ -109,7 +110,7 @@ const handleCompleteRegistration = async () => {
     await loadUserData(true)
 
     // 根據角色導向
-    const dest = userProfile.value?.role === 'admin' ? '/admin' : '/home'
+    const dest = getRoleDestination(userProfile.value?.role)
     await router.replace(dest)
   } catch (err: any) {
     handleAuthError(err, '完成註冊失敗，請稍後再試')

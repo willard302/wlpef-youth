@@ -1,6 +1,7 @@
 import { userService } from "~/services/user"
 import type { Database } from "~/types/database.types"
 import type { LoginFormData, RegisterFormData } from "~/types/auth"
+import { getRoleDestination } from "~/utils/auth"
 
 export const useAuth = () => {
   
@@ -17,7 +18,7 @@ export const useAuth = () => {
   const redirectUserByRole = async() => {
     try {
       const profile = await userService.fetchUserProfile()
-      const dest = profile?.role === 'admin' ? '/admin' : '/home'
+      const dest = getRoleDestination(profile?.role)
       await loadUserData(true)
       return router.push(dest)
     } catch (error) {

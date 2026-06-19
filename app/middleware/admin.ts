@@ -1,3 +1,5 @@
+import { getRoleDestination, isAdminRole } from '~/utils/auth'
+
 export default defineNuxtRouteMiddleware(async () => {
   const { userProfile, loadUserData } = useUser()
 
@@ -9,7 +11,7 @@ export default defineNuxtRouteMiddleware(async () => {
     return navigateTo('/home')
   }
 
-  if (userProfile.value.role !== 'admin') {
-    return navigateTo('/home')
+  if (!isAdminRole(userProfile.value.role)) {
+    return navigateTo(getRoleDestination(userProfile.value.role))
   }
 })

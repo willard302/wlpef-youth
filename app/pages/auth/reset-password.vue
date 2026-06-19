@@ -2,6 +2,7 @@
 import type { Database } from '~/types/database.types'
 import AuthInputField from './components/AuthInputField.vue'
 import AuthButton from './components/AuthButton.vue'
+import { getRoleDestination } from '~/utils/auth'
 
 definePageMeta({
   layout: 'auth'
@@ -68,10 +69,8 @@ const resetPasswordLock = useAsyncLock(async () => {
       .select('role')
       .eq('id', user.id)
       .maybeSingle()
-    
-    if (profile?.role === 'admin') {
-      destination = '/admin'
-    }
+
+    destination = getRoleDestination(profile?.role)
 
     // 調用 Supabase API 更新當前登入用戶的密碼
     const { error: updateError } = await supabase.auth.updateUser({
