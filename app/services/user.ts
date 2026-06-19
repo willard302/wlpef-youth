@@ -1,4 +1,4 @@
-import type { Activity, PointTransaction, Database, ProfileRow } from '~/types'
+import type { Activity, PointTransaction, Database, ProfileRow, PaymentStatusSummary } from '~/types'
 
 type TypedSupabaseClient = ReturnType<typeof useSupabaseClient<Database>>
 const getSupabase = () => useSupabaseClient<Database>()
@@ -100,6 +100,67 @@ export const userService = {
         icon: 'groups'
       }
     ]
+  },
+
+  async fetchLatestPaymentStatus(): Promise<PaymentStatusSummary | null> {
+    try {
+      const supabase = getSupabase()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('User not authenticated')
+
+      const { data, error } = await supabase
+        .from('event_registrations')
+        .select('donation_year, registration_fee')
+        .eq('matched_user_id', user.id)
+        .order('form_submitted_at', { ascending: false })
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (error) throw error
+
+      const registration = data?.[0]
+      if (!registration) {
+        return {
+          hasDonationYear: false,
+          hasRegistrationFee: false,
+          hasAnyPayment: false,
+          label: '未繳費',
+          tone: 'danger',
+        }
+      }
+
+      const hasDonationYear = registration.donation_year === true
+      const hasRegistrationFee = registration.registration_fee === true
+      const hasAnyPayment = hasDonationYear || hasRegistrationFee
+
+      if (!hasAnyPayment) {
+        return {
+          hasDonationYear,
+          hasRegistrationFee,
+          hasAnyPayment,
+          label: '未繳費',
+          tone: 'danger',
+        }
+      }
+
+      const labels: string[] = []
+      if (hasDonationYear) labels.push('年度捐贈')
+      if (hasRegistrationFee) labels.push('活動報名費')
+
+      return {
+        hasDonationYear,
+        hasRegistrationFee,
+        hasAnyPayment,
+        label: labels.join('／'),
+        tone: 'success',
+      }
+    } catch (error: any) {
+      if (error?.message === 'User not authenticated' || error?.name === 'AuthSessionMissingError') {
+        throw error
+      }
+      console.error('Error fetching latest payment status:', error)
+      return null
+    }
   },
 
   // 初始化使用者 metadata（於註冊時調用）

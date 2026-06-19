@@ -1,5 +1,5 @@
 import { userService } from '~/services/user'
-import type { ProfileRow, Activity } from '~/types'
+import type { ProfileRow, Activity, PaymentStatusSummary } from '~/types'
 import type { Database } from '~/types'
 
 export function useUser() {
@@ -9,6 +9,7 @@ export function useUser() {
   // 全域狀態 (Global State)
   const userProfile = useState<ProfileRow | null>('user-profile', () => null)
   const recentActivities = useState<Activity[]>('recent-activities', () => [])
+  const paymentStatus = useState<PaymentStatusSummary | null>('user-payment-status', () => null)
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
   const profileSubscription = useState<any>('user-profile-subscription', () => null)
   const isSettingUpListener = useState('user-profile-listener-loading', () => false)
@@ -91,6 +92,17 @@ export function useUser() {
     }
   }
 
+  const loadPaymentStatus = async (force = false) => {
+    if (paymentStatus.value && !force) return
+
+    try {
+      paymentStatus.value = await userService.fetchLatestPaymentStatus()
+    } catch (err: any) {
+      console.error('載入繳費狀態失敗:', err)
+      paymentStatus.value = null
+    }
+  }
+
   const loadUserData = async (force = false) => {
     const isAuthPage = router.currentRoute.value.path.startsWith('/auth')
     if (isAuthPage && !force) return
@@ -112,7 +124,8 @@ export function useUser() {
       try {
         await Promise.all([
           loadUserProfile(force),
-          loadRecentActivities(force)
+          loadRecentActivities(force),
+          loadPaymentStatus(force)
         ])
       } catch (err: any) {
         // Error already handled in loadUserProfile
@@ -173,6 +186,7 @@ export function useUser() {
     }
     userProfile.value = null
     recentActivities.value = []
+    paymentStatus.value = null
     status.value.error = null
   }
 
@@ -228,6 +242,7 @@ export function useUser() {
   return {
     userProfile,
     recentActivities,
+    paymentStatus,
     status,
     isLoading: computed(() => status.value.loading),
     isUploadingAvatar: computed(() => status.value.uploading),

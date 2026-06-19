@@ -12,7 +12,8 @@ const {
   userProfile,
   isLoading: isUserLoading,
   isUploadingAvatar,
-  handleLogout
+  handleLogout,
+  paymentStatus
 } = useUser()
 
 const {
@@ -26,6 +27,21 @@ const qrPopupVisible = ref(false)
 
 const canUseScanner = computed(() => {
   return userProfile.value?.role === 'admin' || userProfile.value?.scan_permission === true
+})
+
+const paymentBadgeClass = computed(() => {
+  if (!paymentStatus.value) {
+    return 'bg-slate-100 text-slate-500 border-slate-200'
+  }
+
+  return paymentStatus.value.tone === 'success'
+    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    : 'bg-rose-50 text-rose-600 border-rose-200'
+})
+
+const paymentBadgeLabel = computed(() => {
+  if (!paymentStatus.value) return '未繳費'
+  return paymentStatus.value.label
 })
 
 // 統計數據
@@ -116,6 +132,12 @@ const handleItemClick = (item: any, event: Event) => {
             <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-widest">
               {{ getRoleLabel(userProfile?.role) }}
             </span>
+            <span
+              class="text-[11px] font-bold px-3 py-1 rounded-full border uppercase tracking-widest"
+              :class="paymentBadgeClass"
+            >
+              {{ paymentBadgeLabel }}
+            </span>
           </div>
         </div>
 
@@ -170,4 +192,3 @@ const handleItemClick = (item: any, event: Event) => {
     <QRCode v-model:show="qrPopupVisible" />
   </div>
 </template>
-
