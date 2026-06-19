@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { userService } from '~/services/userService'
+import { eventAdminService } from '~/services/eventAdmin.js'
 import type { PointTransaction } from '~/types'
 import PointsTransactionDetailsModal from './components/PointsTransactionDetailsModal.vue'
 
@@ -20,7 +20,7 @@ const itemsPerPage = 15
 const fetchTransactions = async () => {
   try {
     isLoading.value = true
-    transactions.value = await userService.fetchAllPointTransactions()
+    transactions.value = await eventAdminService.fetchAllPointTransactions()
   } catch (error) {
     console.error('Failed to fetch transactions', error)
   } finally {
