@@ -65,7 +65,6 @@ export const useAuth = () => {
       handleAuthError(error, 'Google 登入時發生錯誤。')
       loading.value = false
       isGoogleLoading.value = false
-      throw error
     }
   })
 
@@ -87,7 +86,6 @@ export const useAuth = () => {
       router.push(dest)
     } catch (error) {
       handleAuthError(error, '登入失敗，請檢查您的帳號密碼。')
-      throw error
     } finally {
       loading.value = false
       isEmailLoading.value = false
@@ -122,7 +120,6 @@ export const useAuth = () => {
       }
     } catch (error) {
       handleAuthError(error, '註冊失敗')
-      throw error
     } finally {
       loading.value = false
       isSignupLoading.value = false

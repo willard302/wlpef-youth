@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { format as fnsFormat } from 'date-fns'
 import { userService } from '~/services/userService'
 import type { ProfileRow } from '~/types'
 import MemberForm from './components/MemberForm.vue'
