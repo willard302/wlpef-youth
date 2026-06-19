@@ -1,15 +1,14 @@
 <script setup lang="ts">
 const route = useRoute()
-const { tabbarItems, activeIndex } = useTabbarConfig()
 const { toasts, removeToast } = useToast()
 const { menuVisible } = useSideMenu()
 
-
-const showTabbar = computed(() => {
-  return route.meta.showTabbar !== false
-})
-
 const qrPopupVisible = ref(false)
+const { tabbarItems, activeIndex } = useTabbarConfig()
+
+const showTabbar = computed(() => route.meta.showTabbar !== false)
+
+
 </script>
 
 <template>

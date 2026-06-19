@@ -1,27 +1,31 @@
-import type { Role, TabbarItem, TabbarKey } from '~/types'
+import type { TabbarItem, TabbarKey } from '~/types'
 import { getTabbarItems } from '~/config/tabbar'
+
+const PATH_MAP: Record<string, TabbarKey> = {
+  '/': 'home',
+  '/home': 'home',
+  '/points-history': 'events'
+}
 
 export const useTabbarConfig = () => {
   const route = useRoute()
-  const { userProfile } = useUser()
 
   const activeTabbarKey = computed<TabbarKey>(() => {
     const metaKey = route.meta.tabbarKey as TabbarKey | undefined
     if (metaKey) return metaKey
 
     const path = route.path
-    if (path === '/' || path === '/home') return 'home'
-    if (path.startsWith('/events') || path === '/points-history') return 'events'
+    if (PATH_MAP[path]) return PATH_MAP[path]
+    if (path.startsWith('/events')) return 'events'
     return 'home'
   })
 
   const tabbarItems = computed<TabbarItem[]>(() => {
-    return getTabbarItems(userProfile.value?.role as Role | undefined).map(item => ({
+    return getTabbarItems().map(item => ({
       ...item,
       fill: item.key === activeTabbarKey.value,
     }))
   })
-
 
   const activeIndex = computed(() => {
     const index = tabbarItems.value.findIndex(item => item.key === activeTabbarKey.value)
