@@ -191,6 +191,8 @@ CREATE TABLE IF NOT EXISTS public.event_registrations (
   google_sheet_row_id TEXT,
   form_submitted_at TIMESTAMPTZ DEFAULT NOW(),
   synced_at    TIMESTAMPTZ,
+  donation_year BOOLEAN DEFAULT FALSE,
+  registration_fee BOOLEAN DEFAULT FALSE,
   registration_points_granted_at TIMESTAMPTZ,
   raw_data     JSONB,
   created_at   TIMESTAMPTZ  DEFAULT NOW(),
