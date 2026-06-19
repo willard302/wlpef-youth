@@ -1,4 +1,4 @@
-import type { TabbarItem, TabbarKey } from '@/types'
+import type { Role, TabbarItem, TabbarKey } from '@/types'
 import { getTabbarItems } from '@/config/tabbar'
 
 export const useTabbarConfig = () => {
@@ -16,7 +16,7 @@ export const useTabbarConfig = () => {
   })
 
   const tabbarItems = computed<TabbarItem[]>(() => {
-    return getTabbarItems(userProfile.value?.role).map(item => ({
+    return getTabbarItems(userProfile.value?.role as Role | undefined).map(item => ({
       ...item,
       fill: item.key === activeTabbarKey.value,
     }))
