@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
 import { eventService } from '~/services/event'
-import { eventAdminService } from '~/services/eventAdmin'
 import type { Event } from '@/types'
 
 definePageMeta({
@@ -14,6 +13,7 @@ definePageMeta({
 const router = useRouter()
 const { addToast } = useToast()
 
+const { deleteEventToDatabase } = useAdminEvents()
 const { userProfile, isLoading: isUserLoading } = useUser()
 const {
   selectedDate,
@@ -158,7 +158,7 @@ const handleDeleteEvent = async (eventId: string) => {
   }
 
   try {
-    await eventAdminService.deleteEvent(eventId)
+    await deleteEventToDatabase(eventId)
     addToast('活動已刪除', 'success')
     await Promise.all([loadEvents(), loadUpcomingEvent()])
   } catch (err: any) {

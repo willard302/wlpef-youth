@@ -38,7 +38,7 @@ export default defineNuxtConfig({
   },
 
   imports: {
-    dirs: ['~/composables']
+    dirs: ['~/composables', '~/composables/**']
   },
 
   modules: ['@nuxtjs/tailwindcss', '@nuxtjs/supabase', '@vant/nuxt'],

@@ -1,62 +1,10 @@
 
-import type { Event, EventCheckin, EventRegistration, CreateEventPayload } from '~/types'
+import type { Event, EventCheckin, EventRegistration } from '~/types'
 import type { Database } from '~/types/database.types'
-import type { EventInsert, EventUpdate } from '~/types/database'
 
 const getSupabase = () => useSupabaseClient<Database>()
 
 export const eventAdminService = {
-
-  async createEvent(payload: CreateEventPayload): Promise<Event> {
-    validateTimeRange(payload.start_at, payload.end_at)
-
-    const supabase = getSupabase()
-    const { data: authData, error: authError } = await supabase.auth.getUser()
-
-    if (authError) throw authError
-    if (!authData.user) throw new Error('請先登入後再新增活動')
-
-    const insertPayload: EventInsert = {
-      ...payload,
-      created_by: authData.user.id,
-    }
-
-    const { data, error } = await supabase
-      .from('events')
-      .insert(insertPayload)
-      .select()
-      .single()
-
-    if (error) throw error
-    return mapToEvent(data)
-  },
-
-  async updateEvent(id: string, payload: Partial<CreateEventPayload>): Promise<Event> {
-    if (payload.start_at && payload.end_at) {
-      validateTimeRange(payload.start_at, payload.end_at)
-    }
-
-    const supabase = getSupabase()
-    const { data, error } = await supabase
-      .from('events')
-      .update(payload as EventUpdate)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) throw error
-    return mapToEvent(data)
-  },
-
-  async deleteEvent(id: string): Promise<void> {
-    const supabase = getSupabase()
-    const { error } = await supabase
-      .from('events')
-      .delete()
-      .eq('id', id)
-
-    if (error) throw error
-  },
 
   // 獲取所有活動 (管理員專用，不分狀態)
   async fetchAllEventsForAdmin(): Promise<Event[]> {

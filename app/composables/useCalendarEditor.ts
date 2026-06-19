@@ -1,12 +1,12 @@
 import { addHours, format, parseISO, set } from 'date-fns'
 import type { CreateEventPayload, Event } from '@/types'
 import { eventService } from '~/services/event'
-import { eventAdminService } from '~/services/eventAdmin'
 
 export function useCalendarEditor() {
   const router = useRouter()
   const route = useRoute()
   const { addToast } = useToast()
+  const { createEventToDatabase, updateEventToDatabase, deleteEventToDatabase } = useAdminEvents()
 
   const isSaving = ref(false)
   const isDeleting = ref(false)
@@ -167,10 +167,10 @@ export function useCalendarEditor() {
       }
 
       if (editingEventId.value) {
-        await eventAdminService.updateEvent(editingEventId.value, payload)
+        await updateEventToDatabase(editingEventId.value, payload)
         addToast('活動已更新', 'success')
       } else {
-        await eventAdminService.createEvent(payload)
+        await createEventToDatabase(payload)
         addToast('活動已建立', 'success')
       }
 
@@ -205,7 +205,7 @@ export function useCalendarEditor() {
     isDeleting.value = true
 
     try {
-      await eventAdminService.deleteEvent(editingEventId.value)
+      await deleteEventToDatabase(editingEventId.value)
       addToast('活動已刪除', 'success')
       
       if (onSuccess) {
