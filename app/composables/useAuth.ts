@@ -13,22 +13,7 @@ export const useAuth = () => {
   const isSignupLoading = ref(false)
   const errorMessage = ref('')
 
-  const handleAuthError = (error: any, fallbackMessage: string) => {
-    console.error('Auth Error:', error)
-    const msg = error?.message || ''
-
-    if (msg.includes('provider is not enabled')) {
-      errorMessage.value = '該登入方式（如 Google）尚未啟用，請聯絡管理員。'
-    } else if (msg.includes('Invalid login credentials')) {
-      errorMessage.value = '登入失敗，請檢查您的帳號密碼。'
-    } else if (error?.code === '22023' && msg.includes('role')) {
-      errorMessage.value = '帳號角色設定異常，請先登出後重新登入；若仍失敗請聯絡管理員。'
-    } else {
-      errorMessage.value = error.message || fallbackMessage
-    }
-  }
-
-  const loginWithGoogle = async () => {
+  const googleLoginLock = useAsyncLock(async () => {
     try {
       loading.value = true
       isGoogleLoading.value = true
@@ -45,16 +30,12 @@ export const useAuth = () => {
       handleAuthError(error, 'Google 登入時發生錯誤。')
       loading.value = false
       isGoogleLoading.value = false
+      throw error
     }
-    // 注意：成功時會進行頁面跳轉，不需手動關閉 loading
-  }
+    // 成功時會進行頁面跳轉，不需手動關閉 loading
+  })
 
-  const loginWithEmail = async (formData: LoginFormData) => {
-    if (!formData.email || !formData.password) {
-      errorMessage.value = '請輸入 Email 與密碼'
-      return
-    }
-
+  const emailLoginLock = useAsyncLock(async (formData: LoginFormData) => {
     try {
       loading.value = true
       isEmailLoading.value = true
@@ -66,29 +47,20 @@ export const useAuth = () => {
       })
       if (error) throw error
 
-      // 登入成功後，取得用戶資料以判斷導向路徑
       const profile = await userService.fetchUserProfile()
       const dest = profile.role === 'admin' ? '/admin' : '/home'
-      
+
       router.push(dest)
     } catch (error) {
       handleAuthError(error, '登入失敗，請檢查您的帳號密碼。')
+      throw error
     } finally {
       loading.value = false
       isEmailLoading.value = false
     }
-  }
+  })
 
-  const signupWithEmail = async (registerData: RegisterFormData) => {
-    if (!registerData.email || !registerData.password || !registerData.fullName) {
-      errorMessage.value = '請填寫所有欄位'
-      return
-    }
-
-    if (registerData.password !== registerData.confirmPassword) {
-      errorMessage.value = '兩次輸入的密碼不一樣'
-    }
-
+  const signupLock = useAsyncLock(async (registerData: RegisterFormData) => {
     try {
       loading.value = true
       isSignupLoading.value = true
@@ -118,10 +90,53 @@ export const useAuth = () => {
       }
     } catch (error) {
       handleAuthError(error, '註冊失敗')
+      throw error
     } finally {
       loading.value = false
       isSignupLoading.value = false
     }
+  })
+
+  const handleAuthError = (error: any, fallbackMessage: string) => {
+    console.error('Auth Error:', error)
+    const msg = error?.message || ''
+
+    if (msg.includes('provider is not enabled')) {
+      errorMessage.value = '該登入方式（如 Google）尚未啟用，請聯絡管理員。'
+    } else if (msg.includes('Invalid login credentials')) {
+      errorMessage.value = '登入失敗，請檢查您的帳號密碼。'
+    } else if (error?.code === '22023' && msg.includes('role')) {
+      errorMessage.value = '帳號角色設定異常，請先登出後重新登入；若仍失敗請聯絡管理員。'
+    } else {
+      errorMessage.value = error.message || fallbackMessage
+    }
+  }
+
+  const loginWithGoogle = async () => {
+    return googleLoginLock.run()
+  }
+
+  const loginWithEmail = async (formData: LoginFormData) => {
+    if (!formData.email || !formData.password) {
+      errorMessage.value = '請輸入 Email 與密碼'
+      return
+    }
+
+    return emailLoginLock.run(formData)
+  }
+
+  const signupWithEmail = async (registerData: RegisterFormData) => {
+    if (!registerData.email || !registerData.password || !registerData.fullName) {
+      errorMessage.value = '請填寫所有欄位'
+      return
+    }
+
+    if (registerData.password !== registerData.confirmPassword) {
+      errorMessage.value = '兩次輸入的密碼不一樣'
+      return
+    }
+
+    return signupLock.run(registerData)
   }
 
   return {
