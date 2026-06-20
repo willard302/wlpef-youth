@@ -5,13 +5,15 @@ import type { Database } from '~/types'
 export function useUser() {
   const router = useRouter()
   const supabase = useSupabaseClient<Database>()
+  const nuxtApp = useNuxtApp() as ReturnType<typeof useNuxtApp> & {
+    _userProfileSubscription?: any
+  }
 
   // 全域狀態 (Global State)
   const userProfile = useState<ProfileRow | null>('user-profile', () => null)
   const recentActivities = useState<Activity[]>('recent-activities', () => [])
   const paymentStatus = useState<PaymentStatusSummary | null>('user-payment-status', () => null)
   const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
-  const profileSubscription = useState<any>('user-profile-subscription', () => null)
   const isSettingUpListener = useState('user-profile-listener-loading', () => false)
 
   // 狀態物件化：合併原本分散的 loading 與 error
@@ -22,14 +24,20 @@ export function useUser() {
     error: null as string | null
   }))
 
+  const getProfileSubscription = () => nuxtApp._userProfileSubscription ?? null
+  const setProfileSubscription = (channel: any) => {
+    nuxtApp._userProfileSubscription = channel
+  }
+
   // 動作 (Actions)
   const setupProfileListener = async () => {
-    if (profileSubscription.value || isSettingUpListener.value) return
+    if (process.server) return
+    if (getProfileSubscription() || isSettingUpListener.value) return
     isSettingUpListener.value = true
 
     try {
       const { data: { user } } = await supabase.auth.getUser()
-      if (!user || profileSubscription.value) return
+      if (!user || getProfileSubscription()) return
       
       const channel = supabase
         .channel(`profile-updates-${user.id}`)
@@ -56,7 +64,7 @@ export function useUser() {
         )
         .subscribe()
 
-      profileSubscription.value = channel
+      setProfileSubscription(channel)
     } catch (err) {
       console.error('建立 Profile 監聽器失敗:', err)
     } finally {
@@ -70,7 +78,7 @@ export function useUser() {
     try {
       const profileData = await userService.fetchUserProfile()
       userProfile.value = profileData
-      setupProfileListener()
+      void setupProfileListener()
     } catch (err: any) {
       status.value.error = err.message || '載入用戶資料失敗'
       if (err.message === 'User not authenticated') {
@@ -109,7 +117,7 @@ export function useUser() {
 
     // 如果已經有資料且不是強制更新，則跳過
     if (userProfile.value && !force) {
-      setupProfileListener()
+      void setupProfileListener()
       return
     }
 
@@ -180,9 +188,10 @@ export function useUser() {
   }
 
   const clearUserData = () => {
-    if (profileSubscription.value) {
-      supabase.removeChannel(profileSubscription.value)
-      profileSubscription.value = null
+    const channel = getProfileSubscription()
+    if (channel) {
+      supabase.removeChannel(channel)
+      setProfileSubscription(null)
     }
     userProfile.value = null
     recentActivities.value = []
