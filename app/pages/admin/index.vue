@@ -101,7 +101,7 @@ const eventPickerActions = computed(() => {
 const displayStats = computed(() => [
   { 
     id: 'profiles',
-    label: '完成註冊人數', 
+    label: '會員人數', 
     value: stats.value.totalProfiles.toString(), 
     icon: 'person_check', 
     color: 'text-blue-500', 
@@ -151,7 +151,7 @@ onMounted(() => {
     <AppHeaderHero
       eyebrow="管理後台"
       title="管理中心"
-      height-class="h-56"
+      height-class="42"
     >
       <template #actions>
         <div class="flex">
@@ -190,24 +190,27 @@ onMounted(() => {
       </div>
     </AppHeaderHero>
 
-    <main class="px-4 -mt-8 relative z-20 space-y-6">
+    <main class="px-4 -mt-4 relative z-20 space-y-6">
       <!-- Quick Stats Grid -->
       <section class="grid grid-cols-2 gap-4">
         <div 
           v-for="stat in displayStats" 
           :key="stat.id"
-          class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex flex-col gap-3 transition-all active:scale-[0.98]"
+          class="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 flex gap-3 transition-all active:scale-[0.98]"
           :class="{ 'cursor-pointer hover:border-primary/30': stat.clickable }"
           @click="stat.clickable && (stat.path ? router.push(stat.path) : stat.action?.())"
         >
-          <div :class="[stat.bg, stat.color, 'size-10 rounded-2xl flex items-center justify-center']">
+          <div :class="[stat.bg, stat.color, 'size-12 rounded-2xl flex items-center justify-center']">
             <AppIcon :name="stat.icon" size="md" />
           </div>
           <div>
             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ stat.label }}</p>
-            <div class="flex items-baseline gap-1">
-              <p class="text-2xl font-black text-slate-800">{{ isLoading ? '...' : stat.value }}</p>
-              <span v-if="stat.id === 'points' && !isLoading" class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">PTS</span>
+            <div class="flex items-baseline gap-1 mt-1">
+              <van-loading v-if="isLoading" type="spinner" />
+              <template v-else>
+                <p class="text-xl font-black text-slate-800">{{ stat.value }}</p>
+                <span v-if="stat.id === 'points' && !isLoading" class="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">PTS</span>
+              </template>
             </div>
           </div>
         </div>
