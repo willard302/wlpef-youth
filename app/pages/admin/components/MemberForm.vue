@@ -157,21 +157,6 @@ const onReset = async () => {
             />
           </FormField>
         </div>
-
-        <!-- Scanner Permission Toggle -->
-        <div class="flex items-center justify-between px-4 py-4 bg-slate-50 rounded-2xl">
-          <div class="flex items-center gap-3">
-            <AppIcon name="qr_code_scanner" class="text-slate-400" />
-            <div class="flex flex-col">
-              <span class="text-sm font-medium text-slate-700">簽到掃描權限</span>
-              <span class="text-[10px] text-slate-400">開通後該用戶可協助活動簽到</span>
-            </div>
-          </div>
-          <label class="relative inline-flex items-center cursor-pointer">
-            <input v-model="formData.scanPermission" type="checkbox" class="sr-only peer" />
-            <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
-          </label>
-        </div>
       </div>
 
       <div class="space-y-3">
