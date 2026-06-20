@@ -16,10 +16,7 @@ const {
   paymentStatus
 } = useUser()
 
-const {
-  handleAfterRead,
-  getAvatarUrl
-} = useProfileAvatarUpload()
+const { handleAfterRead, getAvatarUrl } = useProfileAvatarUpload()
 
 const { openMenu } = useSideMenu()
 
@@ -29,19 +26,40 @@ const canUseScanner = computed(() => {
   return userProfile.value?.role === 'admin' || userProfile.value?.scan_permission === true
 })
 
-const paymentBadgeClass = computed(() => {
-  if (!paymentStatus.value) {
-    return 'bg-slate-100 text-slate-500 border-slate-200'
+const profileBadges = computed(() => {
+  const badges = [
+    {
+      key: 'role',
+      label: getRoleLabel(userProfile.value?.role),
+      className: 'bg-primary/10 text-primary border-primary/20 uppercase tracking-widest'
+    }
+  ]
+
+  if (paymentStatus.value?.hasDonationYear) {
+    badges.push({
+      key: 'donation-year',
+      label: '年度捐贈',
+      className: 'bg-amber-50 text-amber-600 border-amber-200'
+    })
   }
 
-  return paymentStatus.value.tone === 'success'
-    ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
-    : 'bg-rose-50 text-rose-600 border-rose-200'
-})
+  if (paymentStatus.value?.hasRegistrationFee) {
+    badges.push({
+      key: 'registration-fee',
+      label: '已繳報名費',
+      className: 'bg-emerald-50 text-emerald-600 border-emerald-200'
+    })
+  }
 
-const paymentBadgeLabel = computed(() => {
-  if (!paymentStatus.value) return '未繳費'
-  return paymentStatus.value.label
+  if (paymentStatus.value && !paymentStatus.value.hasAnyPayment) {
+    badges.push({
+      key: 'unpaid',
+      label: '未繳費',
+      className: 'bg-rose-50 text-rose-600 border border-rose-200'
+    })
+  }
+
+  return badges
 })
 
 // 統計數據
@@ -128,15 +146,14 @@ const handleItemClick = (item: any, event: Event) => {
           <h2 class="text-3xl font-black text-slate-900 tracking-tight">
             {{ userProfile?.name ?? '載入中...' }}
           </h2>
-          <div class="flex items-center justify-center gap-2 mt-2">
-            <span class="text-[11px] font-bold px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 uppercase tracking-widest">
-              {{ getRoleLabel(userProfile?.role) }}
-            </span>
+          <div class="flex flex-wrap items-center justify-center gap-2 mt-2">
             <span
-              class="text-[11px] font-bold px-3 py-1 rounded-full border uppercase tracking-widest"
-              :class="paymentBadgeClass"
+              v-for="badge in profileBadges"
+              :key="badge.key"
+              class="text-[11px] font-bold px-3 py-1 rounded-full border"
+              :class="badge.className"
             >
-              {{ paymentBadgeLabel }}
+              {{ badge.label }}
             </span>
           </div>
         </div>
