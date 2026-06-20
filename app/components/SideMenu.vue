@@ -11,7 +11,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
-const { handleLogout } = useUser()
+const { handleLogout, userProfile } = useUser()
 
 const menuVisible = computed({
   get: () => props.show,
@@ -132,6 +132,26 @@ const menuItems = computed<MenuItem[]>(() => {
       },
     },
   ]
+
+  const canUseScanner =
+    userProfile.value?.role === 'admin' ||
+    userProfile.value?.role === 'staff' ||
+    userProfile.value?.scan_permission === true
+
+  if (canUseScanner) {
+    memberItems.unshift({
+      id: 'checkin-member',
+      label: '活動簽到',
+      icon: 'qr_code_scanner',
+      bgClass: 'bg-emerald-50',
+      textClass: 'text-emerald-600',
+      hoverClass: 'hover:bg-emerald-100',
+      visible: true,
+      action: () => {
+        void router.push('/admin/checkin')
+      },
+    })
+  }
 
   return [
     ...(props.isAdmin ? adminItems : memberItems),

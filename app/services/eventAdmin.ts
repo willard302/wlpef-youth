@@ -89,7 +89,10 @@ export const eventAdminService = {
     if (operatorRes.error) throw operatorRes.error
     if (memberRes.error) throw memberRes.error
 
-    const canScan = operatorRes.data?.role === 'admin' || operatorRes.data?.scan_permission === true
+    const canScan =
+      operatorRes.data?.role === 'admin' ||
+      operatorRes.data?.role === 'staff' ||
+      operatorRes.data?.scan_permission === true
     if (!canScan) throw new Error('您沒有簽到掃描權限')
     if (!memberRes.data) throw new Error('找不到該會員資料')
     if (existingCheckinRes.data) throw new Error('該會員已經完成簽到')

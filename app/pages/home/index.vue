@@ -23,7 +23,9 @@ const { openMenu } = useSideMenu()
 const qrPopupVisible = ref(false)
 
 const canUseScanner = computed(() => {
-  return userProfile.value?.role === 'admin' || userProfile.value?.scan_permission === true
+  return userProfile.value?.role === 'admin' ||
+    userProfile.value?.role === 'staff' ||
+    userProfile.value?.scan_permission === true
 })
 
 const profileBadges = computed(() => {

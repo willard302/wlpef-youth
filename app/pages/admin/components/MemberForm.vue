@@ -28,6 +28,15 @@ const formData = ref({
 
 const isResetting = ref(false)
 
+watch(
+  () => formData.value.role,
+  (role) => {
+    if (role === 'staff') {
+      formData.value.scanPermission = true
+    }
+  }
+)
+
 // Sync internal state when profile or show changes
 watch(() => props.show, (newVal) => {
   if (newVal) {

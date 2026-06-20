@@ -43,6 +43,7 @@ Deno.serve(async (req) => {
     
     // 取得參數
     const { email, name, role = "member", points = 0, scanPermission = false } = await req.json()
+    const normalizedScanPermission = role === "staff" ? true : scanPermission
 
     if (!email || !name) throw new Error("Email and Name are required")
 
@@ -75,7 +76,7 @@ if (inviteError) {
           name: name,
           role: role,
           points: points,
-          scan_permission: scanPermission
+          scan_permission: normalizedScanPermission
         })
 
       if (profileError) throw profileError
@@ -96,7 +97,7 @@ const { error: profileError } = await supabase
     name: name,
     role: role,
     points: points,
-    scan_permission: scanPermission
+    scan_permission: normalizedScanPermission
   })
 
     if (profileError) throw profileError

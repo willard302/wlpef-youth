@@ -287,6 +287,7 @@ CREATE POLICY "Admins and authorized scanners can insert checkins"
       WHERE p.id = auth.uid()
         AND (
           p.role = 'admin'
+          OR p.role = 'staff'
           OR COALESCE(p.scan_permission, FALSE)
         )
     )

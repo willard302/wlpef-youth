@@ -49,7 +49,7 @@ const handleUpdateMember = async (formData: any) => {
       name: formData.name,
       role: formData.role,
       points: formData.points,
-      scan_permission: formData.scanPermission
+      scan_permission: formData.role === 'staff' ? true : formData.scanPermission
     })
     addToast('會員資料更新成功', 'success')
     showEditModal.value = false
@@ -75,7 +75,7 @@ const handleAddMember = async (formData: any) => {
       name: formData.name,
       role: formData.role,
       points: formData.points,
-      scan_permission: formData.scanPermission
+      scan_permission: formData.role === 'staff' ? true : formData.scanPermission
     })
     addToast('會員建立成功並已發送邀請', 'success')
     showAddModal.value = false
