@@ -7,13 +7,13 @@ export function useUser() {
   const supabase = useSupabaseClient<Database>()
   const nuxtApp = useNuxtApp() as ReturnType<typeof useNuxtApp> & {
     _userProfileSubscription?: any
+    _userLoadingPromise?: Promise<void> | null
   }
 
   // 全域狀態 (Global State)
   const userProfile = useState<ProfileRow | null>('user-profile', () => null)
   const recentActivities = useState<Activity[]>('recent-activities', () => [])
   const paymentStatus = useState<PaymentStatusSummary | null>('user-payment-status', () => null)
-  const loadingPromise = useState<Promise<void> | null>('user-loading-promise', () => null)
   const isSettingUpListener = useState('user-profile-listener-loading', () => false)
 
   // 狀態物件化：合併原本分散的 loading 與 error
@@ -25,8 +25,12 @@ export function useUser() {
   }))
 
   const getProfileSubscription = () => nuxtApp._userProfileSubscription ?? null
+  const getLoadingPromise = () => nuxtApp._userLoadingPromise ?? null
   const setProfileSubscription = (channel: any) => {
     nuxtApp._userProfileSubscription = channel
+  }
+  const setLoadingPromise = (promise: Promise<void> | null) => {
+    nuxtApp._userLoadingPromise = promise
   }
 
   // 動作 (Actions)
@@ -122,8 +126,8 @@ export function useUser() {
     }
 
     // 若已有進行中的請求，等待完成即可，不重複發送
-    if (loadingPromise.value && !force) {
-      return await loadingPromise.value
+    if (getLoadingPromise() && !force) {
+      return await getLoadingPromise()
     }
 
     const request = (async () => {
@@ -142,11 +146,11 @@ export function useUser() {
       }
     })()
 
-    loadingPromise.value = request
+    setLoadingPromise(request)
     try {
       await request
     } finally {
-      loadingPromise.value = null
+      setLoadingPromise(null)
     }
   }
 
