@@ -103,8 +103,7 @@ const handleCompleteRegistration = async () => {
     errorMessage.value = ''
     
     await completeSocialSignup({
-      fullName: formData.value.fullName.trim(),
-      points: 0
+      fullName: formData.value.fullName.trim()
     })
 
     await loadUserData(true)

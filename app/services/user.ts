@@ -198,7 +198,6 @@ export const userService = {
     profileData: {
       email?: string
       name?: string
-      points?: number
       role?: string
       scanPermission?: boolean
     }
@@ -214,7 +213,6 @@ export const userService = {
       
       dbData.email = profileData.email !== undefined ? profileData.email : (user.email || '')
       if (profileData.name !== undefined) dbData.name = profileData.name
-      if (profileData.points !== undefined) dbData.points = profileData.points
       if (profileData.role !== undefined) dbData.role = profileData.role
       if (profileData.scanPermission !== undefined) dbData.scan_permission = profileData.scanPermission
 

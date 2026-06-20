@@ -216,15 +216,13 @@ export function useUser() {
 
   const completeSocialSignup = async (socialSignupData: {
     fullName: string
-    points: number
   }) => {
     status.value.updating = true
     status.value.error = null
 
     try {
       await userService.updateUserProfile(supabase, {
-        name: socialSignupData.fullName,
-        points: socialSignupData.points
+        name: socialSignupData.fullName
       })
 
       const { data: { user } } = await supabase.auth.getUser()
