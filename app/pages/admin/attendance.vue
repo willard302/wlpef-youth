@@ -145,9 +145,7 @@ onMounted(async () => {
           />
         </div>
 
-        <div v-if="isLoading" class="flex flex-col items-center py-12 text-slate-400">
-          <p class="text-xs font-bold tracking-widest">載入名單中...</p>
-        </div>
+        <van-loading v-if="isLoading" type="spinner" vertical>載入名單中...</van-loading>
 
         <div v-else-if="attendance.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="person_off" :size="36" class="text-slate-200 mb-2" />
