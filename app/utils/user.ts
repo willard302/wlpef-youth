@@ -9,6 +9,7 @@ export const getRoleLabel = (role?: string | null): string => {
   if (!role) return '訪客'
   
   if (role === 'admin') return ROLE_LABEL.admin
+  if (role === 'staff') return ROLE_LABEL.staff
   
   // 預設為一般成員
   return ROLE_LABEL.member

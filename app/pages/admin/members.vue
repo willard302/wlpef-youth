@@ -189,7 +189,11 @@ onMounted(async () => {
                 <h5 class="font-bold text-slate-900 truncate">{{ profile.name }}</h5>
                 <span 
                   class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter"
-                  :class="profile.role === 'admin' ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-100 text-slate-500'"
+                  :class="profile.role === 'admin'
+                    ? 'bg-indigo-100 text-indigo-600'
+                    : profile.role === 'staff'
+                      ? 'bg-amber-100 text-amber-700'
+                      : 'bg-slate-100 text-slate-500'"
                 >
                   {{ getRoleLabel(profile.role) }}
                 </span>

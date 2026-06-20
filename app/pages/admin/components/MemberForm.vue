@@ -136,6 +136,7 @@ const onReset = async () => {
               class="w-full h-12 px-4 bg-slate-50 rounded-2xl border-none outline-none text-sm focus:ring-2 focus:ring-sky-500/20 appearance-none"
             >
               <option value="member">一般成員</option>
+              <option value="staff">工作人員</option>
               <option value="admin">管理員</option>
             </select>
           </FormField>
