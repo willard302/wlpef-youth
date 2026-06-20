@@ -179,7 +179,7 @@ const handleItemClick = (item: any, event: Event) => {
 
       <!-- Action Items List -->
       <div class="space-y-3 mb-8">
-        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ '帳戶設定' }}</h3>
+        <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">{{ '快速選單' }}</h3>
         <div class="action-list-container">
           <NuxtLink
             v-for="(item, index) in menuItems"
