@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import EventDetailModal from './components/EventDetailModal.vue'
 import { format as fnsFormat } from 'date-fns'
-import { eventService } from '~/services/event'
 import type { Event } from '~/types'
+import { eventService } from '~/services/event'
+import { EVENT_STATUS_CLASS_MAP, EVENT_STATUS_LABEL_MAP } from '~/utils/eventStatus'
 
 definePageMeta({
   layout: 'default',
@@ -70,7 +72,7 @@ const isUpcomingCheckedIn = ref(false)
 const upcomingRegistrationStatus = computed(() => {
   const event = upcomingEventData.value
   if (!event) return ''
-  if (canViewAllEventStatus.value) return STATUS_LABEL_MAP[event.status]
+  if (canViewAllEventStatus.value) return EVENT_STATUS_LABEL_MAP[event.status]
   if (isUpcomingRegistrationLoading.value) return '確認狀態中'
   if (isUpcomingCheckedIn.value) return '已報到'
   if (isUpcomingRegistered.value) return '已報名'
@@ -86,18 +88,6 @@ const isCheckedIn = ref(false)
 const checkingRegistration = ref(false)
 
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
-
-const STATUS_LABEL_MAP = {
-  draft: '草稿',
-  published: '已發佈',
-  closed: '已關閉',
-} as const
-
-const STATUS_CLASS_MAP = {
-  draft: 'bg-amber-50 text-amber-700 border-amber-200',
-  published: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-  closed: 'bg-slate-100 text-slate-600 border-slate-200',
-} as const
 
 const loadUpcomingEvent = async () => {
   isEventLoading.value = true
@@ -249,7 +239,7 @@ onMounted(async () => {
             class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-bold transition-colors"
             :class="[
               canViewAllEventStatus 
-                ? STATUS_CLASS_MAP[upcomingEventData.status] 
+                ? EVENT_STATUS_CLASS_MAP[upcomingEventData.status] 
                 : (isUpcomingCheckedIn 
                   ? 'border-red-200 bg-red-500 text-white shadow-sm shadow-red-100' 
                   : 'border-white/25 bg-white/15 text-white')
@@ -349,9 +339,9 @@ onMounted(async () => {
                 <span
                   v-if="canViewAllEventStatus"
                   class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide mb-2"
-                  :class="STATUS_CLASS_MAP[event.status]"
+                  :class="EVENT_STATUS_CLASS_MAP[event.status]"
                 >
-                  {{ STATUS_LABEL_MAP[event.status] }}
+                  {{ EVENT_STATUS_LABEL_MAP[event.status] }}
                 </span>
                 <p v-if="event.description" class="text-xs text-slate-500 line-clamp-2 mb-2">{{ event.description }}</p>
                 <div class="flex flex-wrap items-center gap-y-1 gap-x-3">
@@ -378,81 +368,15 @@ onMounted(async () => {
     </main>
 
     <!-- Event Detail Modal -->
-    <van-action-sheet v-model:show="eventDetailVisible" title="活動詳情" class="rounded-t-[2.5rem] overflow-hidden">
-      <div v-if="selectedEvent" class="px-6 pb-12 pt-4 space-y-6">
-        <div class="flex items-start gap-4">
-          <div class="size-14 rounded-2xl flex flex-col items-center justify-center text-white shadow-lg" :style="{ backgroundColor: '#0EA5E9' }">
-            <span class="text-[10px] font-bold uppercase opacity-80">{{ format(selectedEvent.startAt, 'MMM') }}</span>
-            <span class="text-xl font-black">{{ format(selectedEvent.startAt, 'd') }}</span>
-          </div>
-          <div class="flex-1 min-w-0">
-            <h3 class="text-xl font-bold text-slate-900 leading-tight">{{ selectedEvent.title }}</h3>
-            <div class="flex items-center gap-2 mt-1">
-              <span
-                v-if="canViewAllEventStatus"
-                class="inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-bold tracking-wide"
-                :class="STATUS_CLASS_MAP[selectedEvent.status]"
-              >
-                {{ STATUS_LABEL_MAP[selectedEvent.status] }}
-              </span>
-              <span class="text-xs text-slate-400 font-medium">{{ selectedEvent.time }} {{ selectedEvent.period }}</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-4 bg-slate-50 rounded-3xl p-5">
-          <div class="flex items-start gap-3">
-            <AppIcon name="location_on" class="text-sky-500" />
-            <div class="flex-1">
-              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">地點</p>
-              <p class="text-sm text-slate-700 font-medium">{{ selectedEvent.location || '未指定地點' }}</p>
-            </div>
-          </div>
-          <div class="flex items-start gap-3">
-            <AppIcon name="schedule" class="text-indigo-400" />
-            <div class="flex-1">
-              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">時間</p>
-              <p class="text-sm text-slate-700 font-medium">
-                {{ format(selectedEvent.startAt, 'yyyy/MM/dd HH:mm') }} - 
-                {{ format(selectedEvent.endAt, 'HH:mm') }}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div v-if="selectedEvent.description" class="space-y-2 px-1">
-          <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">活動簡介</p>
-          <p class="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap">{{ selectedEvent.description }}</p>
-        </div>
-
-        <div class="pt-4">
-          <button
-            @click="handleRegister"
-            :disabled="isCheckedIn || isRegistered || checkingRegistration || selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl"
-            class="w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-lg"
-            :class="[
-              isCheckedIn
-                ? 'bg-red-500 text-white cursor-not-allowed shadow-red-200'
-                : isRegistered 
-                  ? 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200' 
-                  : (selectedEvent.status === 'closed' || !selectedEvent.googleFormUrl ? 'bg-slate-200 text-slate-500 cursor-not-allowed' : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200')
-            ]"
-          >
-            <AppIcon :name="isCheckedIn ? 'task_alt' : (isRegistered ? 'check_circle' : (selectedEvent.status === 'closed' ? 'lock' : 'open_in_new'))" />
-            <span>
-              {{ isCheckedIn ? '已完成活動報到' : (isRegistered ? '已完成報名' : (selectedEvent.status === 'closed' ? '報名已截止' : (!selectedEvent.googleFormUrl ? '尚未開放報名' : '前往 Google 表單報名'))) }}
-            </span>
-          </button>
-          <p v-if="isCheckedIn" class="text-[10px] text-center text-slate-400 mt-2">
-            * 您已完成本次活動的現場報到。
-          </p>
-          <p v-else-if="isRegistered" class="text-[10px] text-center text-slate-400 mt-2">
-            * 點數將於一分鐘內自動發放。
-          </p>
-          <p v-else-if="checkingRegistration" class="text-[10px] text-center text-slate-400 mt-2">正在確認狀態...</p>
-        </div>
-      </div>
-    </van-action-sheet>
+    <EventDetailModal 
+      v-model:show="eventDetailVisible"
+      :selectedEvent="selectedEvent"
+      :can-view-all-event-status="canViewAllEventStatus"
+      :is-registered="isRegistered"
+      :is-checked-in="isCheckedIn"
+      :checking-registration="checkingRegistration"
+      @register="handleRegister"
+    />
   </div>
 </template>
 
