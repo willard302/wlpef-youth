@@ -64,10 +64,7 @@ const onScanSuccess = async (decodedText: string) => {
     const result = await eventAdminService.checkInMember(selectedEventId.value, decodedText)
     scanResult.value = result
     
-    addToast('簽到成功！', 'success')
-    if (!result.hasAnyPayment) {
-      addToast('未偵測到年度捐贈或活動報名費，請提醒繳費', 'error')
-    }
+    !result.hasAnyPayment ? addToast('請提醒繳費', 'error') : addToast('已繳費，簽到成功！', 'success')
     
     // 震動回饋 (如果支援)
     if ('vibrate' in navigator) {
