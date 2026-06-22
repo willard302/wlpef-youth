@@ -16,6 +16,12 @@ verify_jwt = true
 import_map = "./functions/merge-duplicate-account/deno.json"
 entrypoint = "./functions/merge-duplicate-account/index.ts"
 
+[functions.check-user-registration]
+enabled = true
+verify_jwt = false
+import_map = "./functions/check-user-registration/deno.json"
+entrypoint = "./functions/check-user-registration/index.ts"
+
 [functions.send-invitations]
 enabled = true
 verify_jwt = false

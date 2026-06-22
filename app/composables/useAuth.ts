@@ -29,6 +29,11 @@ export const useAuth = () => {
   const handleAuthError = (error: unknown, fallbackMessage: string) => {
     console.error('Auth Error:', error)
 
+    if (typeof error === 'string') {
+      errorMessage.value = error
+      return
+    }
+
     if (!(error instanceof Error)) {
       errorMessage.value = fallbackMessage
       return
@@ -97,6 +102,22 @@ export const useAuth = () => {
       loading.value = true
       isSignupLoading.value = true
       errorMessage.value = ''
+
+      const { data: registrationData, error: registrationError } = await supabase.functions.invoke(
+        'check-user-registration',
+        {
+          body: {
+            email: registerData.email.trim()
+          }
+        }
+      )
+
+      if (registrationError) throw registrationError
+
+      if (registrationData?.exists) {
+        const isGoogleLogin = registrationData.providers?.includes('google')
+        throw isGoogleLogin ? '該 Email 已註冊，請直接透過Google登入' : '該 Email 已註冊，請直接登入'
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email: registerData.email,
