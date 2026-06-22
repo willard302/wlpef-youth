@@ -88,6 +88,7 @@ export type Database = {
           donation_year: boolean
           email: string
           event_id: string | null
+          first_login_enabled: boolean
           form_submitted_at: string | null
           google_sheet_row_id: string | null
           id: string
@@ -104,6 +105,7 @@ export type Database = {
           donation_year?: boolean
           email: string
           event_id?: string | null
+          first_login_enabled?: boolean
           form_submitted_at?: string | null
           google_sheet_row_id?: string | null
           id?: string
@@ -120,6 +122,7 @@ export type Database = {
           donation_year?: boolean
           email?: string
           event_id?: string | null
+          first_login_enabled?: boolean
           form_submitted_at?: string | null
           google_sheet_row_id?: string | null
           id?: string
