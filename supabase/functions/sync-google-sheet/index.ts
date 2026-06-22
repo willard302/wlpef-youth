@@ -1,5 +1,5 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 type EventRow = {
   id: string
@@ -76,47 +76,7 @@ const parseBooleanField = (value: unknown) => {
 
   if (!normalized) return false
 
-  const falseValues = new Set([
-    "false",
-    "0",
-    "no",
-    "n",
-    "否",
-    "無",
-    "未",
-    "未繳",
-    "未繳交",
-    "未付款",
-    "未支付",
-    "未完成",
-    "未勾選",
-    "unchecked",
-    "off",
-  ])
-
-  const trueValues = new Set([
-    "true",
-    "1",
-    "yes",
-    "y",
-    "是",
-    "有",
-    "已繳",
-    "已繳交",
-    "已付款",
-    "已支付",
-    "已完成",
-    "勾選",
-    "checked",
-    "on",
-    "v",
-    "✓",
-  ])
-
-  if (falseValues.has(normalized)) return false
-  if (trueValues.has(normalized)) return true
-
-  return false
+  return normalized === 'v' ? true : false
 }
 
 const toBase64Url = (input: string | ArrayBuffer) => {
@@ -231,7 +191,7 @@ async function fetchSheetRows(sheetId: string, googleToken: string): Promise<str
   return data.values || []
 }
 
-async function loadProfilesByEmail(supabaseAdmin: any): Promise<Map<string, ProfileRow>> {
+async function loadProfilesByEmail(supabaseAdmin: SupabaseClient): Promise<Map<string, ProfileRow>> {
   const profiles = new Map<string, ProfileRow>()
   const pageSize = 1000
   let from = 0
