@@ -126,6 +126,14 @@ const paginatedRegistrations = computed(() => {
   return filteredRegistrations.value.slice(start, end)
 })
 
+const enabledCount = computed(() => {
+  return registrations.value.filter(reg => reg.firstLoginEnabled).length
+})
+
+const disabledCount = computed(() => {
+  return registrations.value.length - enabledCount.value
+})
+
 // Reset to page 1 when searching
 watch(searchQuery, () => {
   currentPage.value = 1
@@ -161,8 +169,8 @@ onMounted(async () => {
       </section>
 
       <!-- Stats Summary -->
-      <div v-if="selectedEvent && !isLoading" class="grid grid-cols-2 gap-4">
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm relative group">
+      <div v-if="selectedEvent && !isLoading" class="grid grid-cols-[1.6fr_1fr_1fr] gap-4">
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總報名人數</p>
           <div class="flex items-end justify-between">
             <p class="text-2xl font-black text-slate-800">{{ registrations.length }}</p>
@@ -177,10 +185,18 @@ onMounted(async () => {
           </div>
         </div>
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Google 同步</p>
-          <p class="text-2xl font-black text-sky-500">
-            {{ registrations.filter(r => !!r.googleSheetRowId).length }}
-          </p>
+          <p class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-1">已啟用</p>
+          <div class="flex items-end justify-between">
+            <p class="text-2xl font-black text-emerald-600">{{ enabledCount }}</p>
+            <span class="size-8 invisible"></span>
+          </div>
+        </div>
+        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
+          <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">未啟用</p>
+          <div class="flex items-end justify-between">
+            <p class="text-2xl font-black text-slate-600">{{ disabledCount }}</p>
+            <span class="size-8 invisible"></span>
+          </div>
         </div>
       </div>
 
@@ -250,7 +266,7 @@ onMounted(async () => {
                 class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
                 :class="reg.firstLoginEnabled ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
               >
-                首次登入 {{ getFirstLoginStatus(reg) }}
+                {{ getFirstLoginStatus(reg) }}
               </span>
             </div>
           </div>

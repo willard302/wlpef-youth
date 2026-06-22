@@ -161,15 +161,76 @@ async function getGoogleAccessToken(serviceAccountJson: string | undefined): Pro
   return data.access_token
 }
 
-const findHeaderIndex = (headers: string[], aliases: string[], fallbackIndex: number) => {
+const findHeaderIndex = (headers: string[], aliases: string[], fallbackIndex = -1) => {
   const normalizedAliases = aliases.map(normalizeHeader)
-  const index = headers.findIndex((header) => normalizedAliases.includes(normalizeHeader(header)))
-  return index >= 0 ? index : fallbackIndex
+  const normalizedHeaders = headers.map((header) => normalizeHeader(header))
+
+  const exactIndex = normalizedHeaders.findIndex((header) => normalizedAliases.includes(header))
+  if (exactIndex >= 0) return exactIndex
+
+  const fuzzyIndex = normalizedHeaders.findIndex((header) =>
+    normalizedAliases.some((alias) => header.includes(alias) || alias.includes(header)),
+  )
+
+  return fuzzyIndex >= 0 ? fuzzyIndex : fallbackIndex
 }
 
-const parseSubmittedAt = (value: string) => {
-  const timestamp = Date.parse(value)
-  return Number.isNaN(timestamp) ? new Date().toISOString() : new Date(timestamp).toISOString()
+const parseSubmittedAt = (value: string, fallbackIso: string) => {
+  const raw = value.trim()
+  if (!raw) return fallbackIso
+
+  const normalizedMeridiem = raw
+    .replace(/上午/gi, " AM ")
+    .replace(/下午/gi, " PM ")
+    .replace(/年/g, "/")
+    .replace(/月/g, "/")
+    .replace(/日/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  const directTimestamp = Date.parse(normalizedMeridiem)
+  if (!Number.isNaN(directTimestamp)) {
+    return new Date(directTimestamp).toISOString()
+  }
+
+  const ymdMatch = normalizedMeridiem.match(
+    /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s*(AM|PM)?\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/i,
+  )
+
+  if (ymdMatch) {
+    const [, year, month, day, meridiemRaw, hourRaw, minuteRaw, secondRaw] = ymdMatch
+    let hour = Number(hourRaw)
+    const minute = Number(minuteRaw)
+    const second = Number(secondRaw || "0")
+    const meridiem = (meridiemRaw || "").toUpperCase()
+
+    if (meridiem === "PM" && hour < 12) hour += 12
+    if (meridiem === "AM" && hour === 12) hour = 0
+
+    const date = new Date(Number(year), Number(month) - 1, Number(day), hour, minute, second)
+    return date.toISOString()
+  }
+
+  const mdyMatch = normalizedMeridiem.match(
+    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s*(AM|PM)?\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/i,
+  )
+
+  if (mdyMatch) {
+    const [, month, day, year, meridiemRaw, hourRaw, minuteRaw, secondRaw] = mdyMatch
+    let hour = Number(hourRaw)
+    const minute = Number(minuteRaw)
+    const second = Number(secondRaw || "0")
+    const meridiem = (meridiemRaw || "").toUpperCase()
+
+    if (meridiem === "PM" && hour < 12) hour += 12
+    if (meridiem === "AM" && hour === 12) hour = 0
+
+    const date = new Date(Number(year), Number(month) - 1, Number(day), hour, minute, second)
+    return date.toISOString()
+  }
+
+  // Keep pipeline stable, but avoid silently using "now" as parse fallback.
+  return fallbackIso
 }
 
 async function fetchSheetRows(sheetId: string, googleToken: string): Promise<string[][]> {
@@ -225,7 +286,7 @@ function toRegistrations(
   if (rows.length <= 1) return { registrations: [], skippedCount: 0 }
 
   const headers = rows[0] || []
-  const timestampIndex = findHeaderIndex(headers, HEADER_ALIASES.timestamp, 0)
+  const timestampIndex = findHeaderIndex(headers, HEADER_ALIASES.timestamp)
   const emailIndex = findHeaderIndex(headers, HEADER_ALIASES.email, 1)
   const nameIndex = findHeaderIndex(headers, HEADER_ALIASES.name, 2)
   const donationIndex = findHeaderIndex(headers, HEADER_ALIASES.donation_year, 3)
@@ -251,7 +312,8 @@ function toRegistrations(
     seenEmails.add(email)
 
     const matchedProfile = profilesByEmail.get(email)
-    const submittedAt = parseSubmittedAt(pickString(row[timestampIndex]))
+    const timestampValue = timestampIndex >= 0 ? pickString(row[timestampIndex]) : ""
+    const submittedAt = parseSubmittedAt(timestampValue, syncedAt)
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
     const donationYear = parseBooleanField(row[donationIndex])
     const registrationFee = parseBooleanField(row[registrationFeeIndex])
