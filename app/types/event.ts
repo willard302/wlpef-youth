@@ -50,6 +50,7 @@ export interface EventRegistration {
   syncedAt: Date | null
   donationYear: boolean
   registrationFee: boolean
+  firstLoginEnabled: boolean
   registrationPointsGrantedAt: Date | null
   rawData?: Record<string, any>
   createdAt: Date

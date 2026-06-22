@@ -97,6 +97,10 @@ const getPointsStatus = (reg: EventRegistration) => {
   return reg.registrationPointsGrantedAt ? '點數已發放' : '處理中'
 }
 
+const getFirstLoginStatus = (reg: EventRegistration) => {
+  return reg.firstLoginEnabled ? '已啟用' : '未啟用'
+}
+
 const filteredRegistrations = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
 
@@ -241,6 +245,12 @@ onMounted(async () => {
                 :class="reg.registrationPointsGrantedAt ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
               >
                 {{ getPointsStatus(reg) }}
+              </span>
+              <span
+                class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
+                :class="reg.firstLoginEnabled ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
+              >
+                首次登入 {{ getFirstLoginStatus(reg) }}
               </span>
             </div>
           </div>

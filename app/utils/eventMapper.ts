@@ -14,6 +14,7 @@ export const mapToRegistration = (row: RegistrationRow): EventRegistration => {
     syncedAt: row.synced_at ? parseISO(row.synced_at) : null,
     donationYear: row.donation_year ?? false,
     registrationFee: row.registration_fee ?? false,
+    firstLoginEnabled: row.first_login_enabled ?? false,
     registrationPointsGrantedAt: row.registration_points_granted_at ? parseISO(row.registration_points_granted_at) : null,
     rawData: row.raw_data as Record<string, any> | undefined,
     createdAt: parseISO(row.created_at as string),
