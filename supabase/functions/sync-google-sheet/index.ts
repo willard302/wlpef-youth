@@ -69,14 +69,12 @@ const pickString = (value: unknown) => {
 
 const parseBooleanField = (value: unknown) => {
   if (typeof value === "boolean") return value
+  if (value === null || value === undefined) return false
 
-  const normalized = pickString(value)
-    .toLowerCase()
-    .replace(/\s+/g, "")
-
+  const normalized = String(value).trim().toLowerCase()
   if (!normalized) return false
 
-  return normalized === 'v' ? true : false
+  return normalized === "v" || normalized === "y"
 }
 
 const toBase64Url = (input: string | ArrayBuffer) => {
@@ -315,8 +313,8 @@ function toRegistrations(
     const timestampValue = timestampIndex >= 0 ? pickString(row[timestampIndex]) : ""
     const submittedAt = parseSubmittedAt(timestampValue, syncedAt)
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
-    const donationYear = parseBooleanField(row[donationIndex])
-    const registrationFee = parseBooleanField(row[registrationFeeIndex])
+    const donationYear = donationIndex >= 0 ? parseBooleanField(row[donationIndex]) : false
+    const registrationFee = registrationFeeIndex >= 0 ? parseBooleanField(row[registrationFeeIndex]) : false
     
     const rawData: Record<string, any> = {}
     headers.forEach((header, i) => {
