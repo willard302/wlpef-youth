@@ -56,21 +56,27 @@ Deno.serve(async (req) => {
 
         if (inviteError) {
           // 2. 如果用戶已存在，嘗試獲取其 ID 並補全 profile
-          if (inviteError.message.includes("already has been invited") || inviteError.message.includes("User already registered")) {
-            console.log(`User ${reg.email} already exists, fetching user details...`)
-            
-            // 遍歷用戶清單找出該用戶 (雖然效能稍低，但在開發期是穩健的做法)
-            const { data: userList } = await supabase.auth.admin.listUsers()
-            const existingUser = userList.users.find(u => u.email?.toLowerCase() === reg.email.toLowerCase())
-            
-            if (existingUser) {
-              targetUserId = existingUser.id
-              console.log(`Found existing user ID: ${targetUserId}`)
-            } else {
-              throw new Error(`Could not find existing user for email: ${reg.email}`)
-            }
+          const duplicateUserErrors = [
+            "already has been invited",
+            "User already registered"
+          ]
+
+          const isAlreadyInvited = duplicateUserErrors.some(msg => {
+            return inviteError?.message?.includes(msg)
+          })
+
+          if (!isAlreadyInvited) throw inviteError
+
+          console.log(`User ${reg.email} already exists, fetching user details...`)
+  
+          const { data: userList } = await supabase.auth.admin.listUsers()
+          const existingUser = userList.users.find(u => u.email?.toLowerCase() === reg.email.toLowerCase())
+          
+          if (existingUser) {
+            targetUserId = existingUser.id
+            console.log(`Found existing user ID: ${targetUserId}`)
           } else {
-            throw inviteError
+            throw new Error(`Could not find existing user for email: ${reg.email}`)
           }
         } else {
           targetUserId = inviteData.user.id
