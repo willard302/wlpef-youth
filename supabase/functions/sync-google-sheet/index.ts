@@ -5,6 +5,9 @@ type EventRow = {
   id: string
   title: string
   google_sheet_id: string | null
+  start_at?: string
+  end_at?: string
+  status?: string | null
 }
 
 type ProfileRow = {
@@ -35,6 +38,15 @@ type SyncResult = {
   error?: string
 }
 
+type SyncRequestBody = {
+  eventId?: string
+  sheetId?: string
+  title?: string
+  mode?: "recent"
+  recentPastDays?: number
+  recentFutureDays?: number
+}
+
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
 
@@ -47,11 +59,11 @@ const corsHeaders = {
 }
 
 const HEADER_ALIASES = {
-  timestamp: ["timestamp", "time", "submittedat", "submittedtime", "時間戳記", "提交時間", "報名時間"],
-  email: ["email", "mail", "e-mail", "電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
-  name: ["name", "fullname", "displayname", "姓名", "名字", "名稱", "暱稱", "您的姓名"],
-  donation_year: ["年度捐贈", "donation_year", "donation year"],
-  registration_fee: ["活動報名費", "報名費", "registration_fee", "registration fee"]
+  timestamp: ["時間戳記"],
+  email: ["電子郵件", "電子郵件地址", "電子信箱", "信箱", "電郵"],
+  name: ["姓名", "您的姓名"],
+  donation_year: ["年度捐贈"],
+  registration_fee: ["活動報名費", "報名費"]
 }
 
 const normalizeEmail = (value?: string | null) => (value || "").trim().toLowerCase()
@@ -74,7 +86,7 @@ const parseBooleanField = (value: unknown) => {
   const normalized = String(value).trim().toLowerCase()
   if (!normalized) return false
 
-  return normalized === "v" || normalized === "y"
+  return ["v", "y"].includes(normalized)
 }
 
 const toBase64Url = (input: string | ArrayBuffer) => {
@@ -250,17 +262,22 @@ async function fetchSheetRows(sheetId: string, googleToken: string): Promise<str
   return data.values || []
 }
 
-async function loadProfilesByEmail(supabaseAdmin: SupabaseClient): Promise<Map<string, ProfileRow>> {
+async function loadProfilesByEmails(
+  supabaseAdmin: SupabaseClient,
+  emails: string[],
+): Promise<Map<string, ProfileRow>> {
   const profiles = new Map<string, ProfileRow>()
-  const pageSize = 1000
-  let from = 0
+  const distinctEmails = [...new Set(emails.map(normalizeEmail).filter(Boolean))]
+  const chunkSize = 200
 
-  while (true) {
+  for (let i = 0; i < distinctEmails.length; i += chunkSize) {
+    const chunk = distinctEmails.slice(i, i + chunkSize)
+    if (chunk.length === 0) continue
+
     const { data, error } = await supabaseAdmin
       .from("profiles")
       .select("id,email,name")
-      .not("email", "is", null)
-      .range(from, from + pageSize - 1)
+      .in("email", chunk)
 
     if (error) throw new Error(`Failed to load profiles: ${error.message}`)
 
@@ -268,12 +285,27 @@ async function loadProfilesByEmail(supabaseAdmin: SupabaseClient): Promise<Map<s
       const email = normalizeEmail(profile.email)
       if (email) profiles.set(email, profile)
     }
-
-    if (!data || data.length < pageSize) break
-    from += pageSize
   }
 
   return profiles
+}
+
+function extractSheetEmails(rows: string[][]): string[] {
+  if (rows.length <= 1) return []
+
+  const headers = rows[0] || []
+  const emailIndex = findHeaderIndex(headers, HEADER_ALIASES.email, 1)
+  const seen = new Set<string>()
+  const emails: string[] = []
+
+  for (const row of rows.slice(1)) {
+    const email = normalizeEmail(row[emailIndex])
+    if (!email || seen.has(email)) continue
+    seen.add(email)
+    emails.push(email)
+  }
+
+  return emails
 }
 
 function toRegistrations(
@@ -345,7 +377,6 @@ async function syncEvent(
   supabaseAdmin: any,
   event: EventRow,
   googleToken: string,
-  profilesByEmail: Map<string, ProfileRow>,
 ): Promise<SyncResult> {
   try {
     if (!event.google_sheet_id) {
@@ -353,6 +384,7 @@ async function syncEvent(
     }
 
     const rows = await fetchSheetRows(event.google_sheet_id, googleToken)
+    const profilesByEmail = await loadProfilesByEmails(supabaseAdmin, extractSheetEmails(rows))
     const { registrations, skippedCount } = toRegistrations(event, rows, profilesByEmail)
 
     if (registrations.length > 0) {
@@ -401,19 +433,51 @@ async function syncEvent(
   }
 }
 
-async function resolveEvents(supabaseAdmin: any, body: any): Promise<EventRow[]> {
-  if (body?.eventId && body?.sheetId) {
-    return [{
-      id: body.eventId,
-      title: body.title || body.eventId,
-      google_sheet_id: body.sheetId
-    }]
+async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise<EventRow[]> {
+  if (body?.eventId) {
+    if (body?.sheetId) {
+      return [{
+        id: body.eventId,
+        title: body.title || body.eventId,
+        google_sheet_id: body.sheetId
+      }]
+    }
+
+    const { data, error } = await supabaseAdmin
+      .from("events")
+      .select("id,title,google_sheet_id,start_at,end_at,status")
+      .eq("id", body.eventId)
+      .maybeSingle()
+
+    if (error) throw new Error(`Failed to load event for sync: ${error.message}`)
+    if (!data) {
+      throw new Error(`Event ${body.eventId} not found`)
+    }
+
+    if (!data.google_sheet_id) {
+      throw new Error(`Event ${body.eventId} is missing google_sheet_id`)
+    }
+
+    if (data.status !== "published") {
+      throw new Error(`Event ${body.eventId} is not published`)
+    }
+
+    return [data as EventRow]
   }
+
+  const now = Date.now()
+  const recentPastDays = Number.isFinite(body?.recentPastDays as number) ? Math.max(0, Math.min(180, Number(body?.recentPastDays))) : 14
+  const recentFutureDays = Number.isFinite(body?.recentFutureDays as number) ? Math.max(0, Math.min(365, Number(body?.recentFutureDays))) : 60
+  const recentWindowStart = new Date(now - recentPastDays * 24 * 60 * 60 * 1000).toISOString()
+  const recentWindowEnd = new Date(now + recentFutureDays * 24 * 60 * 60 * 1000).toISOString()
 
   const { data, error } = await supabaseAdmin
     .from("events")
-    .select("id,title,google_sheet_id")
+    .select("id,title,google_sheet_id,start_at,end_at,status")
     .not("google_sheet_id", "is", null)
+    .eq("status", "published")
+    .gte("end_at", recentWindowStart)
+    .lte("start_at", recentWindowEnd)
 
   if (error) throw new Error(`Failed to load events for sync: ${error.message}`)
 
@@ -463,22 +527,18 @@ Deno.serve(async (req) => {
       }
     }
 
-
-    const body = await req.json().catch(() => ({}))
+    const body = await req.json().catch(() => ({})) as SyncRequestBody
     const events = await resolveEvents(supabaseAdmin, body)
 
     if (events.length === 0) {
       return Response.json({ message: "No events to sync", results: [] }, { headers: corsHeaders })
     }
 
-    const [googleToken, profilesByEmail] = await Promise.all([
-      getGoogleAccessToken(Deno.env.get("GCP_SERVICE_ACCOUNT")),
-      loadProfilesByEmail(supabaseAdmin),
-    ])
+    const googleToken = await getGoogleAccessToken(Deno.env.get("GCP_SERVICE_ACCOUNT"))
 
     const results: SyncResult[] = []
     for (const event of events) {
-      results.push(await syncEvent(supabaseAdmin, event, googleToken, profilesByEmail))
+      results.push(await syncEvent(supabaseAdmin, event, googleToken))
     }
 
     // 觸發點數結算
