@@ -115,13 +115,6 @@ export const eventAdminService = {
 
     if (checkinError) throw checkinError
 
-    // 立即觸發點數結算 (選用)
-    try {
-      await supabase.rpc('process_pending_points')
-    } catch (err) {
-      console.warn('Point processing skipped or failed:', err)
-    }
-
     return {
       registrationId: registrationRes.data?.id || null,
       donationYear,
