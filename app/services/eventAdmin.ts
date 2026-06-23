@@ -68,6 +68,27 @@ export const eventAdminService = {
     }
   },
 
+  async verifyOperatorScanPermission(): Promise<void> {
+    const supabase = getSupabase()
+    const { data: { user: operatorUser } } = await supabase.auth.getUser()
+
+    if (!operatorUser) throw new Error('使用者未登入')
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role, scan_permission')
+      .eq('id', operatorUser.id)
+      .maybeSingle()
+    
+    if (error) throw error
+    if (!data) throw new Error('找不到操作者資料')
+
+    if (!data.role) throw new Error('操作者沒有設定角色')
+    const canScan = ['admin', 'staff'].includes(data.role)
+
+    if (!canScan) throw new Error('您沒有簽到掃描權限')
+  },
+
   /**
    * 管理員為會員進行簽到
    * @param eventId 活動 ID
@@ -76,24 +97,14 @@ export const eventAdminService = {
   async checkInMember(eventId: string, memberId: string): Promise<CheckinScanResult> {
     const supabase = getSupabase()
     const { data: { user: operatorUser } } = await supabase.auth.getUser()
-    
-    if (!operatorUser) throw new Error('使用者未登入')
 
-    const [operatorRes, memberRes, existingCheckinRes, registrationRes] = await Promise.all([
-      supabase.from('profiles').select('role, scan_permission').eq('id', operatorUser.id).maybeSingle(),
+    const [memberRes, existingCheckinRes, registrationRes] = await Promise.all([
       supabase.from('profiles').select('email').eq('id', memberId).maybeSingle(),
       supabase.from('checkin_records').select('id').eq('event_id', eventId).eq('user_id', memberId).maybeSingle(),
       supabase.from('event_registrations').select('id, donation_year, registration_fee').eq('event_id', eventId).eq('matched_user_id', memberId).maybeSingle()
     ])
-
-    if (operatorRes.error) throw operatorRes.error
+    
     if (memberRes.error) throw memberRes.error
-
-    const canScan =
-      operatorRes.data?.role === 'admin' ||
-      operatorRes.data?.role === 'staff' ||
-      operatorRes.data?.scan_permission === true
-    if (!canScan) throw new Error('您沒有簽到掃描權限')
     if (!memberRes.data) throw new Error('找不到該會員資料')
     if (existingCheckinRes.data) throw new Error('該會員已經完成簽到')
 
@@ -110,7 +121,7 @@ export const eventAdminService = {
         registration_id: registrationRes.data?.id || null,
         email: memberRes.data.email || '',
         checkin_method: 'qr_code',
-        checked_in_by: operatorUser.id
+        checked_in_by: operatorUser?.id
       })
 
     if (checkinError) throw checkinError
@@ -120,7 +131,7 @@ export const eventAdminService = {
       donationYear,
       registrationFee,
       hasAnyPayment,
-      paymentMessage: hasAnyPayment ? '已繳費，可通行' : '未繳費，請提醒繳費',
+      paymentMessage: hasAnyPayment ? '簽到成功，請直接入場' : '簽到成功，請前往繳費',
       paymentLevel: hasAnyPayment ? 'success' : 'danger',
     }
   },

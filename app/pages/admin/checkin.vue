@@ -54,11 +54,10 @@ const onScanSuccess = async (decodedText: string) => {
     scannedMemberId.value = decodedText
     scanResult.value = null
     
-    // 假設 decodedText 就是 memberId (UUID)
     const result = await eventAdminService.checkInMember(selectedEventId.value, decodedText)
     scanResult.value = result
-    
-    !result.hasAnyPayment ? addToast('請提醒繳費', 'error') : addToast('已繳費，簽到成功！', 'success')
+
+    addToast(result.paymentMessage, result.hasAnyPayment ? 'success' : 'error')
     
     // 震動回饋 (如果支援)
     if ('vibrate' in navigator) {
@@ -87,6 +86,9 @@ const startScanner = async () => {
   if (!selectedEventId.value) addToast('請先選擇活動', 'info')
 
   try {
+
+    await eventAdminService.verifyOperatorScanPermission()
+
     if (html5QrCode) await stopScanner()
 
     html5QrCode = new Html5Qrcode('reader', {
@@ -106,7 +108,7 @@ const startScanner = async () => {
     isCameraActive.value = true
   } catch (err: any) {
     console.error('Failed to start scanner', err)
-    addToast('啟動相機失敗，請確保已授權相機權限', 'error')
+    addToast(`啟動相機失敗，${err.message}`, 'error')
   }
 }
 
@@ -183,7 +185,7 @@ onUnmounted(async () => {
           >
             <AppIcon :name="isCameraActive ? 'videocam_off' : 'photo_camera'" />
             {{ isCameraActive ? '停止掃描' : '啟動相機' }}
-          </button>
+          </button>  
           <p class="text-[10px] text-slate-400 text-center font-medium">
             {{ isCameraActive ? '請將會員的 QR Code 對準掃描框。' : '點擊按鈕啟動相機開始掃描。' }}<br>掃描成功後系統會自動完成簽到。
           </p>
