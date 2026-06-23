@@ -1,6 +1,5 @@
 import { userService } from '~/services/user'
-import type { ProfileRow, Activity, PaymentStatusSummary } from '~/types'
-import type { Database } from '~/types'
+import type { Database, ProfileRow, Activity, PaymentStatusSummary } from '~/types'
 
 export function useUser() {
   const router = useRouter()

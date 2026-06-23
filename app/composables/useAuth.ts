@@ -1,6 +1,5 @@
 import { userService } from "~/services/user"
-import type { Database } from "~/types"
-import type { LoginFormData, RegisterFormData } from "~/types/auth"
+import type { Database, LoginFormData, RegisterFormData } from "~/types"
 import { getRoleDestination } from "~/utils/auth"
 
 export const useAuth = () => {

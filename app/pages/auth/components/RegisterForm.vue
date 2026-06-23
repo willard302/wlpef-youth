@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { RegisterFormData } from '~/types/auth'
+import type { RegisterFormData } from '~/types'
 import AuthInputField from './AuthInputField.vue'
 import AuthButton from './AuthButton.vue'
 
