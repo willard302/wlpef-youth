@@ -25,22 +25,16 @@ let html5QrCode: Html5Qrcode | null = null
 const loadEvents = async () => {
   try {
     isLoading.value = true
-    // 獲取近期與進行中的活動
-    const ongoing = await eventService.fetchOngoingEvents()
-    const upcoming = await eventService.fetchUpcomingEvents(10)
     
-    // 合併並去重
-    const combined: Event[] = [...ongoing]
-    upcoming.forEach(u => {
-      if (!combined.find(c => c.id === u.id)) {
-        combined.push(u)
-      }
-    })
-    
-    events.value = combined
-    if (combined[0] && combined.length > 0) {
-      selectedEventId.value = combined[0].id
-    }
+    events.value = await eventService.fetchOngoingEvents()
+
+    if (events.value.length === 0) {
+      events.value = await eventService.fetchUpcomingEvents()
+    } 
+
+    if (!events.value[0] || events.value.length <= 0) return
+
+    selectedEventId.value = events.value[0].id
   } catch (err: any) {
     addToast(err.message || '載入活動失敗', 'error')
   } finally {
@@ -70,20 +64,18 @@ const onScanSuccess = async (decodedText: string) => {
     if ('vibrate' in navigator) {
       navigator.vibrate(200)
     }
-    
-    // 稍微延遲一下再允許下次掃描
+
     setTimeout(() => {
       lastScannedId.value = ''
       isScanning.value = false
-    }, 2000)
+    }, 1500)
     
   } catch (err: any) {
     addToast(err.message || '簽到失敗', 'error')
     isScanning.value = false
-    // 失敗的話也清除 lastScannedId 讓它可以重新掃描
     setTimeout(() => {
       lastScannedId.value = ''
-    }, 3000)
+    }, 2000)
   }
 }
 
@@ -92,10 +84,7 @@ const onScanFailure = (error: any) => {
 }
 
 const startScanner = async () => {
-  if (!selectedEventId.value) {
-    addToast('請先選擇活動', 'info')
-    return
-  }
+  if (!selectedEventId.value) addToast('請先選擇活動', 'info')
 
   try {
     if (html5QrCode) await stopScanner()

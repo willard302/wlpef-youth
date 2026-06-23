@@ -39,7 +39,7 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
-  async fetchUpcomingEvents(limit = 5, status?: EventStatus): Promise<Event[]> {
+  async fetchUpcomingEvents(limit = 1, status?: EventStatus): Promise<Event[]> {
     const supabase = getSupabase()
 
     let query = supabase
