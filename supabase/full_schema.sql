@@ -417,8 +417,8 @@ BEGIN
     ),
     body := jsonb_build_object(
       'mode', 'recent',
-      'recentPastDays', 14,
-      'recentFutureDays', 60
+      'recentPastDays', 0,
+      'recentFutureDays', 30
     )
   );
 END;
