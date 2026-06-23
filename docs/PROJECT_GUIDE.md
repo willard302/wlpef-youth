@@ -105,7 +105,8 @@
 - 用途：讀取 Google Sheet 報名資料，寫入 `event_registrations`
 - 支援：
   - 指定單一活動同步（傳入 `eventId` + `sheetId`）
-  - 同步所有有 `google_sheet_id` 的活動
+  - 預設只同步近期且 `status = published` 的活動，不再全站掃描所有有 `google_sheet_id` 的活動
+- 排程：目前 cron 會每分鐘同步近期且已發布的活動
 - 驗證：要求 `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
 - 需要環境變數：
   - `SUPABASE_URL`

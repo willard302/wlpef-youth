@@ -415,7 +415,11 @@ BEGIN
       'Content-Type', 'application/json',
       'Authorization', 'Bearer ' || service_role_key
     ),
-    body := '{}'::jsonb
+    body := jsonb_build_object(
+      'mode', 'recent',
+      'recentPastDays', 14,
+      'recentFutureDays', 60
+    )
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -426,8 +430,12 @@ BEGIN
     PERFORM cron.unschedule('sync-google-sheet-every-minute');
   END IF;
 
+  IF EXISTS (SELECT 1 FROM cron.job WHERE jobname = 'sync-google-sheet-recent-hourly') THEN
+    PERFORM cron.unschedule('sync-google-sheet-recent-hourly');
+  END IF;
+
   PERFORM cron.schedule(
-    'sync-google-sheet-every-minute',
+    'sync-google-sheet-recent-minute',
     '* * * * *',
     'SELECT public.trigger_google_sheet_sync();'
   );
