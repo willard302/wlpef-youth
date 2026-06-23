@@ -1,36 +1,46 @@
 <script setup lang="ts">
 const showOverlay = ref(false)
 
-onMounted(() => {
-  const ua = navigator.userAgent || navigator.vendor || (window as any).opera || ''
-  const currentUrl = window.location.href
+if (import.meta.client) {
+  ;(() => {
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera || ''
+    const currentUrl = window.location.href
 
-  const isLine = /Line/i.test(ua)
-  const isFB = /FBAN|FBAV/i.test(ua)
-  const isIOS = /iPhone|iPad|iPod/i.test(ua)
-  const isAndroid = /Android/i.test(ua)
+    const isLine = /Line/i.test(ua)
+    const isFB = /FBAN|FBAV/i.test(ua)
+    const isIOS = /iPhone|iPad|iPod/i.test(ua)
+    const isAndroid = /Android/i.test(ua)
 
-  // 處理 LINE 的自動跳轉 (iOS & Android 通用最簡單方式)
-  if (isLine) {
-    const url = new URL(currentUrl)
-    if (url.searchParams.has('openExternalBrowser')) return
-    url.searchParams.set('openExternalBrowser', '1')
-    window.location.href = url.toString()
-    return
-  }
+    // 處理 LINE 的自動跳轉 (iOS & Android 通用最簡單方式)
+    if (isLine) {
+      const url = new URL(currentUrl)
+      const hasRequestedExternal = url.searchParams.get('openExternalBrowser') === '1'
 
-  // 處理 Android 的強制跳轉 (針對 FB 或其他內建瀏覽器)
-  if (isAndroid && (isLine || isFB)) {
-    const schemaUrl = currentUrl.replace(/^https?:\/\//, '')
-    window.location.href = `intent://${schemaUrl}#Intent;scheme=https;package=com.android.chrome;end`
-    return
-  }
+      if (!hasRequestedExternal) {
+        url.searchParams.set('openExternalBrowser', '1')
+        window.location.replace(url.toString())
+        // 立刻返回，避免頁面先顯示內容再跳轉
+        return
+      }
 
-  // 處理 iOS 內嵌瀏覽器 (無法自動跳轉，故顯示遮罩提示)
-  if (isIOS && (isLine || isFB)) {
-    showOverlay.value = true
-  }
-})
+      // 若已帶參數仍在 LINE 內，代表自動外開失敗，改為顯示操作提示
+      showOverlay.value = true
+      return
+    }
+
+    // 處理 Android 的強制跳轉 (針對 FB 或其他內建瀏覽器)
+    if (isAndroid && isFB) {
+      const schemaUrl = currentUrl.replace(/^https?:\/\//, '')
+      window.location.replace(`intent://${schemaUrl}#Intent;scheme=https;package=com.android.chrome;end`)
+      return
+    }
+
+    // 處理 iOS 內嵌瀏覽器 (無法自動跳轉，故顯示遮罩提示)
+    if (isIOS && isFB) {
+      showOverlay.value = true
+    }
+  })()
+}
 </script>
 
 <template>
