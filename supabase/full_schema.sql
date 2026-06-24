@@ -462,3 +462,121 @@ BEGIN
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
+
+-- ============================================================
+-- 9. Raffle (抽獎中獎即時通知)
+-- ============================================================
+
+-- events.raffle_active：標記目前哪場活動正在抽獎中（手機端 gating 開關）
+ALTER TABLE public.events
+  ADD COLUMN IF NOT EXISTS raffle_active boolean NOT NULL DEFAULT false;
+
+-- 抽獎中獎名單
+CREATE TABLE IF NOT EXISTS public.raffle_winners (
+  id         uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  event_id   uuid NOT NULL REFERENCES public.events(id)   ON DELETE CASCADE,
+  user_id    uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  round      int  NOT NULL,
+  name       text,
+  points     int,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (event_id, user_id)            -- 同活動不能中兩次
+);
+
+CREATE INDEX IF NOT EXISTS idx_raffle_winners_event_round
+  ON public.raffle_winners (event_id, round);
+
+ALTER TABLE public.raffle_winners ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Authenticated can view raffle winners" ON public.raffle_winners;
+CREATE POLICY "Authenticated can view raffle winners"
+  ON public.raffle_winners FOR SELECT
+  TO authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Admins manage raffle winners" ON public.raffle_winners;
+CREATE POLICY "Admins manage raffle winners"
+  ON public.raffle_winners FOR ALL
+  TO authenticated
+  USING (public.is_admin(auth.uid()))
+  WITH CHECK (public.is_admin(auth.uid()));
+
+-- 開獎函式：admin only、count 1~100、合格條件 points>=門檻 且 role<>'admin'、同活動去重、round 遞增
+CREATE OR REPLACE FUNCTION public.draw_raffle(p_event_id uuid, p_count int)
+RETURNS SETOF public.raffle_winners
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_threshold int;
+  v_round     int;
+BEGIN
+  IF NOT public.is_admin(auth.uid()) THEN
+    RAISE EXCEPTION 'forbidden: admin only';
+  END IF;
+
+  IF p_count IS NULL OR p_count < 1 OR p_count > 100 THEN
+    RAISE EXCEPTION 'invalid count: must be between 1 and 100';
+  END IF;
+
+  SELECT COALESCE(raffle_threshold, 0) INTO v_threshold
+  FROM public.events WHERE id = p_event_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'event not found';
+  END IF;
+
+  SELECT COALESCE(MAX(round), 0) + 1 INTO v_round
+  FROM public.raffle_winners WHERE event_id = p_event_id;
+
+  RETURN QUERY
+  INSERT INTO public.raffle_winners (event_id, user_id, round, name, points)
+  SELECT p_event_id, p.id, v_round, p.name, p.points
+  FROM public.profiles p
+  WHERE p.points >= v_threshold
+    AND p.role <> 'admin'
+    AND NOT EXISTS (
+      SELECT 1 FROM public.raffle_winners w
+      WHERE w.event_id = p_event_id AND w.user_id = p.id
+    )
+  ORDER BY random()
+  LIMIT p_count
+  RETURNING *;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.draw_raffle(uuid, int) FROM public;
+REVOKE ALL ON FUNCTION public.draw_raffle(uuid, int) FROM anon;
+GRANT EXECUTE ON FUNCTION public.draw_raffle(uuid, int) TO authenticated;
+
+-- 合格名單函式（大螢幕跑馬燈用，純讀取）
+CREATE OR REPLACE FUNCTION public.get_raffle_candidates(p_event_id uuid)
+RETURNS TABLE (id uuid, name text)
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_threshold int;
+BEGIN
+  IF NOT public.is_admin(auth.uid()) THEN
+    RAISE EXCEPTION 'forbidden: admin only';
+  END IF;
+
+  SELECT COALESCE(raffle_threshold, 0) INTO v_threshold
+  FROM public.events WHERE id = p_event_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'event not found';
+  END IF;
+
+  RETURN QUERY
+  SELECT p.id, p.name
+  FROM public.profiles p
+  WHERE p.points >= v_threshold
+    AND p.role <> 'admin';
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_raffle_candidates(uuid) FROM public;
+REVOKE ALL ON FUNCTION public.get_raffle_candidates(uuid) FROM anon;
+GRANT EXECUTE ON FUNCTION public.get_raffle_candidates(uuid) TO authenticated;
