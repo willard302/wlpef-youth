@@ -58,6 +58,19 @@
 - 目前首頁有內建「最新公告」區塊（前端靜態資料）。
 - 「查看全部」尚未開放獨立公告列表頁。
 
+### 3.6 抽獎中獎即時通知（後端）
+- 設計與計畫：`docs/superpowers/specs/2026-06-24-raffle-winner-notification-design.md`、`docs/superpowers/plans/2026-06-24-*`。
+- 合格條件：`profiles.points >= events.raffle_threshold` 且 `role <> 'admin'`；同活動已中獎者後續排除。
+- **不使用 Realtime**（免費版 200 連線上限）；手機改以輪詢一支 CDN 可快取的端點，「是不是我中獎」由前端比對。
+- 開獎走 Postgres RPC（admin only、原子、不可前端竄改）：
+  - `draw_raffle(p_event_id, p_count)`：隨機抽 `count`（1~100）人寫入 `raffle_winners`，回傳本輪中獎者。
+  - `get_raffle_candidates(p_event_id)`：回傳合格者 `id, name`，供大螢幕跑馬燈動畫。
+- 輪詢端點 `GET /api/lottery/active`（`server/api/lottery/active.get.ts`）：
+  - 以 service-role 讀取（`serverSupabaseServiceRole`），回傳目前 `raffle_active` 活動的全體中獎名單。
+  - 回應非個人化、不設 cookie，帶 `Cache-Control: public, s-maxage=2, stale-while-revalidate=5` → Vercel CDN 吸收絕大多數流量。
+- 雙層 gating（守住免費額度）：第一層前端用活動 `start_at`/`end_at` ±buffer 決定是否輪詢；第二層 `events.raffle_active` 為主辦開關（常數見 `app/config/raffle.ts`、`server/utils/raffle.ts`）。
+- 注意：前端大螢幕動畫與手機通知 UI 為**後續另開**，本期僅後端。
+
 ## 4. 路由、Layout、權限規則
 
 ### 4.1 Layout
@@ -83,6 +96,8 @@
 - `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data、**invitation_sent_at**）
 - `point_transactions`: 點數異動紀錄
 - `checkin_records`: 簽到紀錄
+- `events`：另含 **`raffle_active`**（抽獎進行中開關）
+- `raffle_winners`: 抽獎中獎名單（event_id、user_id、round、name、points；`UNIQUE(event_id, user_id)`）
 
 ## 6. Edge Functions
 
