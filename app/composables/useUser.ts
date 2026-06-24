@@ -7,6 +7,7 @@ export function useUser() {
   const nuxtApp = useNuxtApp() as ReturnType<typeof useNuxtApp> & {
     _userProfileSubscription?: any
     _userLoadingPromise?: Promise<void> | null
+    _userVisibilityListenerBound?: boolean
   }
 
   // 全域狀態 (Global State)
@@ -32,9 +33,18 @@ export function useUser() {
     nuxtApp._userLoadingPromise = promise
   }
 
+  const teardownProfileListener = () => {
+    const channel = getProfileSubscription()
+    if (!channel) return
+
+    void supabase.removeChannel(channel)
+    setProfileSubscription(null)
+  }
+
   // 動作 (Actions)
   const setupProfileListener = async () => {
     if (process.server) return
+    if (document.visibilityState !== 'visible') return
     if (getProfileSubscription() || isSettingUpListener.value) return
     isSettingUpListener.value = true
 
@@ -153,6 +163,25 @@ export function useUser() {
     }
   }
 
+  const handleVisibilityChange = () => {
+    if (process.server) return
+
+    if (document.visibilityState === 'hidden') {
+      teardownProfileListener()
+      return
+    }
+
+    if (document.visibilityState === 'visible') {
+      void setupProfileListener()
+      return
+    }
+
+    if (document.visibilityState === 'prerender') {
+      teardownProfileListener()
+      void loadUserData(true)
+    }
+  }
+
   const uploadAvatar = async (file: File) => {
     if (!userProfile.value) return
     status.value.uploading = true
@@ -191,11 +220,7 @@ export function useUser() {
   }
 
   const clearUserData = () => {
-    const channel = getProfileSubscription()
-    if (channel) {
-      supabase.removeChannel(channel)
-      setProfileSubscription(null)
-    }
+    teardownProfileListener()
     userProfile.value = null
     recentActivities.value = []
     paymentStatus.value = null
@@ -245,7 +270,13 @@ export function useUser() {
   // ✨ 自動初始化：只要在 Client 端調用 useUser，就確保資料有在載入
   if (process.client && getCurrentInstance()) {
     onMounted(() => {
-      loadUserData()
+      if (!nuxtApp._userVisibilityListenerBound) {
+        document.addEventListener('visibilitychange', handleVisibilityChange)
+        nuxtApp._userVisibilityListenerBound = true
+      }
+
+      void loadUserData()
+      handleVisibilityChange()
     })
   }
 
