@@ -58,9 +58,6 @@ const onScanSuccess = async (decodedText: string) => {
     const result = await eventAdminService.checkInMember(selectedEventId.value, decodedText)
     scanResult.value = result
 
-    addToast(result.paymentMessage, result.hasAnyPayment ? 'success' : 'error')
-    
-
     if (result.hasAnyPayment) {
       playScanAudio('success')
     } else {
@@ -75,6 +72,8 @@ const onScanSuccess = async (decodedText: string) => {
       lastScannedId.value = ''
       isScanning.value = false
     }, 1500)
+
+    addToast(result.paymentMessage, result.hasAnyPayment ? 'success' : 'error')
     
   } catch (err: any) {
     addToast(err.message || '簽到失敗', 'error')
@@ -102,10 +101,10 @@ const startScanner = async () => {
 
     if (html5QrCode) await stopScanner()
 
-    if (scanAudioSuccess && scanAudioFailure) {
-      scanAudioSuccess.play().then( () => scanAudioSuccess?.pause()).catch(() => {})
-      scanAudioFailure.play().then( () => scanAudioFailure?.pause()).catch(() => {})
-    }
+    // if (scanAudioSuccess && scanAudioFailure) {
+    //   scanAudioSuccess.play().then( () => scanAudioSuccess?.pause()).catch(() => {})
+    //   scanAudioFailure.play().then( () => scanAudioFailure?.pause()).catch(() => {})
+    // }
 
     html5QrCode = new Html5Qrcode('reader', {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -152,18 +151,14 @@ const loadScanAudio = () => {
 
 const playScanAudio = (result: string) => {
   if (!scanAudioSuccess || !scanAudioFailure) return
-  let resultAudio;
-  resultAudio = result === 'success' ? scanAudioSuccess : scanAudioFailure
-  resultAudio.currentTime = 0
-  
-  scanAudioSuccess.currentTime = 0
-  scanAudioFailure.currentTime = 0
 
   if (result === 'success') {
+    scanAudioSuccess.currentTime = 0
     scanAudioSuccess.play().catch(error => {
       console.error('成功音效播放失敗，可能是因為瀏覽器權限限制：', error)
     })
   } else {
+    scanAudioFailure.currentTime = 0
     scanAudioFailure.play().catch(error => {
       console.error('失敗音效播放失敗，可能是因為瀏覽器權限限制：', error)
     })
