@@ -1,4 +1,5 @@
 import { raffleAdminService, type RaffleEvent, type RaffleWinnerRow } from '~/services/raffleAdmin'
+import { GATING_BUFFER_MINUTES } from '~/config/raffle'
 
 export function useAdminRaffle() {
   const { addToast } = useToast()
@@ -7,12 +8,35 @@ export function useAdminRaffle() {
   const selectedEventId = ref<string | null>(null)
   const candidateCount = ref<number | null>(null)
   const winners = ref<RaffleWinnerRow[]>([])
-  const drawCount = ref(1)
+  const drawCount = ref(1) // stepper 草稿值
+  const confirmedCount = ref(1) // 已套用、實際抽獎用的位數
   const loading = ref(false)
   const drawing = ref(false)
 
   const selectedEvent = computed(() => events.value.find(e => e.id === selectedEventId.value) ?? null)
   const isActive = computed(() => !!selectedEvent.value?.raffleActive)
+  // 草稿值與已套用值不同 → 提示尚未套用
+  const countDirty = computed(() => clampCount(drawCount.value) !== confirmedCount.value)
+
+  // 選中活動「現在」是否落在時間窗 [start-buffer, end+buffer] 內（給開始抽獎防呆用）
+  const withinWindow = computed(() => {
+    const e = selectedEvent.value
+    if (!e?.startAt || !e?.endAt) return true // 無時間資訊就不擋
+    const buffer = GATING_BUFFER_MINUTES * 60 * 1000
+    const now = Date.now()
+    return now >= new Date(e.startAt).getTime() - buffer && now <= new Date(e.endAt).getTime() + buffer
+  })
+
+  function clampCount(v: number) {
+    return Math.max(1, Math.min(100, Math.floor(v || 1)))
+  }
+
+  function applyCount() {
+    const v = clampCount(drawCount.value)
+    drawCount.value = v
+    confirmedCount.value = v
+    addToast(`已設定每輪 ${v} 位`, 'success')
+  }
   const totalDrawn = computed(() => winners.value.length)
   const currentRound = computed(() => winners.value.reduce((m, w) => Math.max(m, w.round), 0))
 
@@ -89,7 +113,7 @@ export function useAdminRaffle() {
 
   async function drawOne() {
     if (!selectedEventId.value || drawing.value) return
-    const count = Math.max(1, Math.min(100, Math.floor(drawCount.value || 1)))
+    const count = confirmedCount.value // 用「已套用」的位數
     drawing.value = true
     try {
       const fresh = await raffleAdminService.drawRound(selectedEventId.value, count)
@@ -129,6 +153,9 @@ export function useAdminRaffle() {
     winners,
     winnersByRound,
     drawCount,
+    confirmedCount,
+    countDirty,
+    withinWindow,
     isActive,
     loading,
     drawing,
@@ -136,6 +163,7 @@ export function useAdminRaffle() {
     currentRound,
     loadEvents,
     onSelectEvent,
+    applyCount,
     start,
     stop,
     drawOne,

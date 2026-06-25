@@ -7,6 +7,8 @@ export interface RaffleEvent {
   status: string
   raffleThreshold: number
   raffleActive: boolean
+  startAt: string
+  endAt: string
 }
 
 export interface RaffleWinnerRow {
@@ -27,7 +29,7 @@ export const raffleAdminService = {
   async fetchEvents(): Promise<RaffleEvent[]> {
     const { data, error } = await getSupabase()
       .from('events')
-      .select('id, title, status, raffle_threshold, raffle_active')
+      .select('id, title, status, raffle_threshold, raffle_active, start_at, end_at')
       .order('start_at', { ascending: false })
     if (error) throw error
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -37,6 +39,8 @@ export const raffleAdminService = {
       status: r.status,
       raffleThreshold: r.raffle_threshold ?? 0,
       raffleActive: !!r.raffle_active,
+      startAt: r.start_at,
+      endAt: r.end_at,
     }))
   },
 

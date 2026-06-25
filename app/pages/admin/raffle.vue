@@ -13,6 +13,9 @@ const {
   candidateCount,
   winnersByRound,
   drawCount,
+  confirmedCount,
+  countDirty,
+  withinWindow,
   isActive,
   loading,
   drawing,
@@ -20,6 +23,7 @@ const {
   currentRound,
   loadEvents,
   onSelectEvent,
+  applyCount,
   start,
   stop,
   drawOne,
@@ -27,6 +31,24 @@ const {
 } = useAdminRaffle()
 
 onMounted(loadEvents)
+
+// 開始抽獎：若現在不在活動時間窗內，先警告（一般使用者收不到通知）
+async function onStart() {
+  if (!withinWindow.value) {
+    try {
+      await showConfirmDialog({
+        title: '不在活動時段',
+        message: '現在不在此活動的時間窗內（活動前 30 分 ~ 結束後 30 分），一般使用者的頁面不會輪詢、收不到中獎通知。仍要開始抽獎嗎？',
+        confirmButtonText: '仍要開始',
+        confirmButtonColor: '#f59e0b',
+      })
+    }
+    catch {
+      return // 使用者取消
+    }
+  }
+  await start()
+}
 
 async function confirmRevoke(round: number) {
   try {
@@ -78,16 +100,27 @@ async function confirmRevoke(round: number) {
             <span>合格人數（points ≥ {{ selectedEvent.raffleThreshold }}）</span>
             <b>{{ candidateCount ?? '—' }}</b>
           </div>
-          <van-button v-if="!isActive" type="primary" block @click="start">開始抽獎</van-button>
+          <van-button v-if="!isActive" type="primary" block @click="onStart">開始抽獎</van-button>
           <van-button v-else type="warning" block @click="stop">結束抽獎</van-button>
         </section>
 
-        <!-- 抽獎參數 + 觸發 -->
+        <!-- 抽獎參數 -->
         <section class="rounded-lg border border-slate-200 p-3 space-y-3">
           <div class="flex items-center justify-between">
-            <span class="text-sm font-medium text-slate-700">這一輪抽幾位</span>
-            <van-stepper v-model="drawCount" :min="1" :max="100" integer />
+            <span class="text-sm font-medium text-slate-700">每輪抽幾位</span>
+            <div class="flex items-center gap-2">
+              <van-stepper v-model="drawCount" :min="1" :max="100" integer />
+              <van-button size="small" type="primary" :disabled="!countDirty" @click="applyCount">套用</van-button>
+            </div>
           </div>
+          <p class="text-xs" :class="countDirty ? 'text-amber-600' : 'text-slate-400'">
+            <template v-if="countDirty">已調整位數，按「套用」才會生效</template>
+            <template v-else>目前設定：每輪 <b>{{ confirmedCount }}</b> 位</template>
+          </p>
+        </section>
+
+        <!-- 觸發 -->
+        <section class="rounded-lg border border-slate-200 p-3 space-y-2">
           <van-button
             type="success"
             block
@@ -95,7 +128,7 @@ async function confirmRevoke(round: number) {
             :disabled="!isActive"
             @click="drawOne"
           >
-            抽這一輪（第 {{ currentRound + 1 }} 輪）
+            抽這一輪（第 {{ currentRound + 1 }} 輪・{{ confirmedCount }} 位）
           </van-button>
           <p v-if="!isActive" class="text-xs text-slate-400">先「開始抽獎」才能抽。</p>
         </section>
