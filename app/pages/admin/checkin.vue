@@ -3,6 +3,7 @@ import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
 import { eventService } from '~/services/event'
 import { eventAdminService } from '~/services/eventAdmin'
 import type { Event, CheckinScanResult } from '~/types'
+import CheckInDetailModal from './components/CheckInDetailModal.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -21,6 +22,8 @@ const scannedMemberId = ref('')
 const { addToast } = useToast()
 
 let html5QrCode: Html5Qrcode | null = null
+let scanAudioSuccess: HTMLAudioElement | null = null
+let scanAudioFailure: HTMLAudioElement | null = null
 
 const loadEvents = async () => {
   try {
@@ -44,8 +47,6 @@ const loadEvents = async () => {
 
 const onScanSuccess = async (decodedText: string) => {
   if (isScanning.value) return
-  
-  // 避免重複掃描同一個 ID 太快
   if (decodedText === lastScannedId.value) return
   
   try {
@@ -59,7 +60,13 @@ const onScanSuccess = async (decodedText: string) => {
 
     addToast(result.paymentMessage, result.hasAnyPayment ? 'success' : 'error')
     
-    // 震動回饋 (如果支援)
+
+    if (result.hasAnyPayment) {
+      playScanAudio('success')
+    } else {
+      playScanAudio('failure')
+    }
+
     if ('vibrate' in navigator) {
       navigator.vibrate(200)
     }
@@ -71,6 +78,7 @@ const onScanSuccess = async (decodedText: string) => {
     
   } catch (err: any) {
     addToast(err.message || '簽到失敗', 'error')
+    playScanAudio('failure')
     isScanning.value = false
     setTimeout(() => {
       lastScannedId.value = ''
@@ -83,13 +91,21 @@ const onScanFailure = (error: any) => {
 }
 
 const startScanner = async () => {
-  if (!selectedEventId.value) addToast('請先選擇活動', 'info')
+  if (!selectedEventId.value) {
+    addToast('請先選擇活動', 'info');
+    return;
+  }
 
   try {
 
     await eventAdminService.verifyOperatorScanPermission()
 
     if (html5QrCode) await stopScanner()
+
+    if (scanAudioSuccess && scanAudioFailure) {
+      scanAudioSuccess.play().then( () => scanAudioSuccess?.pause()).catch(() => {})
+      scanAudioFailure.play().then( () => scanAudioFailure?.pause()).catch(() => {})
+    }
 
     html5QrCode = new Html5Qrcode('reader', {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
@@ -98,13 +114,11 @@ const startScanner = async () => {
     
     await html5QrCode.start(
       { facingMode: 'environment' },
-      { 
-        fps: 10, 
-        qrbox: { width: 250, height: 250 }
-      },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
       onScanSuccess,
       onScanFailure
     )
+
     isCameraActive.value = true
   } catch (err: any) {
     console.error('Failed to start scanner', err)
@@ -129,7 +143,35 @@ const stopScanner = async () => {
   }
 }
 
+const loadScanAudio = () => {
+  scanAudioSuccess = new Audio('/audio/scan-success.mp3')
+  scanAudioFailure = new Audio('/audio/scan-failure.mp3')
+  scanAudioSuccess.load()
+  scanAudioFailure.load()
+}
+
+const playScanAudio = (result: string) => {
+  if (!scanAudioSuccess || !scanAudioFailure) return
+  let resultAudio;
+  resultAudio = result === 'success' ? scanAudioSuccess : scanAudioFailure
+  resultAudio.currentTime = 0
+  
+  scanAudioSuccess.currentTime = 0
+  scanAudioFailure.currentTime = 0
+
+  if (result === 'success') {
+    scanAudioSuccess.play().catch(error => {
+      console.error('成功音效播放失敗，可能是因為瀏覽器權限限制：', error)
+    })
+  } else {
+    scanAudioFailure.play().catch(error => {
+      console.error('失敗音效播放失敗，可能是因為瀏覽器權限限制：', error)
+    })
+  }
+}
+
 onMounted(() => {
+  loadScanAudio()
   loadEvents()
 })
 
@@ -151,7 +193,7 @@ onUnmounted(async () => {
         </div>
 
         <div v-if="isLoading" class="py-4 flex justify-center">
-          <div class="size-6 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
+          <van-loading type="spinner" color="#0ea5e9" />
         </div>
         <div v-else-if="events.length === 0" class="py-4 text-center">
           <p class="text-sm text-slate-400">目前沒有可簽到的活動</p>
@@ -191,54 +233,21 @@ onUnmounted(async () => {
           </p>
         </div>
 
-        <div v-if="scanResult" class="mt-6 rounded-3xl p-5 border-2" :class="scanResult.hasAnyPayment ? 'bg-emerald-50 border-emerald-200' : 'bg-rose-50 border-rose-200'">
-          <div class="flex items-center gap-3 mb-4">
-            <div class="size-12 rounded-2xl flex items-center justify-center text-white shadow-lg"
-              :class="scanResult.hasAnyPayment ? 'bg-emerald-500 shadow-emerald-200' : 'bg-rose-500 shadow-rose-200'">
-              <AppIcon :name="scanResult.hasAnyPayment ? 'check_circle' : 'error'" />
-            </div>
-            <div>
-              <p class="text-sm font-bold" :class="scanResult.hasAnyPayment ? 'text-emerald-800' : 'text-rose-800'">
-                {{ scanResult.hasAnyPayment ? '繳費狀態正常' : '請提醒繳費' }}
-              </p>
-              <p class="text-xs font-medium" :class="scanResult.hasAnyPayment ? 'text-emerald-700' : 'text-rose-700'">
-                {{ scanResult.paymentMessage }}
-              </p>
-            </div>
-          </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-2xl bg-white px-4 py-3 border"
-              :class="scanResult.donationYear ? 'border-emerald-200' : 'border-slate-200'">
-              <p class="text-[10px] font-bold text-slate-400 mb-1">年度捐贈</p>
-              <p class="text-sm font-bold" :class="scanResult.donationYear ? 'text-emerald-600' : 'text-slate-500'">
-                {{ scanResult.donationYear ? '已完成' : '未完成' }}
-              </p>
-            </div>
-            <div class="rounded-2xl bg-white px-4 py-3 border"
-              :class="scanResult.registrationFee ? 'border-emerald-200' : 'border-slate-200'">
-              <p class="text-[10px] font-bold text-slate-400 mb-1">活動報名費</p>
-              <p class="text-sm font-bold" :class="scanResult.registrationFee ? 'text-emerald-600' : 'text-slate-500'">
-                {{ scanResult.registrationFee ? '已完成' : '未完成' }}
-              </p>
-            </div>
-          </div>
-
-          <p class="mt-4 text-xs font-medium" :class="scanResult.hasAnyPayment ? 'text-emerald-700' : 'text-rose-700'">
-            會員 ID：{{ scannedMemberId }}
-          </p>
-        </div>
+        <!-- Check in detail modal -->
+        <CheckInDetailModal 
+          v-if="scanResult"
+          :scan-result="scanResult"
+          :scanned-member-id="scannedMemberId"
+        />
       </section>
-
-      <!-- Status Info -->
-      <div v-if="isScanning" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
-        <div class="size-20 bg-sky-500 rounded-3xl flex items-center justify-center mb-6 animate-bounce">
-          <AppIcon name="sync" :size="36" />
-        </div>
-        <h2 class="text-xl font-bold mb-2">簽到處理中...</h2>
-        <p class="text-white/60 text-sm">正在驗證會員資料、報名與繳費狀態</p>
-      </div>
     </main>
+    <div v-if="isScanning" class="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center text-white p-6 text-center">
+      <div class="size-20 flex items-center justify-center animate-bounce mb-16">
+        <img src="/images/shooting-man.png" />
+      </div>
+      <h2 class="text-xl font-bold mb-2">簽到處理中...</h2>
+      <p class="text-white/60 text-sm">正在驗證會員資料、報名與繳費狀態</p>
+    </div>
   </div>
 </template>
 
