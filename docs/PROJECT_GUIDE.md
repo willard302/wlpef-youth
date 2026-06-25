@@ -170,3 +170,13 @@ pnpm preview
   - `README.md`（快速啟動與環境變數）
   - 本文件（功能現況與資料流）
   - `supabase/config.toml`（若新增/調整 Edge Function）
+
+### 9.1 Migration 結構注意事項（重要）
+本專案的 migration **不是自足的**：基線 schema 由 `supabase/full_schema.sql` **手動套用**（在 Studio SQL Editor 跑），`supabase/migrations/` 只是上面的增量補丁。例如 `20260608_*` 直接 `ALTER TABLE public.event_registrations`，但沒有任何 migration 去 `CREATE` 該基礎表。
+
+影響與規則：
+- ✅ 可用：`supabase db push`（直接往遠端套增量）、`supabase db dump`（直接撈遠端 schema）。
+- ❌ 會壞：`supabase db diff`、任何「從空白重放 migration」的 shadow-DB 工具 —— 因為基礎表不存在，重放到第一支 `ALTER` 就失敗（`relation ... does not exist`）。
+- **migration 檔名用 14 位時間戳**（`YYYYMMDDHHMMSS_desc.sql`）。Supabase 以「檔名開頭數字」為 version，同日多支若只用 8 位日期會**撞號**。
+- 既有測試/正式專案若出現孤兒歷史（remote 有、local 無），用 `supabase migration repair --status reverted <version>` 對齊**帳本**（不動 schema），再 `db push`。
+- 想讓 `db diff` 等工具可用，未來可補一支「baseline migration」把 `full_schema.sql` 納入版控起點（屬較大重構，動前先評估）。

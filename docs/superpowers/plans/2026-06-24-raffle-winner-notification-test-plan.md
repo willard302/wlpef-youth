@@ -5,6 +5,18 @@
 - 前提：本專案目前**無自動化測試框架**，故以「可重現的手動驗證（SQL / curl / 觀測）」為主，並在文末附「若要自動化」的建議。
 - 最重要目標：**活動當天不出包**。除了功能正確，特別驗證「免費版額度撐得住 300~500 人」與「正式彩排」。
 
+## 驗證狀態（2026-06-25，測試專案 josh1002's Project）
+
+| 項目 | 狀態 |
+|---|---|
+| 6 個 migration 套用 + Local/Remote 歷史同步 | ✅ 已驗證 |
+| 遠端 schema 與 `full_schema.sql` 對齊（表/欄位/UNIQUE/index/RLS/3 函式/grants，`db dump` 比對） | ✅ 已驗證 |
+| 權限：anon 僅可執行 `get_active_raffle`，不可 `draw_raffle`/`get_raffle_candidates` | ✅ 已驗證 |
+| L2-01/02/05 端點 e2e（`{active:false}` + `Cache-Control` + 無 cookie，本機 `pnpm dev`） | ✅ 已驗證 |
+| L1 寫入路徑（`draw_raffle` 去重/排除 admin/邊界）+ L2-03/04/06（active:true） | ⬜ 待跑（需測試 DB 有 admin + member；SQL 見 §3） |
+| L4 CDN 命中率 / 額度（需 Vercel 環境） | ⬜ 部署後量測 |
+| L5 真機彩排 | ⬜ 活動前 |
+
 ## 1. 測試層次
 
 ```mermaid
