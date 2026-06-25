@@ -27,7 +27,7 @@
 ### Task 1: 資料表 `raffle_winners` 與 `events.raffle_active`
 
 **Files:**
-- Create: `supabase/migrations/20260624_create_raffle_winners.sql`
+- Create: `supabase/migrations/20260624000001_create_raffle_winners.sql`
 - Modify: `supabase/full_schema.sql`（補上同等定義，置於 events 區段之後）
 
 **Interfaces:**
@@ -35,7 +35,7 @@
 
 - [ ] **Step 1: 寫 migration 檔**
 
-建立 `supabase/migrations/20260624_create_raffle_winners.sql`：
+建立 `supabase/migrations/20260624000001_create_raffle_winners.sql`：
 
 ```sql
 -- 抽獎中獎名單
@@ -80,7 +80,7 @@ ALTER TABLE public.events
 請使用者執行（或在 session 用 `!` 前綴）：
 
 Run: `supabase db push`
-Expected: 顯示套用 `20260624_create_raffle_winners` 成功，無錯誤。
+Expected: 顯示套用 `20260624000001_create_raffle_winners` 成功，無錯誤。
 
 - [ ] **Step 3: 驗證表與欄位存在**
 
@@ -111,7 +111,7 @@ Expected: 第二次 INSERT 報 `duplicate key value violates unique constraint`�
 - [ ] **Step 6: Commit**
 
 ```bash
-git add supabase/migrations/20260624_create_raffle_winners.sql supabase/full_schema.sql
+git add supabase/migrations/20260624000001_create_raffle_winners.sql supabase/full_schema.sql
 git commit -m "feat: add raffle_winners table and events.raffle_active"
 ```
 
@@ -120,7 +120,7 @@ git commit -m "feat: add raffle_winners table and events.raffle_active"
 ### Task 2: 開獎函式 `draw_raffle(p_event_id, p_count)`
 
 **Files:**
-- Create: `supabase/migrations/20260624_create_draw_raffle_function.sql`
+- Create: `supabase/migrations/20260624000002_create_draw_raffle_function.sql`
 - Modify: `supabase/full_schema.sql`
 
 **Interfaces:**
@@ -129,7 +129,7 @@ git commit -m "feat: add raffle_winners table and events.raffle_active"
 
 - [ ] **Step 1: 寫 migration 檔**
 
-建立 `supabase/migrations/20260624_create_draw_raffle_function.sql`：
+建立 `supabase/migrations/20260624000002_create_draw_raffle_function.sql`：
 
 ```sql
 CREATE OR REPLACE FUNCTION public.draw_raffle(p_event_id uuid, p_count int)
@@ -183,7 +183,7 @@ GRANT EXECUTE ON FUNCTION public.draw_raffle(uuid, int) TO authenticated;
 - [ ] **Step 2: 套用 migration（需使用者確認）**
 
 Run: `supabase db push`
-Expected: 套用 `20260624_create_draw_raffle_function` 成功。
+Expected: 套用 `20260624000002_create_draw_raffle_function` 成功。
 
 - [ ] **Step 3: 驗證 — 非 admin 被擋**
 
@@ -225,7 +225,7 @@ Expected: 第一/二輪 user 無交集；round 群組為 (1,2)；`admin_leak = 0
 - [ ] **Step 6: Commit**
 
 ```bash
-git add supabase/migrations/20260624_create_draw_raffle_function.sql supabase/full_schema.sql
+git add supabase/migrations/20260624000002_create_draw_raffle_function.sql supabase/full_schema.sql
 git commit -m "feat: add draw_raffle rpc with admin guard and dedup"
 ```
 
@@ -234,7 +234,7 @@ git commit -m "feat: add draw_raffle rpc with admin guard and dedup"
 ### Task 3: 合格名單函式 `get_raffle_candidates(p_event_id)`
 
 **Files:**
-- Create: `supabase/migrations/20260624_create_get_raffle_candidates_function.sql`
+- Create: `supabase/migrations/20260624000003_create_get_raffle_candidates_function.sql`
 - Modify: `supabase/full_schema.sql`
 
 **Interfaces:**
@@ -243,7 +243,7 @@ git commit -m "feat: add draw_raffle rpc with admin guard and dedup"
 
 - [ ] **Step 1: 寫 migration 檔**
 
-建立 `supabase/migrations/20260624_create_get_raffle_candidates_function.sql`：
+建立 `supabase/migrations/20260624000003_create_get_raffle_candidates_function.sql`：
 
 ```sql
 CREATE OR REPLACE FUNCTION public.get_raffle_candidates(p_event_id uuid)
@@ -303,7 +303,7 @@ Expected: 非 admin 報 `forbidden`；`via_rpc = expected`。
 - [ ] **Step 5: Commit**
 
 ```bash
-git add supabase/migrations/20260624_create_get_raffle_candidates_function.sql supabase/full_schema.sql
+git add supabase/migrations/20260624000003_create_get_raffle_candidates_function.sql supabase/full_schema.sql
 git commit -m "feat: add get_raffle_candidates rpc for marquee"
 ```
 
