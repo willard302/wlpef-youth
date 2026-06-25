@@ -53,10 +53,9 @@ pnpm dev
 - `SUPABASE_ANON_KEY`（`merge-duplicate-account` 會使用）
 - `GCP_SERVICE_ACCOUNT`（`sync-google-sheet` 需要，內容為 service account JSON）
 
-## Server 環境變數（Nitro / Vercel）
-抽獎輪詢端點 `GET /api/lottery/active` 以 service-role 讀取，需在**本機 `.env` 與 Vercel 專案環境變數**都設定：
-
-- `SUPABASE_SERVICE_ROLE_KEY`（僅 server 端使用，不會外洩到瀏覽器；於 `nuxt.config.ts` 對映為 supabase 模組的 `serviceKey`）
+## 抽獎輪詢端點
+`GET /api/lottery/active` 以**既有的公開 anon key**（`SUPABASE_KEY`）呼叫 DB 函式 `get_active_raffle()`，
+**不需額外環境變數、不需 service role key**。只要 `SUPABASE_URL` / `SUPABASE_KEY` 設定正確即可運作（本機與 Vercel 皆同）。
 
 ## 文件
 - 專案指南：`docs/PROJECT_GUIDE.md`

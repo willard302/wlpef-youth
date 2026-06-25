@@ -46,8 +46,6 @@ export default defineNuxtConfig({
   supabase: {
     url: process.env.SUPABASE_URL,
     key: process.env.SUPABASE_KEY,
-    // 抽獎輪詢端點 /api/lottery/active 以 service-role 讀取（server 端 only）
-    serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
     redirectOptions: {
       login: '/auth',
       callback: '/auth/confirm',

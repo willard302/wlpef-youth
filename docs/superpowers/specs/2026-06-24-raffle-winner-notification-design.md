@@ -109,9 +109,11 @@ sequenceDiagram
 
 ## 5. 手機輪詢端點（Nitro / Vercel）
 
-新增 server route：`app/server/api/lottery/active.get.ts`
+新增 server route：`server/api/lottery/active.get.ts`（Nuxt 4 server 目錄在專案根層）
 
-回傳格式：
+> 實作定案：端點以**既有公開 anon key**（`SUPABASE_KEY`）server 端 `$fetch` 呼叫 `SECURITY DEFINER` 函式 `get_active_raffle()`，**不需 service role key、不需新增任何環境變數**。理由：service role key 是高權限祕密、且本機與 Vercel 都要管理；改用 anon key + DEFINER 函式只暴露大螢幕本就公開的中獎名單，安全面更小。（Vault 無法解此問題：它是 DB 內機制，無法供外部 server 取得連線憑證。）
+
+回傳格式（由 `get_active_raffle()` 直接產生）：
 
 ```json
 {
@@ -126,7 +128,7 @@ sequenceDiagram
 
 - 無進行中抽獎時回 `{ "active": false }`。
 - **快取標頭**：`Cache-Control: public, s-maxage=2, stale-while-revalidate=5` → Vercel CDN 擋掉絕大多數流量。
-- 以 **anon key 在 server 端自建 supabase client** 讀取，**不可**使用帶 cookie 的 per-user client（否則回應個人化、CDN 不快取）。
+- 以 **anon key 呼叫 RPC**，server 端 `$fetch`、**不帶 cookie**（不可用帶 cookie 的 per-user client，否則回應個人化、CDN 不快取）。
 - 回傳「全體中獎名單」，**「是不是我」比對在前端做** → 端點對所有人一致，才可被快取。
 - 隱私：只輸出中獎者 `userId + name`（公開資訊，已於大螢幕揭示）；不輸出合格者全名單、不輸出點數。
 
