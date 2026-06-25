@@ -26,7 +26,7 @@ const isVisible = computed({
 </script>
 
 <template>
-  <van-action-sheet v-model:show="isVisible">
+  <van-popup v-model:show="isVisible" position="bottom" round closeable>
     <div class="px-6 pt-6 pb-10 bg-slate-50 min-h-[500px]">
       <div class="text-center mb-8">
         <h3 class="text-xl font-bold text-slate-900">我的 QR Code</h3>
@@ -69,5 +69,5 @@ const isVisible = computed({
         </div>
       </div>
     </div>
-  </van-action-sheet>
+  </van-popup>
 </template>
