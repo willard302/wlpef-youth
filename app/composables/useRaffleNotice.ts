@@ -35,11 +35,33 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
   const polling = ref(false)
   const lastResponse = ref<ActiveRaffleResponse | null>(null)
 
-  // 已通知過的輪次，避免每次輪詢都重複跳窗
-  const notifiedRounds = new Set<number>()
   let timer: ReturnType<typeof setInterval> | null = null
 
   const myId = computed(() => user.value?.sub ?? null)
+
+  // 已通知過的輪次存 localStorage（依 event + 使用者），refresh 後也不再重複跳窗
+  function notifiedKey(eventId: string) {
+    return `raffle:notified:${eventId}:${myId.value ?? 'anon'}`
+  }
+  function getNotified(eventId: string): Set<number> {
+    try {
+      const raw = localStorage.getItem(notifiedKey(eventId))
+      return new Set(raw ? (JSON.parse(raw) as number[]) : [])
+    }
+    catch {
+      return new Set()
+    }
+  }
+  function addNotified(eventId: string, rounds: number[]) {
+    try {
+      const set = getNotified(eventId)
+      rounds.forEach(r => set.add(r))
+      localStorage.setItem(notifiedKey(eventId), JSON.stringify([...set]))
+    }
+    catch {
+      // localStorage 不可用時略過（最多退回每次都跳，不致出錯）
+    }
+  }
 
   async function poll() {
     try {
@@ -57,10 +79,14 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
       const mine = (data.winners ?? []).filter(w => w.userId === myId.value)
       myWinningRounds.value = mine.map(w => w.round).sort((a, b) => a - b)
 
-      const fresh = myWinningRounds.value.filter(r => !notifiedRounds.has(r))
-      if (fresh.length) {
-        fresh.forEach(r => notifiedRounds.add(r))
-        options?.onWin?.(fresh)
+      const eventId = data.eventId
+      if (eventId) {
+        const notified = getNotified(eventId)
+        const fresh = myWinningRounds.value.filter(r => !notified.has(r))
+        if (fresh.length) {
+          addNotified(eventId, fresh)
+          options?.onWin?.(fresh)
+        }
       }
     }
     catch (e: unknown) {
