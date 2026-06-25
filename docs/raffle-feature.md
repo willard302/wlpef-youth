@@ -101,6 +101,9 @@ flowchart TD
 - 第一層（前端、零成本）：抓 published 活動時間窗判斷是否輪詢，buffer 可調。每 60 秒重評估、每 10 分鐘重抓活動。
 - 第二層（後端）：`events.raffle_active` 由後台控制台開關。
 
+**只通知一次**：已通知過的輪次存於 `localStorage`（key `raffle:notified:{eventId}:{userId}`），所以**重整頁面不會重複跳窗**；同一輪只跳一次，之後若有**新輪次**中獎才會再跳。
+- 測試時若要對「同帳號同一輪」重看彈窗，需先清掉該 localStorage key（DevTools → Application → Local Storage），或用無痕視窗、或抽新的一輪。
+
 ### 4.2 後台抽獎控制台 `/admin/raffle`
 
 | 檔案 | 角色 |
@@ -111,6 +114,11 @@ flowchart TD
 | `app/pages/admin/index.vue` | 管理首頁「抽獎控制」入口 |
 
 功能：選活動 → 顯示合格人數 → 開始抽獎（自動關掉其他場，確保同時只有一場）→ 設每輪幾位（預設 1、上限 100）→ 逐輪「抽這一輪」→ 依輪次顯示中獎名單、每輪可撤回（含確認）→ 結束抽獎。
+
+**「這一輪抽幾位」是設定，不是觸發**：
+- stepper 的 `+ / −` 只改 `drawCount` 數字，**不會抽獎、不打後端**。
+- 按 **抽這一輪** 才讀 `drawCount` 呼叫 `draw_raffle(event, count)`，一次抽出剛好那麼多位（round 自動 +1）。
+- `drawCount` 抽完不歸零，下一輪沿用同一個數字（要改再用 +/− 調）。
 
 ### 4.3 測試頁 `/raffle-test`
 
