@@ -22,6 +22,7 @@ const quickActions = [
   { label: '活動出席', icon: 'verified', path: '/admin/attendance', color: 'bg-teal-500' },
   { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
   { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
+  { label: '抽獎控制', icon: 'casino', path: '/admin/raffle', color: 'bg-rose-500' },
 ]
 
 const headerActions = [
