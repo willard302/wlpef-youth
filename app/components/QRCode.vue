@@ -27,20 +27,19 @@ const isVisible = computed({
 
 <template>
   <van-popup v-model:show="isVisible" position="bottom" round closeable>
-    <div class="px-6 pt-6 pb-10 bg-slate-50 min-h-[500px]">
+    <div class="px-6 pt-6 pb-10 bg-slate-50 min-h-[96vh]">
       <div class="text-center mb-8">
         <h3 class="text-xl font-bold text-slate-900">我的 QR Code</h3>
         <p class="text-sm text-slate-500 mt-1">出示此碼以完成活動報到</p>
       </div>
 
-      <div v-if="isLoading" class="flex flex-col items-center justify-center py-10">
-        <div class="size-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-slate-500 text-sm font-medium">載入中...</p>
-      </div>
-
-      <div v-else-if="userProfile" class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <!-- QR Code Section -->
-        <div class="p-6 bg-white rounded-[2.5rem] shadow-xl shadow-sky-100/50 border border-white text-center mx-auto w-[260px]">
+      <div class="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <van-skeleton v-if="isLoading">
+          <template #template>
+            <van-skeleton-image class="m-auto" image-size="240" />
+          </template>
+        </van-skeleton>
+        <div v-else-if="userProfile" class="p-6 bg-white rounded-[2.5rem] shadow-xl shadow-sky-100/50 border border-white text-center mx-auto w-[260px]">
           <qrcode-vue
             :value="qrValue"
             :size="200"
