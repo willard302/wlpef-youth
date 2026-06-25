@@ -59,16 +59,10 @@ onMounted(() => {
     <AppHeaderPage title="點數紀錄" />
 
     <main class="px-4 py-6 max-w-md mx-auto space-y-6">
-      <!-- Search Bar -->
-      <div class="relative">
-        <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input 
-          v-model="searchQuery"
-          type="text"
-          placeholder="搜尋姓名、Email 或活動..."
-          class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
-        />
-      </div>
+      <SearchBar
+        v-model="searchQuery"
+        placeholder="搜尋姓名、Email或活動..."
+      />
 
       <div v-if="isLoading" class="flex flex-col items-center py-20 text-slate-400">
         <div class="size-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>

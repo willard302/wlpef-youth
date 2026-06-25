@@ -62,16 +62,10 @@ onMounted(() => {
 
     <main class="px-4 mt-4 space-y-6">
       <!-- Search -->
-      <div class="relative">
-        <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-        <input
-          v-model="searchQuery"
-          type="text"
-          placeholder="搜尋活動名稱..."
-          class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-sky-500/20 outline-none text-sm"
-        />
-      </div>
-
+      <SearchBar
+        v-model="searchQuery"
+        placeholder="搜尋活動名稱..."
+      />
       <!-- List -->
       <div v-if="isLoading" class="flex flex-col items-center py-12 text-slate-400">
         <div class="size-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
