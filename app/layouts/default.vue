@@ -8,6 +8,9 @@ const { tabbarItems, activeIndex } = useTabbarConfig()
 
 const showTabbar = computed(() => route.meta.showTabbar !== false)
 
+// 全域中獎通知（含雙層 gating：活動時間窗 + raffle_active）
+useRaffleNotifier()
+
 
 </script>
 
