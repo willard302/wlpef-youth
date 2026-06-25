@@ -58,19 +58,18 @@
 - 目前首頁有內建「最新公告」區塊（前端靜態資料）。
 - 「查看全部」尚未開放獨立公告列表頁。
 
-### 3.6 抽獎中獎即時通知（後端）
-- 設計與計畫：`docs/superpowers/specs/2026-06-24-raffle-winner-notification-design.md`、`docs/superpowers/plans/2026-06-24-*`。
+### 3.6 抽獎中獎即時通知
+**完整文件見 `docs/raffle-feature.md`**（架構、DB 函式、端點、前端、操作手冊、設定）。摘要：
+
 - 合格條件：`profiles.points >= events.raffle_threshold` 且 `role <> 'admin'`；同活動已中獎者後續排除。
-- **不使用 Realtime**（免費版 200 連線上限）；手機改以輪詢一支 CDN 可快取的端點，「是不是我中獎」由前端比對。
-- DB 函式：
-  - `draw_raffle(p_event_id, p_count)`（admin only、原子、不可前端竄改）：隨機抽 `count`（1~100）人寫入 `raffle_winners`，回傳本輪中獎者。
-  - `get_raffle_candidates(p_event_id)`（admin only）：回傳合格者 `id, name`，供大螢幕跑馬燈動畫。
-  - `get_active_raffle()`（`SECURITY DEFINER`，`GRANT TO anon`）：回傳目前 `raffle_active` 活動的中獎名單，只吐 `userId/name/round` 公開欄位。
-- 輪詢端點 `GET /api/lottery/active`（`server/api/lottery/active.get.ts`）：
-  - 以**既有公開 anon key**（`SUPABASE_KEY`）server 端 `$fetch` 呼叫 `get_active_raffle()`，**不需 service role key**。
-  - 回應非個人化、不設 cookie，帶 `Cache-Control: public, s-maxage=2, stale-while-revalidate=5` → Vercel CDN 吸收絕大多數流量。
-- 雙層 gating（守住免費額度）：第一層前端用活動 `start_at`/`end_at` ±buffer 決定是否輪詢；第二層 `events.raffle_active` 為主辦開關（常數見 `app/config/raffle.ts`、`server/utils/raffle.ts`）。
-- 注意：前端大螢幕動畫與手機通知 UI 為**後續另開**，本期僅後端。
+- **不使用 Realtime**（免費版 ~200 連線上限）；手機輪詢一支 CDN 可快取端點，「是不是我中獎」由前端比對。
+- DB 函式：`draw_raffle`（開獎，admin only）、`get_raffle_candidates`（合格名單，admin only）、`get_active_raffle`（中獎名單，**anon** 可讀）。
+- 端點 `GET /api/lottery/active`：用既有 anon key 呼叫 `get_active_raffle()`，**不需 service role key**；`Cache-Control: s-maxage=2` 讓 Vercel CDN 擋流量。
+- 前端：
+  - 全域通知掛在 `app/layouts/default.vue`（`useRaffleNotifier`）→ 會員任何頁都可收到，含**雙層 gating**（活動時間窗 + `raffle_active`）。
+  - 後台控制台 `/admin/raffle`（逐輪手動抽、撤回、合格人數）；管理首頁有「抽獎控制」入口。
+  - 測試頁 `/raffle-test`（無 gating，調試用）。
+- 環境變數只需 `SUPABASE_URL` / `SUPABASE_KEY`。限制：僅 App 內提示（鎖屏/背景會暫停），未做背景推播。
 
 ## 4. 路由、Layout、權限規則
 

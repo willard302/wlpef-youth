@@ -53,9 +53,11 @@ pnpm dev
 - `SUPABASE_ANON_KEY`（`merge-duplicate-account` 會使用）
 - `GCP_SERVICE_ACCOUNT`（`sync-google-sheet` 需要，內容為 service account JSON）
 
-## 抽獎輪詢端點
-`GET /api/lottery/active` 以**既有的公開 anon key**（`SUPABASE_KEY`）呼叫 DB 函式 `get_active_raffle()`，
-**不需額外環境變數、不需 service role key**。只要 `SUPABASE_URL` / `SUPABASE_KEY` 設定正確即可運作（本機與 Vercel 皆同）。
+## 抽獎中獎即時通知
+活動抽獎環節：後台 `/admin/raffle` 開獎，合格者手機在 App 內即時跳「恭喜中獎」。
+不使用 Realtime（避開免費版連線上限），手機輪詢 `GET /api/lottery/active`（以 anon key 呼叫 `get_active_raffle()`、`s-maxage=2` 走 Vercel CDN 快取），**不需 service role key**——只要 `SUPABASE_URL` / `SUPABASE_KEY` 設定正確即可（本機與 Vercel 皆同）。
+
+完整說明（架構 / DB 函式 / 前端 / 操作手冊 / 設定）見 **`docs/raffle-feature.md`**。
 
 ## 文件
 - 專案指南：`docs/PROJECT_GUIDE.md`
