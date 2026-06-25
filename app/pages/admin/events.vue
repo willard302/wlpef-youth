@@ -7,7 +7,6 @@ import EventForm from './components/EventForm.vue'
 definePageMeta({
   layout: 'admin',
   middleware: ['auth', 'admin'],
-  showTabbar: false,
 })
 
 const { addToast } = useToast()

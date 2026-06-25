@@ -5,8 +5,7 @@ import MemberForm from './components/MemberForm.vue'
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['auth', 'admin'],
-  showTabbar: false,
+  middleware: ['auth', 'admin']
 })
 
 const { addToast } = useToast()

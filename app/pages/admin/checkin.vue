@@ -8,7 +8,6 @@ import { eventAdminService } from '~/services/eventAdmin'
 definePageMeta({
   layout: 'admin',
   middleware: ['auth', 'scanner-access'],
-  showTabbar: false,
 })
 
 const events = ref<Event[]>([])

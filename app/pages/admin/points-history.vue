@@ -5,8 +5,7 @@ import PointsTransactionDetailsModal from './components/PointsTransactionDetails
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['auth', 'admin'],
-  showTabbar: false,
+  middleware: ['auth', 'admin']
 })
 
 const transactions = ref<PointTransaction[]>([])

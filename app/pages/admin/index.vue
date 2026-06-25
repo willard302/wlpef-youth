@@ -8,8 +8,6 @@ import PointsBreakdownModal from './components/PointsBreakdownModal.vue'
 definePageMeta({
   layout: 'admin',
   middleware: ['auth', 'admin'],
-  showTabbar: false,
-  tabbarKey: 'home'
 })
 
 const { openMenu } = useSideMenu()
