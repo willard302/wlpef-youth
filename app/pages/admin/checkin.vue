@@ -199,9 +199,8 @@ onUnmounted(async () => {
           <h3 class="text-sm font-bold uppercase tracking-widest">第一步：選擇活動</h3>
         </div>
 
-        <div v-if="isLoading" class="py-4 flex justify-center">
-          <van-loading type="spinner" color="#0ea5e9" />
-        </div>
+        <AppLoading v-if="isLoading" class="py-4" />
+
         <div v-else-if="events.length === 0" class="py-4 text-center">
           <p class="text-sm text-slate-400">目前沒有可簽到的活動</p>
         </div>

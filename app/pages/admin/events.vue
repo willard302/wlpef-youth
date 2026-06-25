@@ -67,10 +67,7 @@ onMounted(() => {
         placeholder="搜尋活動名稱..."
       />
       <!-- List -->
-      <div v-if="isLoading" class="flex flex-col items-center py-12 text-slate-400">
-        <div class="size-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-xs font-bold tracking-widest uppercase">載入活動中...</p>
-      </div>
+      <AppLoading v-if="isLoading" />
 
       <div v-else-if="filteredEvents.length === 0" class="bg-white rounded-[2rem] py-12 flex flex-col items-center justify-center text-center border-2 border-dashed border-slate-200">
         <AppIcon name="event_busy" :size="36" class="text-slate-200 mb-2" />

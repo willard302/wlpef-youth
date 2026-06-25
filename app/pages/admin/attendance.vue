@@ -130,7 +130,6 @@ onMounted(async () => {
             <span v-if="!isLoading && attendance.length > 0">
               {{ filteredAttendance.length }} / {{ attendance.length }}
             </span>
-            <span v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
         
@@ -139,7 +138,7 @@ onMounted(async () => {
           placeholder="搜尋姓名、Email..."
         />
 
-        <van-loading v-if="isLoading" type="spinner" vertical>載入名單中...</van-loading>
+        <AppLoading v-if="isLoading" />
 
         <div v-else-if="attendance.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="person_off" :size="36" class="text-slate-200 mb-2" />

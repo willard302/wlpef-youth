@@ -150,12 +150,9 @@ onMounted(async () => {
       <section class="space-y-4">
         <div class="flex items-center justify-between px-2">
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">會員清單</h4>
-          <div v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
 
-        <div v-if="isLoading && profiles.length === 0" class="flex flex-col items-center py-12 text-slate-400">
-          <p class="text-xs font-bold tracking-widest">載入會員中...</p>
-        </div>
+        <AppLoading v-if="isLoading && profiles.length === 0" />
 
         <div v-else-if="filteredProfiles.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="group_off" :size="36" class="text-slate-200 mb-2" />

@@ -63,11 +63,7 @@ onMounted(() => {
         v-model="searchQuery"
         placeholder="搜尋姓名、Email或活動..."
       />
-
-      <div v-if="isLoading" class="flex flex-col items-center py-20 text-slate-400">
-        <div class="size-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-sm font-bold tracking-widest">載入中...</p>
-      </div>
+      <AppLoading v-if="isLoading" />
 
       <div v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center py-20 text-slate-400 text-center">
         <AppIcon name="history_toggle_off" :size="60" class="opacity-20 mb-4" />

@@ -311,10 +311,7 @@ onMounted(async () => {
           </h4>
         </div>
 
-        <div v-if="isCalendarLoading || isLoading" class="flex flex-col items-center py-12 text-slate-400">
-          <div class="size-8 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-          <p class="text-xs font-bold tracking-widest">載入活動中...</p>
-        </div>
+        <AppLoading v-if="isCalendarLoading || isLoading" />
 
         <div v-else-if="eventsForSelectedDate.length === 0" class="bg-slate-50/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="event_busy" class="text-4xl text-slate-200 mb-2" />

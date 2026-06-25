@@ -207,7 +207,6 @@ onMounted(async () => {
             <span v-if="!isLoading && registrations.length > 0">
               {{ filteredRegistrations.length }} / {{ registrations.length }}
             </span>
-            <span v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
         
@@ -216,9 +215,7 @@ onMounted(async () => {
           placeholder="搜尋姓名、Email、表單欄位..."
         />
 
-        <div v-if="isLoading" class="flex flex-col items-center py-12 text-slate-400">
-          <p class="text-xs font-bold tracking-widest">載入名單中...</p>
-        </div>
+        <AppLoading v-if="isLoading" />
 
         <div v-else-if="registrations.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="group_off" :size="36" class="text-slate-200 mb-2" />
