@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode'
-import { eventService } from '~/services/event'
-import { eventAdminService } from '~/services/eventAdmin'
 import type { Event, CheckinScanResult } from '~/types'
 import CheckInDetailModal from './components/CheckInDetailModal.vue'
+import { eventService } from '~/services/event'
+import { eventAdminService } from '~/services/eventAdmin'
 
 definePageMeta({
   layout: 'admin',
@@ -22,8 +22,9 @@ const scannedMemberId = ref('')
 const { addToast } = useToast()
 
 let html5QrCode: Html5Qrcode | null = null
-let scanAudioSuccess: HTMLAudioElement | null = null
-let scanAudioFailure: HTMLAudioElement | null = null
+let audioCtx: AudioContext | null = null
+let successBuffer: AudioBuffer | null = null
+let failureBuffer: AudioBuffer | null = null
 
 const loadEvents = async () => {
   try {
@@ -101,11 +102,6 @@ const startScanner = async () => {
 
     if (html5QrCode) await stopScanner()
 
-    // if (scanAudioSuccess && scanAudioFailure) {
-    //   scanAudioSuccess.play().then( () => scanAudioSuccess?.pause()).catch(() => {})
-    //   scanAudioFailure.play().then( () => scanAudioFailure?.pause()).catch(() => {})
-    // }
-
     html5QrCode = new Html5Qrcode('reader', {
       formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
       verbose: false
@@ -142,27 +138,44 @@ const stopScanner = async () => {
   }
 }
 
-const loadScanAudio = () => {
-  scanAudioSuccess = new Audio('/audio/scan-success.mp3')
-  scanAudioFailure = new Audio('/audio/scan-failure.mp3')
-  scanAudioSuccess.load()
-  scanAudioFailure.load()
+const loadScanAudio = async() => {
+  try {
+    audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)()
+  
+    const [resSuccess, resFailure] = await Promise.all([
+      fetch('/audio/scan-success.mp3'),
+      fetch('/audio/scan-failure.mp3')
+    ])
+
+    const [arraySuccess, arrayFailure] = await Promise.all([
+      resSuccess.arrayBuffer(),
+      resFailure.arrayBuffer()
+    ])
+  
+    successBuffer = await audioCtx.decodeAudioData(arraySuccess)
+    failureBuffer = await audioCtx.decodeAudioData(arrayFailure)
+  } catch(error) {
+    console.error('音效預載失敗', 0)
+  }
 }
 
 const playScanAudio = (result: string) => {
-  if (!scanAudioSuccess || !scanAudioFailure) return
+  if (!audioCtx! || !successBuffer || !failureBuffer) return
 
-  if (result === 'success') {
-    scanAudioSuccess.currentTime = 0
-    scanAudioSuccess.play().catch(error => {
-      console.error('成功音效播放失敗，可能是因為瀏覽器權限限制：', error)
-    })
-  } else {
-    scanAudioFailure.currentTime = 0
-    scanAudioFailure.play().catch(error => {
-      console.error('失敗音效播放失敗，可能是因為瀏覽器權限限制：', error)
-    })
+  if (audioCtx.state === 'suspended') {
+    audioCtx.resume()
   }
+
+  const source = audioCtx.createBufferSource()
+  source.buffer = result === 'success' ? successBuffer : failureBuffer
+
+  const gainNode = audioCtx.createGain()
+  gainNode.gain.value = 0.3
+
+  source.connect(gainNode)
+  gainNode.connect(audioCtx.destination)
+
+  source.start()
 }
 
 onMounted(() => {
