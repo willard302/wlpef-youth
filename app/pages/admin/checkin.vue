@@ -194,7 +194,7 @@ onUnmounted(async () => {
     <main class="px-4 pt-6 space-y-6">
       <!-- Step 1: Select Event -->
       <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
-        <div class="flex items-center gap-3 mb-4 text-slate-400">
+        <div v-if="!isCameraActive" class="flex items-center gap-3 mb-4 text-slate-400">
           <AppIcon name="event_note" />
           <h3 class="text-sm font-bold uppercase tracking-widest">第一步：選擇活動</h3>
         </div>
@@ -218,7 +218,7 @@ onUnmounted(async () => {
 
       <!-- Step 2: Scan QR Code -->
       <section class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 overflow-hidden">
-        <div class="flex items-center gap-3 mb-6 text-slate-400">
+        <div v-if="!isCameraActive" class="flex items-center gap-3 mb-6 text-slate-400">
           <AppIcon name="qr_code_scanner" />
           <h3 class="text-sm font-bold uppercase tracking-widest">第二步：掃描會員</h3>
         </div>
