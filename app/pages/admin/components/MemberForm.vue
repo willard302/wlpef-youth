@@ -163,7 +163,7 @@ const onReset = async () => {
         <button
           @click="handleSubmit"
           :disabled="loading || isResetting"
-          class="w-full h-14 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
+          class="w-full h-12 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
         >
           <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
           <AppIcon v-else :name="mode === 'edit' ? 'save' : 'send'" :size="18" />
