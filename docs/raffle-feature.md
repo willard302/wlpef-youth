@@ -158,6 +158,8 @@ flowchart TD
 | Vercel 流量 | 因第一層 gating 綁活動時段：500 人 × 每 3 秒 × 約 2 小時 ≈ 1~2GB，遠低於 Hobby 100GB |
 | 環境變數 | 只需 `SUPABASE_URL` / `SUPABASE_KEY`（**無** service role key） |
 
+> 活動當天 300–500 人的**負載測試方法**（可快取性驗證、k6 分階段壓測、Vercel Hobby 額度與防火牆注意事項、免費雲端壓測方案）見 `docs/raffle-selftest-runbook.md` §E。
+
 ## 8. 限制與已知事項
 
 - **僅 App 內提示**：鎖屏 / 切背景會暫停輪詢，重開才補看到（未做背景 Web Push）。
