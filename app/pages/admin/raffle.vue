@@ -9,6 +9,7 @@ definePageMeta({
 const { selectedEvent } = useAdminEventPicker()
 
 const {
+  selectedDrawItem,
   candidateCount,
   winnersByRound,
   drawCount,
@@ -28,7 +29,6 @@ const {
   revoke,
 } = useAdminRaffle()
 
-const selectedItem = ref<string>('1')
 const lotteryItems = ref([
   { id: '1', name: '禪社紀念衫 (共10名)', totalWinners: 10 },
   { id: '2', name: '禪社隨行杯 (共5名)', totalWinners: 5 },
@@ -87,61 +87,44 @@ const confirmRevoke = async(round: number) => {
         @change="handleEventChange"
       />
 
-      <div>
-        <label class="flex items-center gap-2 text-[#24527A] text-[15px] font-bold mb-3">
-          <AppIcon name="hexagon" />
-          選擇抽獎項目
-        </label>
-        <div class="relative">
-          <select
-            v-model="selectedItem"
-            class="w-full appearance-none bg-[#F5F8FE] text-[#334155] rounded-2xl py-4 px-5 pr-12 font-medium focus:outline-none focus:ring-2 focus:ring-[#0091E6]/20 transition-all cursor-pointer"
-          >
-            <option v-for="item in lotteryItems" :key="item.id" :value="item.id">
-              {{ item.name }}
-            </option>
-          </select>
-          <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none text-[#64748B]">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
-            </svg>
+      <div v-if="selectedEvent" class="grid grid-cols-2 gap-4">
+        <div class="stat-card">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">抽獎狀態</p>
+          <div class="flex items-end justify-between">
+            <p class="text-xl font-black text-slate-800">{{ isActive ? '進行中' : '未開始' }}</p>
           </div>
+        </div>
+        <div class="stat-card">
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">抽獎人數</p>
+          <p class="text-xl font-black text-emerald-500">{{ candidateCount ?? 0 }}</p>
         </div>
       </div>
 
       <template v-if="selectedEvent">
-        <!-- 狀態 + 開關 -->
-        <section class="rounded-lg bg-slate-50 p-3 space-y-3">
-          <div class="flex items-center justify-between text-sm">
-            <span>抽獎狀態</span>
-            <van-tag :type="isActive ? 'success' : 'default'" size="medium">
-              {{ isActive ? '進行中' : '未開始' }}
-            </van-tag>
+        <!-- 抽獎參數 -->
+        <section class="rounded-lg border border-slate-200 p-3 space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="flex items-center gap-2 text-[#24527A] text-[15px] font-bold">
+              <AppIcon name="hexagon" />
+              抽獎項目
+            </label>
+            <div class="relative">
+              <select
+                v-model="selectedDrawItem"
+                class="w-full appearance-none bg-[#F5F8FE] text-[#334155] rounded-2xl py-4 px-5 pr-12 font-medium focus:outline-none focus:ring-2 focus:ring-[#0091E6]/20 transition-all cursor-pointer"
+              >
+                <option v-for="item in lotteryItems" :key="item.id" :value="item.id">
+                  {{ item.name }}
+                </option>
+              </select>
+              <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none text-[#64748B]">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </div>
+            </div>
           </div>
-          <div class="flex items-center justify-between text-sm">
-            <span>合格人數（points ≥ {{ selectedEvent.raffleThreshold }}）</span>
-            <b>{{ candidateCount ?? '—' }}</b>
-          </div>
-          <button
-            v-if="!isActive"
-            @click="onStart"
-            class="w-full h-12 bg-sky-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <AppIcon v-else name="play_arrow" :size="18" />
-            <span>開始抽獎</span>
-          </button>
-          <button
-            v-else
-            @click="stop"
-            class="w-full h-12 bg-white text-red-500 border border-red-100 rounded-2xl font-bold flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <AppIcon v-else name="stop" :size="18" />
-            <span>結束抽獎</span>
-          </button>
         </section>
-
         <!-- 抽獎參數 -->
         <section class="rounded-lg border border-slate-200 p-3 space-y-2">
           <div class="flex items-center justify-between">
@@ -160,18 +143,32 @@ const confirmRevoke = async(round: number) => {
           </p>
         </section>
 
-        <section class="rounded-lg border border-slate-200 p-3 space-y-2">
-          <button
+        <section class="rounded-lg bg-slate-50 p-3 space-y-3">
+          <van-button 
+            v-if="!isActive" 
+            :loading="loading" 
+            icon="play-circle-o"
+            text="開始抽獎"
+            color="#0ea5e9" round size="large" 
+            @click="onStart"
+          />
+          <van-button 
+            v-else
+            :loading="loading" 
+            icon="stop-circle-o"
+            text="結束抽獎"
+            color="#ef4444" round size="large" 
+            @click="stop"
+          />
+          <p v-if="!isActive" class="text-xs text-slate-400">先「開始抽獎」才能抽。</p>
+          <van-button 
             :loading="drawing"
             :disabled="!isActive"
+            icon="star-o"
+            :text="`抽這一輪（第 ${currentRound + 1} 輪・${confirmedCount} 位）`"
+            color="#22c55e" round size="large" 
             @click="drawOne"
-            class="w-full h-12 bg-green-500 text-white rounded-2xl font-bold shadow-lg shadow-sky-100 flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50"
-          >
-            <span v-if="loading" class="size-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <AppIcon v-else name="play_arrow" :size="18" />
-            <span>抽這一輪（第 {{ currentRound + 1 }} 輪・{{ confirmedCount }} 位）</span>
-          </button>
-          <p v-if="!isActive" class="text-xs text-slate-400">先「開始抽獎」才能抽。</p>
+          />
         </section>
 
         <!-- 結果 -->
@@ -197,7 +194,7 @@ const confirmRevoke = async(round: number) => {
                 v-for="w in group.items"
                 :key="w.id"
                 type="primary"
-                size="medium"
+                size="medium" round
               >
                 {{ w.name ?? w.user_id.slice(0, 8) }}
               </van-tag>

@@ -6,6 +6,7 @@ export const useAdminRaffle = () => {
 
   const selectedEventId = ref<string | null>(null)
   const selectedEvent = ref<RaffleEvent | null>(null)
+  const selectedDrawItem = ref<string>('1')
 
   const candidateCount = ref<number | null>(null)
   const winners = ref<RaffleWinnerRow[]>([])
@@ -136,6 +137,7 @@ export const useAdminRaffle = () => {
   return {
     selectedEventId,
     selectedEvent,
+    selectedDrawItem,
     candidateCount,
     winners,
     winnersByRound,
