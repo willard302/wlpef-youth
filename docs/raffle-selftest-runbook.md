@@ -10,34 +10,34 @@
 ### 前置
 
 1. **把站台跑起來**（二選一）：
-   - 本機：`pnpm dev` → `http://localhost:3000`（手機測：`pnpm dev --host` + 區網 IP）
-   - 線上：push 到 GitHub 讓 Vercel 部署 → `https://<app>.vercel.app`
-   - 確認 `.env`（或 Vercel env）`SUPABASE_URL`/`SUPABASE_KEY` 指向要測的專案。
+  - 本機：`pnpm dev` → `http://localhost:3000`（手機測：`pnpm dev --host` + 區網 IP）
+  - 線上：push 到 GitHub 讓 Vercel 部署 → `https://<app>.vercel.app`
+  - 確認 `.env`（或 Vercel env）`SUPABASE_URL`/`SUPABASE_KEY` 指向要測的專案。
 2. **兩個帳號**：一個 `admin`、一個一般 user（例 `test0531@example.com`），各開一個視窗/裝置登入。
 3. **讓 user 有資格中獎**：合格條件是 `points >= 活動門檻`。新帳號 points=0，最簡單就是把要抽的活動**門檻設 0**：
-   ```sql
-   UPDATE public.events SET raffle_threshold = 0 WHERE id = '<EVENT_UUID>';
-   ```
+  ```sql
+  UPDATE public.events SET raffle_threshold = 0 WHERE id = '<EVENT_UUID>';
+  ```
 
 ### A1. admin 開獎（後台控制台）
 
 1. admin 登入 → 管理首頁 → **抽獎控制**（`/admin/raffle`）
 2. 選那場活動 → 確認「合格人數」≥ 1（含測試 user）
-3. 按 **開始抽獎**（系統自動關掉其他場）。若現在不在活動時間窗會跳警告——測試時可選「仍要開始」，但這樣只有 `/raffle-test` 看得到（見 D 注意事項）。
+3. 按 **開始抽獎**（系統自動關掉其他場）。若現在不在活動時間窗會跳警告——測試時可選「仍要開始」，但這樣只有 `/raffle/index.vue` 看得到（見 D 注意事項）。
 4. 用 `+ / −` 設「每輪抽幾位」→ 按 **套用**（草稿值才生效）→ 按 **抽這一輪**（真正開獎；多按幾次＝多輪，提高測試 user 被抽中機率）
 
 ### A2. user 看顯示效果（兩種看法）
 
 | 方式 | 怎麼開 | 條件 |
 |---|---|---|
-| **測試頁（最簡單，隨時可測）** | 開 `/raffle-test` | 無 gating，必定輪詢；顯示我的 id / 目前輪次 / 是否中獎 / 原始回應，中獎跳窗 |
+| **測試頁（最簡單，隨時可測）** | 開 `/raffle/index.vue` | 無 gating，必定輪詢；顯示我的 id / 目前輪次 / 是否中獎 / 原始回應，中獎跳窗 |
 | **正式全域體驗** | 停在**任何會員頁**（首頁等） | 需「現在」落在該活動 `[start−30分, end+30分]` 時間窗內，否則第一層 gating 會擋住不輪詢 |
 
 → 測試 user 被抽中後，**約 5 秒內**跳「🎉 恭喜中獎」，且**同一輪只跳一次**（重整也不重複）。
 
 ### A3.（選用）指定某帳號「必中」做畫面驗證
 
-不靠隨機，直接讓指定帳號中獎（前提：已有一場 `raffle_active=true`、該帳號開著 `/raffle-test` 或會員頁）：
+不靠隨機，直接讓指定帳號中獎（前提：已有一場 `raffle_active=true`、該帳號開著 `/raffle/index.vue` 或會員頁）：
 ```sql
 INSERT INTO public.raffle_winners (event_id, user_id, round, name, points)
 SELECT e.id, p.id, 1, p.name, p.points
@@ -149,7 +149,7 @@ SELECT id, title, raffle_active FROM public.events WHERE raffle_active = true OR
 
 - **延遲**：本機即時；上 Vercel 後 `s-maxage=2` + 輪詢 3 秒，最壞約 5 秒內跳出（設計值）。
 - **僅 App 內提示**：鎖屏 / 切背景會暫停輪詢，重開才補看到（未做背景推播）。
-- **gating**：正式全域通知只在活動時間窗內輪詢；要測「全域」就讓活動時間涵蓋現在，或直接用 `/raffle-test`（無 gating）。
+- **gating**：正式全域通知只在活動時間窗內輪詢；要測「全域」就讓活動時間涵蓋現在，或直接用 `/raffle/index.vue`（無 gating）。
 - **`draw_raffle` 回 0 筆**：代表沒有合格 member（`points ≥ 門檻` 且非 admin），降低門檻或塞測試 member。
 - **CDN 命中率 / 免費額度**：需 Vercel 環境，對端點連打觀察 `x-vercel-cache: HIT`（見測試計畫 L4）。
 
@@ -263,7 +263,7 @@ export default function () {
 壓測還在跑時，另開 `/admin/raffle` 觸發開獎，確認：
 1. 中獎名單在 **~5 秒內** 反映到端點回應（`s-maxage=2` + 輪詢 3 秒的設計上限）。
 2. 開獎當下 Supabase / Vercel **沒有尖峰**（抽獎只是幾次 RPC，不是流量來源）。
-3. 真有手機（或 `/raffle-test`）在跑 → 確認跳窗、且同一輪只跳一次。
+3. 真有手機（或 `/raffle/index.vue`）在跑 → 確認跳窗、且同一輪只跳一次。
 
 ### E5. Vercel Hobby（免費版）額度與防火牆注意事項
 

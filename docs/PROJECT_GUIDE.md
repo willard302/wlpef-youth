@@ -68,7 +68,7 @@
 - 前端：
   - 全域通知掛在 `app/layouts/default.vue`（`useRaffleNotifier`）→ 會員任何頁都可收到，含**雙層 gating**（活動時間窗 + `raffle_active`）。
   - 後台控制台 `/admin/raffle`（逐輪手動抽、撤回、合格人數）；管理首頁有「抽獎控制」入口。
-  - 測試頁 `/raffle-test`（無 gating，調試用）。
+  - 測試頁 `/raffle`（無 gating，調試用）。
 - 環境變數只需 `SUPABASE_URL` / `SUPABASE_KEY`。限制：僅 App 內提示（鎖屏/背景會暫停），未做背景推播。
 
 ## 4. 路由、Layout、權限規則

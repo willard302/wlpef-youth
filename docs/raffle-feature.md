@@ -124,11 +124,11 @@ flowchart TD
 **開始抽獎防呆（非活動時段警告）**：
 - 後端 `draw_raffle` / 端點**不檢查活動時間**，但前端全域通知的第一層 gating 會。
 - 若按「開始抽獎」時**現在不在該活動時間窗**（`[start−30分, end+30分]`），會先跳確認：「現在不在活動時段，一般使用者收不到通知，仍要開始嗎？」—— 提醒但不強制阻擋（仍可用於測試）。
-- 含意：**正式抽獎要在活動時段內進行**，否則一般使用者頁面不會輪詢、收不到通知（只有無 gating 的 `/raffle-test` 看得到）。
+- 含意：**正式抽獎要在活動時段內進行**，否則一般使用者頁面不會輪詢、收不到通知（只有無 gating 的 `/raffle/index` 看得到）。
 
-### 4.3 測試頁 `/raffle-test`
+### 4.3 測試頁 `/raffle`
 
-`app/pages/raffle-test.vue`：**無 gating**、純前端調試用，顯示我的 id、目前輪次、是否中獎與原始回應，方便任何時間驗證單頁效果。正式體驗以 4.1 全域為準。
+`app/pages/raffle/index.vue`：**無 gating**、純前端調試用，顯示我的 id、目前輪次、是否中獎與原始回應，方便任何時間驗證單頁效果。正式體驗以 4.1 全域為準。
 
 ## 5. 設定值（集中管理）
 
@@ -181,7 +181,7 @@ flowchart TD
 - `app/config/raffle.ts`
 - `app/composables/useRaffleNotice.ts`、`app/composables/useRaffleNotifier.ts`
 - `app/composables/admin/raffle.ts`、`app/services/raffleAdmin.ts`
-- `app/pages/admin/raffle.vue`、`app/pages/raffle-test.vue`
+- `app/pages/admin/raffle.vue`、`app/pages/raffle/index.vue`
 - `app/layouts/default.vue`（掛載全域通知）、`app/pages/admin/index.vue`（入口）
 
 ## 10. 後續可擴充（未做）

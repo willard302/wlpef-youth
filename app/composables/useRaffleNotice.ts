@@ -18,7 +18,7 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
 
   let timer: ReturnType<typeof setInterval> | null = null
 
-  const myId = computed(() => user.value?.sub ?? null)
+  const myId = computed(() => user.value?.email ?? null)
 
   // 已通知過的輪次存 localStorage（依 event + 使用者），refresh 後也不再重複跳窗
   function notifiedKey(eventId: string) {
