@@ -8,9 +8,9 @@ definePageMeta({
 })
 
 const { selectedEvent, isPickerLoading, changeEvent } = useAdminEventPicker()
+const { searchQuery } = useSearch()
 
 const attendance = ref<EventCheckin[]>([])
-const searchQuery = ref('')
 
 const selectedAttendance = ref<EventCheckin | null>(null)
 const showAttendanceDetail = ref(false)
@@ -74,16 +74,11 @@ const filteredAttendance = computed(() => {
             <span v-if="isPickerLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
-
-        <div class="relative">
-          <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="搜尋姓名、Email..."
-            class="search-input"
-          />
-        </div>
+        
+        <AppSearchBar 
+          v-model="searchQuery"
+          placeholder="搜尋姓名、Email..."
+        />
 
         <van-loading v-if="isPickerLoading" type="spinner" vertical>載入名單中...</van-loading>
 

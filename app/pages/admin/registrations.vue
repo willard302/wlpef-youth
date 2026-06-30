@@ -11,8 +11,8 @@ definePageMeta({
 
 const { addToast } = useToast()
 const { selectedEvent, registrations, isPickerLoading, changeEvent } = useAdminEventPicker()
+const { searchQuery } = useSearch()
 
-const searchQuery = ref('')
 const isSyncing = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 15
@@ -145,16 +145,11 @@ watch(searchQuery, () => {
             <span v-if="isPickerLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
-
-        <div class="relative">
-          <AppIcon name="search" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="搜尋姓名、Email、表單欄位..."
-            class="w-full h-12 pl-12 pr-4 bg-white rounded-2xl border-none shadow-sm focus:ring-2 focus:ring-primary/50 outline-none text-sm"
-          />
-        </div>
+        
+        <AppSearchBar 
+          v-model="searchQuery"
+          placeholder="搜尋姓名、Email、表單欄位..."
+        />
 
         <div v-if="isPickerLoading" class="flex flex-col items-center py-12 text-slate-400">
           <p class="text-xs font-bold tracking-widest">載入名單中...</p>
