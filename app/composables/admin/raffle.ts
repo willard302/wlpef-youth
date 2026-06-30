@@ -1,11 +1,12 @@
 import { raffleAdminService, type RaffleEvent, type RaffleWinnerRow } from '~/services/raffleAdmin'
 import { GATING_BUFFER_MINUTES } from '~/config/raffle'
 
-export function useAdminRaffle() {
+export const useAdminRaffle = () => {
   const { addToast } = useToast()
 
-  const events = ref<RaffleEvent[]>([])
   const selectedEventId = ref<string | null>(null)
+  const selectedEvent = ref<RaffleEvent | null>(null)
+
   const candidateCount = ref<number | null>(null)
   const winners = ref<RaffleWinnerRow[]>([])
   const drawCount = ref(1) // stepper 草稿值
@@ -13,7 +14,6 @@ export function useAdminRaffle() {
   const loading = ref(false)
   const drawing = ref(false)
 
-  const selectedEvent = computed(() => events.value.find(e => e.id === selectedEventId.value) ?? null)
   const isActive = computed(() => !!selectedEvent.value?.raffleActive)
   // 草稿值與已套用值不同 → 提示尚未套用
   const countDirty = computed(() => clampCount(drawCount.value) !== confirmedCount.value)
@@ -27,16 +27,6 @@ export function useAdminRaffle() {
     return now >= new Date(e.startAt).getTime() - buffer && now <= new Date(e.endAt).getTime() + buffer
   })
 
-  function clampCount(v: number) {
-    return Math.max(1, Math.min(100, Math.floor(v || 1)))
-  }
-
-  function applyCount() {
-    const v = clampCount(drawCount.value)
-    drawCount.value = v
-    confirmedCount.value = v
-    addToast(`已設定每輪 ${v} 位`, 'success')
-  }
   const totalDrawn = computed(() => winners.value.length)
   const currentRound = computed(() => winners.value.reduce((m, w) => Math.max(m, w.round), 0))
 
@@ -52,7 +42,18 @@ export function useAdminRaffle() {
       .map(([round, items]) => ({ round, items }))
   })
 
-  async function refreshSelected() {
+  const clampCount = (v: number) => {
+    return Math.max(1, Math.min(100, Math.floor(v || 1)))
+  }
+
+  const applyCount = () => {
+    const v = clampCount(drawCount.value)
+    drawCount.value = v
+    confirmedCount.value = v
+    addToast(`已設定每輪 ${v} 位`, 'success')
+  }
+
+  const refreshSelected = async() => {
     if (!selectedEventId.value) return
     const [count, wins] = await Promise.all([
       raffleAdminService.fetchCandidateCount(selectedEventId.value).catch(() => null),
@@ -62,35 +63,21 @@ export function useAdminRaffle() {
     winners.value = wins
   }
 
-  async function loadEvents() {
-    loading.value = true
-    try {
-      events.value = await raffleAdminService.fetchEvents()
-      const active = events.value.find(e => e.raffleActive)
-      selectedEventId.value = active?.id ?? events.value[0]?.id ?? null
-      if (selectedEventId.value) await refreshSelected()
-    }
-    catch {
-      addToast('載入活動失敗', 'error')
-    }
-    finally {
-      loading.value = false
-    }
-  }
-
-  async function onSelectEvent(id: string) {
-    selectedEventId.value = id
+  const onSelectEvent = async(event: any) => {
+    selectedEvent.value = event
+    selectedEventId.value = event?.id ?? null
     candidateCount.value = null
     winners.value = []
-    await refreshSelected()
+    if (selectedEventId.value) await refreshSelected()
   }
 
-  async function start() {
+  const start = async() => {
     if (!selectedEventId.value) return
     try {
       await raffleAdminService.startRaffle(selectedEventId.value)
-      const id = selectedEventId.value
-      events.value = events.value.map(e => ({ ...e, raffleActive: e.id === id }))
+      if (selectedEvent.value) {
+        selectedEvent.value.raffleActive = true
+      }
       addToast('已開始抽獎', 'success')
     }
     catch {
@@ -98,12 +85,13 @@ export function useAdminRaffle() {
     }
   }
 
-  async function stop() {
+  const stop = async() => {
     if (!selectedEventId.value) return
     try {
       await raffleAdminService.stopRaffle(selectedEventId.value)
-      const id = selectedEventId.value
-      events.value = events.value.map(e => (e.id === id ? { ...e, raffleActive: false } : e))
+      if (selectedEvent.value) {
+        selectedEvent.value.raffleActive = false
+      }
       addToast('已結束抽獎', 'success')
     }
     catch {
@@ -111,7 +99,7 @@ export function useAdminRaffle() {
     }
   }
 
-  async function drawOne() {
+  const drawOne = async() => {
     if (!selectedEventId.value || drawing.value) return
     const count = confirmedCount.value // 用「已套用」的位數
     drawing.value = true
@@ -133,7 +121,7 @@ export function useAdminRaffle() {
     }
   }
 
-  async function revoke(round: number) {
+  const revoke = async(round: number) => {
     if (!selectedEventId.value) return
     try {
       await raffleAdminService.revokeRound(selectedEventId.value, round)
@@ -146,7 +134,6 @@ export function useAdminRaffle() {
   }
 
   return {
-    events,
     selectedEventId,
     selectedEvent,
     candidateCount,
@@ -161,7 +148,6 @@ export function useAdminRaffle() {
     drawing,
     totalDrawn,
     currentRound,
-    loadEvents,
     onSelectEvent,
     applyCount,
     start,

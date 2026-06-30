@@ -1,23 +1,16 @@
 <script setup lang="ts">
-import { format as fnsFormat } from 'date-fns'
-import { eventAdminService } from '~/services/eventAdmin'
 import type { Event, EventCheckin } from '~/types'
+import { format as fnsFormat } from 'date-fns'
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['auth', 'admin'],
-  showTabbar: false,
+  middleware: ['auth', 'admin']
 })
 
-const { addToast } = useToast()
+const { selectedEvent, isPickerLoading, changeEvent } = useAdminEventPicker()
 
-const isLoading = ref(false)
-const isEventsLoading = ref(false)
-const events = ref<Event[]>([])
 const attendance = ref<EventCheckin[]>([])
 const searchQuery = ref('')
-const selectedEvent = ref<Event | null>(null)
-const showEventPicker = ref(false)
 
 const selectedAttendance = ref<EventCheckin | null>(null)
 const showAttendanceDetail = ref(false)
@@ -27,49 +20,13 @@ const openAttendanceDetail = (item: EventCheckin) => {
   showAttendanceDetail.value = true
 }
 
-const loadEvents = async () => {
-  isEventsLoading.value = true
-  try {
-    events.value = await eventAdminService.fetchAllEventsForAdmin()
-    if (events.value.length > 0) {
-      // Default to the most recent event
-      await selectEvent(events.value[0]!!)
-    }
-  } catch (err: any) {
-    addToast(err.message || '載入活動列表失敗', 'error')
-  } finally {
-    isEventsLoading.value = false
-  }
+const handleEventChange = async(event: Event) => {
+  await changeEvent(event)
 }
-
-const selectEvent = async (event: Event) => {
-  selectedEvent.value = event
-  showEventPicker.value = false
-  isLoading.value = true
-  try {
-    attendance.value = await eventAdminService.fetchAttendanceByEventId(event.id)
-  } catch (err: any) {
-    addToast(err.message || '載入出席名單失敗', 'error')
-    attendance.value = []
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const eventPickerActions = computed(() => {
-  return events.value.map(event => ({
-    name: event.title,
-    subname: `${fnsFormat(event.startAt, 'yyyy/MM/dd')} (${event.status})`,
-    callback: () => selectEvent(event)
-  }))
-})
 
 const filteredAttendance = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
-
-  if (!keyword) {
-    return attendance.value
-  }
+  if (!keyword) return attendance.value
 
   return attendance.value.filter((item) => {
     return (
@@ -79,37 +36,20 @@ const filteredAttendance = computed(() => {
     )
   })
 })
-
-onMounted(async () => {
-  await loadEvents()
-})
 </script>
 
 <template>
   <div class="attendance-page pb-24 min-h-screen bg-slate-50">
     <AppHeaderPage title="活動出席狀況" />
 
-    <main class="px-4 -mt-6 relative z-20 space-y-6">
-      <!-- Event Selector -->
-      <section class="white-glass-card p-5 mt-8">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目前檢視活動</p>
-        <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-bold text-slate-800 truncate">
-              {{ selectedEvent?.title || (isEventsLoading ? '載入中...' : '尚未選擇活動') }}
-            </h3>
-          </div>
-          <button
-            @click="showEventPicker = true"
-            class="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 text-xs font-bold hover:bg-sky-100 transition-all flex items-center gap-2"
-          >
-            <AppIcon name="swap_horiz" :size="18" />
-          </button>
-        </div>
-      </section>
+    <main class="px-4 -mt-6 relative z-20 space-y-3 pb-24">
+      <AdminEventPicker 
+        v-model="selectedEvent"
+        @change="handleEventChange"
+      />
 
       <!-- Stats Summary -->
-      <div v-if="selectedEvent && !isLoading" class="grid grid-cols-2 gap-4">
+      <div v-if="selectedEvent && !isPickerLoading" class="grid grid-cols-2 gap-4">
         <div class="stat-card">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總出席人數</p>
           <div class="flex items-end justify-between">
@@ -128,10 +68,10 @@ onMounted(async () => {
         <div class="flex items-center justify-between px-2">
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">出席名單</h4>
           <div class="flex items-center gap-3 text-[11px] font-bold text-slate-400">
-            <span v-if="!isLoading && attendance.length > 0">
+            <span v-if="!isPickerLoading && attendance.length > 0">
               {{ filteredAttendance.length }} / {{ attendance.length }}
             </span>
-            <span v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
+            <span v-if="isPickerLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
 
@@ -145,7 +85,7 @@ onMounted(async () => {
           />
         </div>
 
-        <van-loading v-if="isLoading" type="spinner" vertical>載入名單中...</van-loading>
+        <van-loading v-if="isPickerLoading" type="spinner" vertical>載入名單中...</van-loading>
 
         <div v-else-if="attendance.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="person_off" :size="36" class="text-slate-200 mb-2" />
@@ -190,16 +130,6 @@ onMounted(async () => {
         </div>
       </section>
     </main>
-
-    <!-- Event Picker -->
-    <van-action-sheet
-      v-model:show="showEventPicker"
-      :actions="eventPickerActions"
-      title="選擇活動"
-      cancel-text="取消"
-      close-on-click-action
-      class="rounded-t-[2.5rem]"
-    />
 
     <!-- Attendance Detail Modal -->
     <van-action-sheet v-model:show="showAttendanceDetail" title="出席詳細資料" class="rounded-t-[2.5rem] overflow-hidden">

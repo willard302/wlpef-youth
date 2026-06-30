@@ -1,24 +1,18 @@
 <script setup lang="ts">
+import type { Event, EventRegistration } from '~/types'
 import { format as fnsFormat } from 'date-fns'
 import { eventAdminService } from '~/services/eventAdmin.js'
-import type { Event, EventRegistration } from '~/types'
 import RegistrationDetailModal from './components/RegistrationDetailModal.vue'
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['auth', 'admin'],
-  showTabbar: false,
+  middleware: ['auth', 'admin']
 })
 
 const { addToast } = useToast()
+const { selectedEvent, registrations, isPickerLoading, changeEvent } = useAdminEventPicker()
 
-const isLoading = ref(false)
-const isEventsLoading = ref(false)
-const events = ref<Event[]>([])
-const registrations = ref<EventRegistration[]>([])
 const searchQuery = ref('')
-const selectedEvent = ref<Event | null>(null)
-const showEventPicker = ref(false)
 const isSyncing = ref(false)
 const currentPage = ref(1)
 const itemsPerPage = 15
@@ -31,34 +25,9 @@ const openRegistrationDetail = (reg: EventRegistration) => {
   registrationDetailVisible.value = true
 }
 
-const loadEvents = async () => {
-  isEventsLoading.value = true
-  try {
-    events.value = await eventAdminService.fetchAllEventsForAdmin()
-    if (events.value.length > 0) {
-      // Default to the most recent event
-      await selectEvent(events.value[0]!!)
-    }
-  } catch (err: any) {
-    addToast(err.message || '載入活動列表失敗', 'error')
-  } finally {
-    isEventsLoading.value = false
-  }
-}
-
-const selectEvent = async (event: Event) => {
-  selectedEvent.value = event
-  showEventPicker.value = false
-  isLoading.value = true
+const handleEventChange = async(event: Event) => {
   currentPage.value = 1
-  try {
-    registrations.value = await eventAdminService.fetchRegistrationsByEventId(event.id)
-  } catch (err: any) {
-    addToast(err.message || '載入報名名單失敗', 'error')
-    registrations.value = []
-  } finally {
-    isLoading.value = false
-  }
+  await changeEvent(event)
 }
 
 const handleSync = async () => {
@@ -75,8 +44,9 @@ const handleSync = async () => {
     )
     
     addToast(`同步完成！匯入 ${results[0].importedCount} 筆，比對成功 ${results[0].matchedCount} 筆`, 'success')
-    // Reload registrations
-    await selectEvent(selectedEvent.value)
+
+    if (!selectedEvent.value) return
+    await changeEvent(selectedEvent.value)
   } catch (err: any) {
     console.error('Sync error:', err)
     addToast(err.message || '同步失敗，請檢查設定', 'error')
@@ -84,14 +54,6 @@ const handleSync = async () => {
     isSyncing.value = false
   }
 }
-
-const eventPickerActions = computed(() => {
-  return events.value.map(event => ({
-    name: event.title,
-    subname: `${fnsFormat(event.startAt, 'yyyy/MM/dd')} (${event.status})`,
-    callback: () => selectEvent(event)
-  }))
-})
 
 const getPointsStatus = (reg: EventRegistration) => {
   return reg.registrationPointsGrantedAt ? '點數已發放' : '處理中'
@@ -103,10 +65,7 @@ const getFirstLoginStatus = (reg: EventRegistration) => {
 
 const filteredRegistrations = computed(() => {
   const keyword = searchQuery.value.trim().toLowerCase()
-
-  if (!keyword) {
-    return registrations.value
-  }
+  if (!keyword) return registrations.value
 
   return registrations.value.filter((reg) => {
     const searchableValues = [
@@ -115,7 +74,6 @@ const filteredRegistrations = computed(() => {
       reg.googleSheetRowId,
       ...Object.entries(reg.rawData ?? {}).flatMap(([key, value]) => [key, String(value ?? '')]),
     ]
-
     return searchableValues.some(value => value?.toLowerCase().includes(keyword))
   })
 })
@@ -126,21 +84,11 @@ const paginatedRegistrations = computed(() => {
   return filteredRegistrations.value.slice(start, end)
 })
 
-const enabledCount = computed(() => {
-  return registrations.value.filter(reg => reg.firstLoginEnabled).length
-})
+const enabledCount = computed(() => registrations.value.filter(reg => reg.firstLoginEnabled).length)
+const disabledCount = computed(() => registrations.value.length - enabledCount.value)
 
-const disabledCount = computed(() => {
-  return registrations.value.length - enabledCount.value
-})
-
-// Reset to page 1 when searching
 watch(searchQuery, () => {
   currentPage.value = 1
-})
-
-onMounted(async () => {
-  await loadEvents()
 })
 </script>
 
@@ -148,28 +96,14 @@ onMounted(async () => {
   <div class="registrations-page pb-24 min-h-screen bg-slate-50">
     <AppHeaderPage title="活動報名狀況" />
 
-    <main class="px-4 -mt-6 relative z-20 space-y-6 pb-24">
-      <!-- Event Selector -->
-      <section class="white-glass-card p-5 mt-8">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">目前檢視活動</p>
-        <div class="flex items-center justify-between">
-          <div class="flex-1 min-w-0">
-            <h3 class="text-lg font-bold text-slate-800 truncate">
-              {{ selectedEvent?.title || (isEventsLoading ? '載入中...' : '尚未選擇活動') }}
-            </h3>
-          </div>
-          <button
-            @click="showEventPicker = true"
-            class="px-4 py-2 rounded-xl bg-sky-50 text-sky-600 text-xs font-bold hover:bg-sky-100 transition-all flex items-center gap-2"
-          >
-            <AppIcon name="swap_horiz" :size="14" />
-            切換活動
-          </button>
-        </div>
-      </section>
+    <main class="px-4 -mt-6 relative z-20 space-y-3 pb-24">
+      <AdminEventPicker 
+        v-model="selectedEvent"
+        @change="handleEventChange"
+      />
 
       <!-- Stats Summary -->
-      <div v-if="selectedEvent && !isLoading" class="grid grid-cols-[1.6fr_1fr_1fr] gap-4">
+      <div v-if="selectedEvent && !isPickerLoading" class="grid grid-cols-[1.6fr_1fr_1fr] gap-4">
         <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-sm">
           <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總報名人數</p>
           <div class="flex items-end justify-between">
@@ -205,10 +139,10 @@ onMounted(async () => {
         <div class="flex items-center justify-between px-2">
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">報名名單</h4>
           <div class="flex items-center gap-3 text-[11px] font-bold text-slate-400">
-            <span v-if="!isLoading && registrations.length > 0">
+            <span v-if="!isPickerLoading && registrations.length > 0">
               {{ filteredRegistrations.length }} / {{ registrations.length }}
             </span>
-            <span v-if="isLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
+            <span v-if="isPickerLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
 
@@ -222,7 +156,7 @@ onMounted(async () => {
           />
         </div>
 
-        <div v-if="isLoading" class="flex flex-col items-center py-12 text-slate-400">
+        <div v-if="isPickerLoading" class="flex flex-col items-center py-12 text-slate-400">
           <p class="text-xs font-bold tracking-widest">載入名單中...</p>
         </div>
 
@@ -291,16 +225,6 @@ onMounted(async () => {
         </div>
       </section>
     </main>
-
-    <!-- Event Picker -->
-    <van-action-sheet
-      v-model:show="showEventPicker"
-      :actions="eventPickerActions"
-      title="選擇活動"
-      cancel-text="取消"
-      close-on-click-action
-      class="rounded-t-[2.5rem]"
-    />
 
     <!-- Registration Detail Modal -->
     <RegistrationDetailModal 
