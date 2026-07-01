@@ -1,25 +1,10 @@
+import type { RaffleEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
+import { normalizeRafflePrizeSettings } from '~/utils/raffle'
+
 // 抽獎控制台資料層。raffle_winners / draw_raffle / get_raffle_candidates 尚未進
 // generated types，故對這些呼叫以 any 取用（套 migration 後重產 database.types.ts 可移除）。
 
-export interface RaffleEvent {
-  id: string
-  title: string
-  status: string
-  raffleThreshold: number
-  raffleActive: boolean
-  startAt: string
-  endAt: string
-}
 
-export interface RaffleWinnerRow {
-  id: string
-  event_id: string
-  user_id: string
-  round: number
-  name: string | null
-  points: number | null
-  created_at: string
-}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getSupabase = () => useSupabaseClient() as any
@@ -29,7 +14,7 @@ export const raffleAdminService = {
   async fetchEvents(): Promise<RaffleEvent[]> {
     const { data, error } = await getSupabase()
       .from('events')
-      .select('id, title, status, raffle_threshold, raffle_active, start_at, end_at')
+      .select('id, title, status, raffle_threshold, raffle_prizes, raffle_active, start_at, end_at')
       .order('start_at', { ascending: false })
     if (error) throw error
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,6 +23,7 @@ export const raffleAdminService = {
       title: r.title,
       status: r.status,
       raffleThreshold: r.raffle_threshold ?? 0,
+      rafflePrizes: normalizeRafflePrizeSettings(r.raffle_prizes ?? []),
       raffleActive: !!r.raffle_active,
       startAt: r.start_at,
       endAt: r.end_at,
@@ -49,6 +35,35 @@ export const raffleAdminService = {
     const { data, error } = await getSupabase().rpc('get_raffle_candidates', { p_event_id: eventId })
     if (error) throw error
     return (data ?? []).length
+  },
+
+  async fetchRafflePrizes(eventId: string): Promise<RafflePrizeSetting[]> {
+    const supabase = getSupabase()
+
+    const { data, error } = await supabase
+      .from('events')
+      .select('raffle_prizes')
+      .maybeSingle()
+      .eq('id', eventId)
+
+    if (error) throw error
+
+    return normalizeRafflePrizeSettings(data?.raffle_prizes ?? [])
+  },
+
+  async updateRafflePrizes(eventId: string, prizes: RafflePrizeSetting[]): Promise<RafflePrizeSetting[]> {
+    const supabase = getSupabase()
+
+    const { data, error } = await supabase
+      .from('events')
+      .update({ raffle_prizes: prizes })
+      .select('raffle_prizes')
+      .maybeSingle()
+      .eq('id', eventId)
+
+    if (error) throw error
+
+    return normalizeRafflePrizeSettings(data?.raffle_prizes ?? [])
   },
 
   // 開始抽獎：先把其他場關掉，確保同時只有一場 raffle_active=true

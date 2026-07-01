@@ -7,17 +7,16 @@ definePageMeta({
 
 const {
   active,
-  currentRound,
-  myWinningRounds,
+  myWinningPrizes,
   lastError,
   polling,
   myId,
   poll,
 } = useRaffleNotice({
-  onWin(rounds) {
+  onWin(wins) {
     void showDialog({
       title: '🎉 恭喜中獎！',
-      message: `你在第 ${rounds.join('、')} 輪中獎了！`,
+      message: `你抽中 ${wins.map(win => win.label).join('、')}！`,
       confirmButtonText: '太棒了',
       theme: 'round-button',
     })
@@ -167,8 +166,8 @@ const isEligible = computed(() => !!userProfile.value)
         <div class="glass-card p-4 flex flex-col justify-between h-32">
           <AppIcon name="military_tech" class="text-primary" size="md" />
           <p class="text-xs font-bold text-slate-700 leading-snug">
-            今日獎項：<br />
-            <span class="text-slate-900 font-black">深度禪修營門票</span>
+            獎項說明：<br />
+            <span class="text-slate-900 font-black">請依後台預先設定為準</span>
           </p>
         </div>
 
@@ -184,7 +183,7 @@ const isEligible = computed(() => !!userProfile.value)
 
       <!-- 中獎輪次（若有） -->
       <div
-        v-if="myWinningRounds.length"
+        v-if="myWinningPrizes.length"
         class="glass-card p-5 bg-emerald-50/60 border border-emerald-200/60"
       >
         <div class="flex items-center gap-2 mb-2">
@@ -192,7 +191,7 @@ const isEligible = computed(() => !!userProfile.value)
           <span class="font-black text-emerald-700 text-sm">恭喜！您中獎了！</span>
         </div>
         <p class="text-xs text-emerald-600">
-          中獎輪次：<b>{{ myWinningRounds.join('、') }}</b>
+          中獎獎項：<b>{{ myWinningPrizes.map(win => win.label).join('、') }}</b>
         </p>
       </div>
 
@@ -212,32 +211,11 @@ const isEligible = computed(() => !!userProfile.value)
           <!-- 彈窗卡片 -->
           <div class="relative z-10 w-full max-w-sm glass-card p-8 text-center space-y-5">
             <!-- 裝飾 logo -->
-            <div class="flex justify-center">
-              <div class="zen-logo w-16 h-16">
-                <div class="zen-logo-inner-1">
-                  <div class="zen-logo-inner-2" />
-                </div>
-              </div>
-            </div>
+            <LogoIcon />
 
             <div class="space-y-1">
               <h2 class="text-2xl font-black text-slate-900">恭喜中獎！</h2>
               <p class="text-sm text-slate-500">您已被選為本次抽獎的幸運得主！</p>
-            </div>
-
-            <div class="space-y-3 pt-2">
-              <button
-                class="w-full py-4 rounded-full font-bold text-sm text-white bg-gradient-to-r from-sky-600 to-primary shadow-lg active:scale-95 transition-all"
-                @click="closeWinModal"
-              >
-                立即領取
-              </button>
-              <button
-                class="text-slate-400 text-sm font-medium hover:text-slate-600 transition-colors"
-                @click="closeWinModal"
-              >
-                稍後再說
-              </button>
             </div>
           </div>
         </div>
@@ -255,30 +233,6 @@ const isEligible = computed(() => !!userProfile.value)
 /* ── Glass Card（沿用 global.css 基礎，局部加強） ── */
 .glass-card {
   @apply rounded-3xl border border-white/60 bg-white/40 backdrop-blur-xl shadow-lg;
-}
-
-/* ── Zen Logo ── */
-.zen-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: #ef4444;
-  padding: 4px;
-  box-shadow: 0 0 20px 6px rgba(255, 255, 255, 0.5);
-}
-.zen-logo-inner-1 {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: #facc15;
-  padding: 4px;
-}
-.zen-logo-inner-2 {
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: #22c55e;
 }
 
 /* ── Modal 進出場動畫 ── */

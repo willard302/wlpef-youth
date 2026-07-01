@@ -1,5 +1,5 @@
 import { POLL_INTERVAL_MS } from '~/config/raffle'
-import type { UseRaffleNoticeOptions, ActiveRaffleResponse } from '~/types'
+import type { UseRaffleNoticeOptions, ActiveRaffleResponse, RaffleWinDisplay } from '~/types'
 
 /**
  * 最小中獎通知機制：每 POLL_INTERVAL_MS 輪詢 /api/lottery/active，
@@ -10,8 +10,8 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
   const user = useSupabaseUser()
 
   const active = ref(false)
-  const currentRound = ref(0)
   const myWinningRounds = ref<number[]>([])
+  const myWinningPrizes = ref<RaffleWinDisplay[]>([])
   const lastError = ref<string | null>(null)
   const polling = ref(false)
   const lastResponse = ref<ActiveRaffleResponse | null>(null)
@@ -50,10 +50,10 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
       lastResponse.value = data
       lastError.value = null
       active.value = !!data.active
-      currentRound.value = data.round ?? 0
 
       if (!data.active || !myId.value) {
         myWinningRounds.value = []
+        myWinningPrizes.value = []
         return
       }
 
@@ -63,9 +63,9 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
       const eventId = data.eventId
       if (eventId) {
         const notified = getNotified(eventId)
-        const fresh = myWinningRounds.value.filter(r => !notified.has(r))
+        const fresh = myWinningPrizes.value.filter(w => !notified.has(w.round))
         if (fresh.length) {
-          addNotified(eventId, fresh)
+          addNotified(eventId, fresh.map(w => w.round))
           options?.onWin?.(fresh)
         }
       }
@@ -95,8 +95,8 @@ export function useRaffleNotice(options?: UseRaffleNoticeOptions) {
 
   return {
     active,
-    currentRound,
     myWinningRounds,
+    myWinningPrizes,
     lastError,
     polling,
     lastResponse,

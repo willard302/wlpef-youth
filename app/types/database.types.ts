@@ -165,6 +165,7 @@ export type Database = {
           location: string | null
           participants: string[] | null
           raffle_threshold: number | null
+          raffle_prizes: Json | null
           registration_bonus: number | null
           start_at: string
           status: string | null
@@ -183,6 +184,7 @@ export type Database = {
           location?: string | null
           participants?: string[] | null
           raffle_threshold?: number | null
+          raffle_prizes?: Json | null
           registration_bonus?: number | null
           start_at: string
           status?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           location?: string | null
           participants?: string[] | null
           raffle_threshold?: number | null
+          raffle_prizes?: Json | null
           registration_bonus?: number | null
           start_at?: string
           status?: string | null

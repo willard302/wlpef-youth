@@ -114,6 +114,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   registration_bonus INTEGER DEFAULT 0,
   checkin_bonus INTEGER DEFAULT 0,
   raffle_threshold INTEGER DEFAULT 0,
+  raffle_prizes JSONB DEFAULT '[]'::jsonb,
   participants TEXT[],
   created_by   UUID         REFERENCES auth.users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ  DEFAULT NOW()
@@ -125,7 +126,8 @@ ALTER TABLE public.events
   ADD COLUMN IF NOT EXISTS google_form_url TEXT,
   ADD COLUMN IF NOT EXISTS registration_bonus INTEGER DEFAULT 0,
   ADD COLUMN IF NOT EXISTS checkin_bonus INTEGER DEFAULT 0,
-  ADD COLUMN IF NOT EXISTS raffle_threshold INTEGER DEFAULT 0;
+  ADD COLUMN IF NOT EXISTS raffle_threshold INTEGER DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS raffle_prizes JSONB DEFAULT '[]'::jsonb;
 
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS email TEXT;
@@ -593,6 +595,7 @@ DECLARE
   v_event_id uuid;
   v_round    int;
   v_winners  jsonb;
+  v_prizes   jsonb;
 BEGIN
   SELECT id INTO v_event_id
   FROM public.events
@@ -603,10 +606,25 @@ BEGIN
     RETURN jsonb_build_object('active', false);
   END IF;
 
+  SELECT COALESCE(raffle_prizes, '[]'::jsonb)
+  INTO v_prizes
+  FROM public.events
+  WHERE id = v_event_id;
+
   SELECT
     COALESCE(
       jsonb_agg(
-        jsonb_build_object('userId', w.user_id, 'name', w.name, 'round', w.round)
+        jsonb_build_object(
+          'userId', w.user_id,
+          'name', w.name,
+          'round', w.round,
+          'prize', NULLIF((
+            SELECT BTRIM(COALESCE(elem ->> 'name', ''))
+            FROM jsonb_array_elements(COALESCE(v_prizes, '[]'::jsonb)) WITH ORDINALITY AS prize(elem, ord)
+            WHERE COALESCE(NULLIF((elem ->> 'order')::int, 0), ord::int) = w.round
+            LIMIT 1
+          ), '')
+        )
         ORDER BY w.round
       ),
       '[]'::jsonb

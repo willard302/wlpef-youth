@@ -14,6 +14,7 @@
 > 全程不使用 Supabase Realtime（避開免費版 ~200 連線上限），改以 HTTP 輪詢 + Vercel CDN 快取，把 500 支手機的流量壓到「每約 2 秒回源 1 次」。
 
 - 合格條件：`profiles.points >= events.raffle_threshold` 且 `role <> 'admin'`；同活動已中獎者後續排除。
+- 獎項設定：`events.raffle_prizes` 先預設好 `[{ order, name, count }]`，`round` 仍作為資料庫中的輪次識別，但前端顯示會依 `order` 轉成「第幾獎：獎項名稱」。
 - 通知形式：**僅 App 內提示**（不做背景 Web Push）。手機鎖屏/切背景會暫停，重開才補看到。
 - 可接受延遲：3~5 秒（實測最壞約 5 秒內）。
 
@@ -54,6 +55,7 @@ sequenceDiagram
 |---|---|
 | `raffle_winners` | 中獎名單：`id, event_id, user_id, round, name, points, created_at`；`UNIQUE(event_id, user_id)`（同活動不重複中獎）；索引 `(event_id, round)` |
 | `events.raffle_active` | `boolean DEFAULT false`：標記目前哪場活動正在抽獎（手機 gating 第二層開關） |
+| `events.raffle_prizes` | `jsonb DEFAULT []`：預先設定的獎項清單，每筆包含 `order`、`name` 與 `count` |
 
 RLS（`raffle_winners`）：登入者可 SELECT；ALL 僅 admin（`is_admin`）。
 
@@ -63,7 +65,7 @@ RLS（`raffle_winners`）：登入者可 SELECT；ALL 僅 admin（`is_admin`）�
 |---|---|---|
 | `draw_raffle(p_event_id, p_count)` | authenticated（內部驗 admin） | 一次交易內隨機抽 `count`（1~100）人、排除 admin 與已中獎者、`round` 自動 +1、寫入並回傳本輪中獎者 |
 | `get_raffle_candidates(p_event_id)` | authenticated（內部驗 admin） | 回傳合格者 `id, name`（後台顯示合格人數 / 未來大螢幕跑馬燈） |
-| `get_active_raffle()` | **anon** + authenticated | 回傳目前 `raffle_active` 活動的中獎名單，只吐 `userId/name/round`；供輪詢端點用 |
+| `get_active_raffle()` | **anon** + authenticated | 回傳目前 `raffle_active` 活動的中獎名單，只吐 `userId/name/round/prize`；供輪詢端點用，`prize` 依 `raffle_prizes[].order` 對應 |
 
 > `draw_raffle` / `get_raffle_candidates` **不開放 anon**；只有 `get_active_raffle` 開放 anon，且只吐公開的中獎資訊。
 
@@ -73,7 +75,7 @@ RLS（`raffle_winners`）：登入者可 SELECT；ALL 僅 admin（`is_admin`）�
 
 - 以**既有公開 anon key**（`SUPABASE_KEY`）server 端 `$fetch` 呼叫 `get_active_raffle()` RPC，**不需 service role key**。
 - 回應非個人化、不設 cookie，帶 `Cache-Control: public, s-maxage=2, stale-while-revalidate=5` → Vercel CDN 吸收絕大多數流量。
-- 回傳：`{ active: false }` 或 `{ active: true, eventId, round, winners: [{ userId, name, round }] }`。
+- 回傳：`{ active: false }` 或 `{ active: true, eventId, round, winners: [{ userId, name, round, prize }] }`。
 - 「是不是我」比對在**前端**做（端點對所有人一致才可被快取）。
 
 ## 4. 前端
@@ -109,17 +111,17 @@ flowchart TD
 | 檔案 | 角色 |
 |---|---|
 | `app/pages/admin/raffle.vue` | 控制台頁（admin layout + `['auth','admin']` middleware） |
-| `app/composables/admin/raffle.ts` | `useAdminRaffle`：選活動、開始/結束、抽一輪、撤回、讀結果 |
-| `app/services/raffleAdmin.ts` | 資料層：`draw_raffle` / `get_raffle_candidates` / 切 `raffle_active` / 讀寫 `raffle_winners` |
+| `app/composables/admin/raffle.ts` | `useAdminRaffle`：選活動、開始/結束、編輯獎項與人數、抽一輪、撤回、讀結果 |
+| `app/services/raffleAdmin.ts` | 資料層：`draw_raffle` / `get_raffle_candidates` / 切 `raffle_active` / 讀寫 `raffle_winners` 與 `events.raffle_prizes` |
 | `app/pages/admin/index.vue` | 管理首頁「抽獎控制」入口 |
 
-功能：選活動 → 顯示合格人數 → 開始抽獎（自動關掉其他場，確保同時只有一場）→ 設每輪幾位 → 逐輪「抽這一輪」→ 依輪次顯示中獎名單、每輪可撤回（含確認）→ 結束抽獎。
+功能：選活動 → 顯示合格人數 → 開始抽獎（自動關掉其他場，確保同時只有一場）→ 預先設定每輪獎項與人數 → 逐輪「抽這一獎」→ 依輪次顯示中獎名單、每輪可撤回（含確認）→ 結束抽獎。
 
-**「每輪抽幾位」是設定，需按「套用」確認**：
-- stepper 的 `+ / −` 只改**草稿值**，不會抽獎、不打後端。
-- 按 **套用** 才把草稿值變成「實際抽獎用的位數」（`confirmedCount`，預設 1、上限 100）；未套用會顯示提示。
-- 按 **抽這一輪** 用**已套用**的位數呼叫 `draw_raffle(event, count)`，一次抽出剛好那麼多位（round 自動 +1）。
-- 已套用的位數抽完不歸零，下一輪沿用（要改再調 stepper + 套用）。
+**「第幾獎 / 人數」是先設定、再抽**：
+- 在 `/admin/raffle` 先把每一獎的 `order`、名稱與中獎人數存進 `events.raffle_prizes`。
+- 按 **儲存** 後才會生效；未儲存時抽獎按鈕會被鎖住，避免用到舊設定。
+- 按 **抽第 N 獎** 時，系統會自動使用該獎預設的人數呼叫 `draw_raffle(event, count)`，`round` 仍由 DB 自動遞增。
+- 後台列表會直接顯示 `第 N 獎：名稱` 與該獎設定的人數。
 
 **開始抽獎防呆（非活動時段警告）**：
 - 後端 `draw_raffle` / 端點**不檢查活動時間**，但前端全域通知的第一層 gating 會。
@@ -128,7 +130,7 @@ flowchart TD
 
 ### 4.3 測試頁 `/raffle`
 
-`app/pages/raffle/index.vue`：**無 gating**、純前端調試用，顯示我的 id、目前輪次、是否中獎與原始回應，方便任何時間驗證單頁效果。正式體驗以 4.1 全域為準。
+`app/pages/raffle/index.vue`：**無 gating**、純前端調試用，顯示我的 id、目前輪次、是否中獎與原始回應，並把中獎輪次轉成獎項名稱，方便任何時間驗證單頁效果。正式體驗以 4.1 全域為準。
 
 ## 5. 設定值（集中管理）
 
@@ -144,7 +146,7 @@ flowchart TD
 1. admin 登入 → 管理首頁 → **抽獎控制**。
 2. 選擇本次抽獎的活動（確認 `raffle_threshold` 與合格人數正確）。
 3. 按 **開始抽獎**（系統自動關掉其他場）。
-4. 設定「這一輪抽幾位」→ 按 **抽這一輪**；要多輪就重複按（round 自動累加）。
+4. 先把每一獎的名稱與人數設定好並按 **儲存**，再按 **抽第 N 獎**；要多輪就重複按（round 自動累加）。
 5. 中獎者手機在約 5 秒內跳「恭喜中獎」；大螢幕可同時展示後台名單。
 6. 抽錯了 → 對該輪按 **撤回本輪**（被撤回者可在後續輪次再被抽中）。
 7. 全部抽完 → 按 **結束抽獎**。

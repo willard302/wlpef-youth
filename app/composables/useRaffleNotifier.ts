@@ -14,10 +14,10 @@ export function useRaffleNotifier() {
 
   const notice = useRaffleNotice({
     auto: false,
-    onWin(rounds) {
+    onWin(wins) {
       void showDialog({
         title: '🎉 恭喜中獎！',
-        message: `你在第 ${rounds.join('、')} 輪中獎了！`,
+        message: `你抽中 ${wins.map(win => win.label).join('、')}！`,
         confirmButtonText: '太棒了',
         theme: 'round-button',
       })

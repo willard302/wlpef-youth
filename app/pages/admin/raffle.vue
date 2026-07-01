@@ -1,79 +1,85 @@
 <script setup lang="ts">
 import type { Event } from '~/types'
+import AdminRaffleDrawStage from '~/components/admin/raffle/components/DrawStage.vue'
+import RaffleForm from './components/RaffleForm.vue'
 
 definePageMeta({
   layout: 'admin',
   middleware: ['auth', 'admin']
 })
 
-const { selectedEvent } = useAdminEventPicker()
+const { selectedEvent, changeEvent } = useAdminEventPicker()
 
 const {
-  selectedDrawItem,
+  showPrizeModal,
   candidateCount,
-  winnersByRound,
-  drawCount,
-  confirmedCount,
-  countDirty,
+  winners,
+  prizeRows,
+  prizeDirty,
   withinWindow,
   isActive,
   loading,
   drawing,
-  totalDrawn,
-  currentRound,
   onSelectEvent,
-  applyCount,
+  removePrizeRow,
+  savePrizes,
   start,
   stop,
   drawOne,
-  revoke,
+  addPrizeRow,
+  updatePrizeRow,
 } = useAdminRaffle()
 
-const lotteryItems = ref([
-  { id: '1', name: '禪社紀念衫 (共10名)', totalWinners: 10 },
-  { id: '2', name: '禪社隨行杯 (共5名)', totalWinners: 5 },
-  { id: '3', name: '特等純棉毛巾 (共3名)', totalWinners: 3 }
-])
+const showDrawStage = ref(false)
+const formMode = ref<'create' | 'edit'>('create')
+const editingIndex = ref<number | null>(null)
+const editingPrize = ref<{ prize: string, name: string, count: number, drawOrder: number } | null>(null)
 
-watch(() => selectedEvent.value, async(newEvent) => {
-  await onSelectEvent(newEvent)
-})
+const openAddPrizeModal = () => {
+  formMode.value = 'create'
+  editingIndex.value = null
+  editingPrize.value = null
+  addPrizeRow()
+}
+
+const openEditPrizeModal = (index: number) => {
+  const prize = prizeRows.value[index]
+  if (!prize) return
+  formMode.value = 'edit'
+  editingIndex.value = index
+  editingPrize.value = {
+    prize: prize.prize,
+    name: prize.name,
+    count: prize.count,
+    drawOrder: prize.drawOrder,
+  }
+  showPrizeModal.value = true
+}
+
+const submitAddPrize = async(payload: { prize: string, name: string, count: number, drawOrder: number }) => {
+  if (formMode.value === 'edit' && editingIndex.value !== null) {
+    await updatePrizeRow(editingIndex.value, payload)
+    return
+  }
+
+  await addPrizeRow(payload)
+}
+
+watch(
+  () => selectedEvent.value,
+  async(newEvent) => {
+    await onSelectEvent(newEvent)
+  },
+  { immediate: true }
+)
 
 const handleEventChange = async(event: Event) => {
-  const { changeEvent } = useAdminEventPicker()
   await changeEvent(event)
 }
 
-const onStart = async() => {
-  if (!withinWindow.value) {
-    try {
-      await showConfirmDialog({
-        title: '不在活動時段',
-        message: '現在不在此活動的時間窗內（活動前 30 分 ~ 結束後 30 分），一般使用者的頁面不會輪詢、收不到中獎通知。仍要開始抽獎嗎？',
-        confirmButtonText: '仍要開始',
-        confirmButtonColor: '#f59e0b',
-      })
-    }
-    catch {
-      return // 使用者取消
-    }
-  }
-  await start()
-}
-
-const confirmRevoke = async(round: number) => {
-  try {
-    await showConfirmDialog({
-      title: '撤回本輪',
-      message: `確定撤回第 ${round} 輪的中獎名單？被撤回者可在後續輪次再被抽中。`,
-      confirmButtonText: '撤回',
-      confirmButtonColor: '#ef4444',
-    })
-    await revoke(round)
-  }
-  catch {
-    // 使用者取消
-  }
+const openDrawStage = () => {
+  if (!selectedEvent.value) return
+  showDrawStage.value = true
 }
 </script>
 
@@ -101,107 +107,84 @@ const confirmRevoke = async(round: number) => {
       </div>
 
       <template v-if="selectedEvent">
-        <!-- 抽獎參數 -->
-        <section class="rounded-lg border border-slate-200 p-3 space-y-2">
-          <div class="flex items-center justify-between">
+        <section class="stat-card space-y-3">
+          <div class="flex items-center justify-between gap-3">
             <label class="flex items-center gap-2 text-[#24527A] text-[15px] font-bold">
-              <AppIcon name="hexagon" />
-              抽獎項目
+              <AppIcon name="military_tech" />
+              獎項
             </label>
-            <div class="relative">
-              <select
-                v-model="selectedDrawItem"
-                class="w-full appearance-none bg-[#F5F8FE] text-[#334155] rounded-2xl py-4 px-5 pr-12 font-medium focus:outline-none focus:ring-2 focus:ring-[#0091E6]/20 transition-all cursor-pointer"
-              >
-                <option v-for="item in lotteryItems" :key="item.id" :value="item.id">
-                  {{ item.name }}
-                </option>
-              </select>
-              <div class="absolute inset-y-0 right-5 flex items-center pointer-events-none text-[#64748B]">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
-                </svg>
-              </div>
+            <div class="flex items-center gap-2 text-xs font-bold">
+              <van-button size="small" type="primary" @click="openAddPrizeModal">新增</van-button>
             </div>
           </div>
-        </section>
-        <!-- 抽獎參數 -->
-        <section class="rounded-lg border border-slate-200 p-3 space-y-2">
-          <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-[#24527A] text-[15px] font-bold">
-              <AppIcon name="people" />
-              每次抽取人數
-            </label>
-            <div class="flex items-center gap-2">
-              <van-stepper v-model="drawCount" :min="1" :max="100" integer />
-              <van-button size="small" type="primary" :disabled="!countDirty" @click="applyCount">套用</van-button>
-            </div>
-          </div>
-          <p class="text-xs" :class="countDirty ? 'text-amber-600' : 'text-slate-400'">
-            <template v-if="countDirty">已調整位數，按「套用」才會生效</template>
-            <template v-else>目前設定：每輪 <b>{{ confirmedCount }}</b> 位</template>
-          </p>
+
+          <van-swipe-cell
+            v-for="(prize, index) in prizeRows"
+            :key="index"
+          >
+            <template #right>
+              <van-button
+                square
+                type="danger"
+                text="刪除"
+                icon="delete"
+                @click="removePrizeRow(index)"
+              />
+            </template>
+            <van-cell 
+              :title="prize.prize || '未命名獎項'"
+              :value="prize.name || '未命名獎品'"
+              :label="`序位 ${ prize.drawOrder } / 中獎人數 ${ prize.count } 位`"
+            />
+            <template #left>
+              <van-button
+                square
+                type="warning"
+                text="編輯"
+                icon="edit"
+                @click="openEditPrizeModal(index)"
+              />
+            </template>
+          </van-swipe-cell>
         </section>
 
         <section class="rounded-lg bg-slate-50 p-3 space-y-3">
-          <van-button 
-            v-if="!isActive" 
-            :loading="loading" 
-            icon="play-circle-o"
+          <p class="text-sm text-slate-500 leading-relaxed">
+            確認獎項設定後，點擊下方按鈕進入抽獎介面。
+          </p>
+          <van-button
+            icon="casino"
             text="開始抽獎"
-            color="#0ea5e9" round size="large" 
-            @click="onStart"
+            color="#22c55e"
+            round
+            size="large"
+            @click="openDrawStage"
           />
-          <van-button 
-            v-else
-            :loading="loading" 
-            icon="stop-circle-o"
-            text="結束抽獎"
-            color="#ef4444" round size="large" 
-            @click="stop"
-          />
-          <p v-if="!isActive" class="text-xs text-slate-400">先「開始抽獎」才能抽。</p>
-          <van-button 
-            :loading="drawing"
-            :disabled="!isActive"
-            icon="star-o"
-            :text="`抽這一輪（第 ${currentRound + 1} 輪・${confirmedCount} 位）`"
-            color="#22c55e" round size="large" 
-            @click="drawOne"
-          />
-        </section>
-
-        <!-- 結果 -->
-        <section class="space-y-2">
-          <div class="flex items-center justify-between">
-            <h2 class="text-sm font-semibold text-slate-700">中獎名單</h2>
-            <span class="text-xs text-slate-400">共 {{ totalDrawn }} 位 / {{ winnersByRound.length }} 輪</span>
-          </div>
-
-          <p v-if="!winnersByRound.length" class="text-sm text-slate-400 py-4 text-center">尚未開獎</p>
-
-          <div
-            v-for="group in winnersByRound"
-            :key="group.round"
-            class="rounded-lg border border-slate-200 p-3 space-y-2"
-          >
-            <div class="flex items-center justify-between">
-              <span class="text-sm font-medium">第 {{ group.round }} 輪（{{ group.items.length }} 位）</span>
-              <van-button size="mini" type="danger" plain @click="confirmRevoke(group.round)">撤回本輪</van-button>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <van-tag
-                v-for="w in group.items"
-                :key="w.id"
-                type="primary"
-                size="medium" round
-              >
-                {{ w.name ?? w.user_id.slice(0, 8) }}
-              </van-tag>
-            </div>
-          </div>
         </section>
       </template>
     </main>
+
+    <RaffleForm
+      v-model:show="showPrizeModal"
+      :mode="formMode"
+      :initial-prize="editingPrize"
+      @submit="submitAddPrize"
+    />
+
+    <AdminRaffleDrawStage
+      v-model:show="showDrawStage"
+      :event="selectedEvent"
+      :candidate-count="candidateCount"
+      :winners="winners"
+      :prize-rows="prizeRows"
+      :prize-dirty="prizeDirty"
+      :within-window="withinWindow"
+      :is-active="isActive"
+      :loading="loading"
+      :drawing="drawing"
+      :on-start="start"
+      :on-stop="stop"
+      :on-draw-one="drawOne"
+    />
   </div>
 </template>
