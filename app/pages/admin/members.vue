@@ -9,10 +9,10 @@ definePageMeta({
 })
 
 const { addToast } = useToast()
+const { searchQuery } = useSearch()
 
 const isLoading = ref(true)
 const profiles = ref<ProfileRow[]>([])
-const searchQuery = ref('')
 const isCreating = ref(false)
 const isUpdating = ref(false)
 
@@ -132,19 +132,19 @@ onMounted(async () => {
         </div>
       </div>
 
-      <!-- Search and Add -->
-      <section class="flex gap-2">
-        <SearchBar 
-          v-model="searchQuery"
-          placeholder="搜尋姓名、Email..."
-        />
-        <button
-          @click="showAddModal = true"
-          class="size-12 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
-        >
-          <AppIcon name="person_add" />
-        </button>
-      </section>
+      <AppSearchBar
+        v-model="searchQuery"
+        placeholder="搜尋姓名、Email..."
+      >
+        <template #right-icon>
+          <button
+            @click="showAddModal = true"
+            class="size-12 bg-sky-500 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-transform"
+          >
+            <AppIcon name="person_add" />
+          </button>
+        </template>
+      </AppSearchBar>
 
       <!-- Member List -->
       <section class="space-y-4">

@@ -1,6 +1,7 @@
 export * from './database'
 
 export * from './activity'
+export * from './raffle'
 export * from './auth'
 export * from './navigation'
 export * from './event'

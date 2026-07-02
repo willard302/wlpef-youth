@@ -58,6 +58,19 @@
 - 目前首頁有內建「最新公告」區塊（前端靜態資料）。
 - 「查看全部」尚未開放獨立公告列表頁。
 
+### 3.6 抽獎中獎即時通知
+**完整文件見 `docs/raffle-feature.md`**（架構、DB 函式、端點、前端、操作手冊、設定）。摘要：
+
+- 合格條件：`profiles.points >= events.raffle_threshold` 且 `role <> 'admin'`；同活動已中獎者後續排除。
+- **不使用 Realtime**（免費版 ~200 連線上限）；手機輪詢一支 CDN 可快取端點，「是不是我中獎」由前端比對。
+- DB 函式：`draw_raffle`（開獎，admin only）、`get_raffle_candidates`（合格名單，admin only）、`get_active_raffle`（中獎名單，**anon** 可讀）。
+- 端點 `GET /api/lottery/active`：用既有 anon key 呼叫 `get_active_raffle()`，**不需 service role key**；`Cache-Control: s-maxage=2` 讓 Vercel CDN 擋流量。
+- 前端：
+  - 全域通知掛在 `app/layouts/default.vue`（`useRaffleNotifier`）→ 會員任何頁都可收到，含**雙層 gating**（活動時間窗 + `raffle_active`）。
+  - 後台控制台 `/admin/raffle`（逐輪手動抽、撤回、合格人數）；管理首頁有「抽獎控制」入口。
+  - 測試頁 `/raffle`（無 gating，調試用）。
+- 環境變數只需 `SUPABASE_URL` / `SUPABASE_KEY`。限制：僅 App 內提示（鎖屏/背景會暫停），未做背景推播。
+
 ## 4. 路由、Layout、權限規則
 
 ### 4.1 Layout
@@ -83,6 +96,8 @@
 - `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data、**invitation_sent_at**）
 - `point_transactions`: 點數異動紀錄
 - `checkin_records`: 簽到紀錄
+- `events`：另含 **`raffle_active`**（抽獎進行中開關）
+- `raffle_winners`: 抽獎中獎名單（event_id、user_id、round、name、points；`UNIQUE(event_id, user_id)`）
 
 ## 6. Edge Functions
 
@@ -154,3 +169,13 @@ pnpm preview
   - `README.md`（快速啟動與環境變數）
   - 本文件（功能現況與資料流）
   - `supabase/config.toml`（若新增/調整 Edge Function）
+
+### 9.1 Migration 結構注意事項（重要）
+本專案的 migration **不是自足的**：基線 schema 由 `supabase/full_schema.sql` **手動套用**（在 Studio SQL Editor 跑），`supabase/migrations/` 只是上面的增量補丁。例如 `20260608_*` 直接 `ALTER TABLE public.event_registrations`，但沒有任何 migration 去 `CREATE` 該基礎表。
+
+影響與規則：
+- ✅ 可用：`supabase db push`（直接往遠端套增量）、`supabase db dump`（直接撈遠端 schema）。
+- ❌ 會壞：`supabase db diff`、任何「從空白重放 migration」的 shadow-DB 工具 —— 因為基礎表不存在，重放到第一支 `ALTER` 就失敗（`relation ... does not exist`）。
+- **migration 檔名用 14 位時間戳**（`YYYYMMDDHHMMSS_desc.sql`）。Supabase 以「檔名開頭數字」為 version，同日多支若只用 8 位日期會**撞號**。
+- 既有測試/正式專案若出現孤兒歷史（remote 有、local 無），用 `supabase migration repair --status reverted <version>` 對齊**帳本**（不動 schema），再 `db push`。
+- 想讓 `db diff` 等工具可用，未來可補一支「baseline migration」把 `full_schema.sql` 納入版控起點（屬較大重構，動前先評估）。

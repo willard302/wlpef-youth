@@ -1,5 +1,12 @@
 export type EventStatus = 'draft' | 'published' | 'closed'
 
+export interface RafflePrize {
+  prize: string
+  name: string
+  count: number
+  drawOrder: number
+}
+
 export interface Event {
   id: string
   title: string
@@ -15,6 +22,7 @@ export interface Event {
   registrationBonus: number
   checkinBonus: number
   raffleThreshold: number
+  rafflePrizes?: RafflePrize[]
   
   // Derived display fields
   date: Date
@@ -37,6 +45,7 @@ export interface CreateEventPayload {
   registration_bonus?: number
   checkin_bonus?: number
   raffle_threshold?: number
+  raffle_prizes?: Array<{ prize: string; name: string; count: number; drawOrder: number }>
 }
 
 export interface EventRegistration {

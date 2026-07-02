@@ -1,6 +1,7 @@
 import { addMonths, endOfMonth, format, parseISO, startOfMonth, subMonths } from 'date-fns'
 import type { EventRegistration, EventCheckin, Event, Role } from '~/types'
 import type { RegistrationRow, CheckinRow, EventRow, ProfileRow  } from '~/types'
+import { normalizeRafflePrizeSettings } from '~/utils/raffle'
 
 export const mapToRegistration = (row: RegistrationRow): EventRegistration => {
   return {
@@ -58,6 +59,7 @@ export const mapToEvent = (row: EventRow): Event => {
     registrationBonus: row.registration_bonus ?? 0,
     checkinBonus: row.checkin_bonus ?? 0,
     raffleThreshold: row.raffle_threshold ?? 0,
+    rafflePrizes: normalizeRafflePrizeSettings(row.raffle_prizes as any),
     date: startAt,
     time: row.all_day ? '全天' : format(startAt, 'HH:mm'),
     period: hours < 12 ? 'AM' : 'PM',

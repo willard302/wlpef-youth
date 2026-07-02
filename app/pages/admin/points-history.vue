@@ -8,9 +8,10 @@ definePageMeta({
   middleware: ['auth', 'admin']
 })
 
+const { searchQuery } = useSearch()
+
 const transactions = ref<PointTransaction[]>([])
 const isLoading = ref(true)
-const searchQuery = ref('')
 const detailsDialogOpen = ref(false)
 const selectedTransaction = ref<PointTransaction | null>(null)
 const currentPage = ref(1)
@@ -59,11 +60,16 @@ onMounted(() => {
     <AppHeaderPage title="點數紀錄" />
 
     <main class="px-4 py-6 max-w-md mx-auto space-y-6">
-      <SearchBar
+      <!-- Search Bar -->
+      <AppSearchBar 
         v-model="searchQuery"
-        placeholder="搜尋姓名、Email或活動..."
+        placeholder="搜尋姓名、Email 或活動..."
       />
-      <AppLoading v-if="isLoading" />
+
+      <div v-if="isLoading" class="flex flex-col items-center py-20 text-slate-400">
+        <div class="size-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-sm font-bold tracking-widest">載入中...</p>
+      </div>
 
       <div v-else-if="filteredTransactions.length === 0" class="flex flex-col items-center py-20 text-slate-400 text-center">
         <AppIcon name="history_toggle_off" :size="60" class="opacity-20 mb-4" />
