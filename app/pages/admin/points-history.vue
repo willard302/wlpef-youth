@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import { eventAdminService } from '~/services/eventAdmin.js'
-import type { PointTransaction } from '~/types'
 import PointsTransactionDetailsModal from './components/PointsTransactionDetailsModal.vue'
 
 definePageMeta({
@@ -8,47 +6,18 @@ definePageMeta({
   middleware: ['auth', 'admin']
 })
 
-const { searchQuery } = useSearch()
-
-const transactions = ref<PointTransaction[]>([])
-const isLoading = ref(true)
-const detailsDialogOpen = ref(false)
-const selectedTransaction = ref<PointTransaction | null>(null)
-const currentPage = ref(1)
-const itemsPerPage = 15
-
-const fetchTransactions = async () => {
-  try {
-    isLoading.value = true
-    transactions.value = await eventAdminService.fetchAllPointTransactions()
-  } catch (error) {
-    console.error('Failed to fetch transactions', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const filteredTransactions = computed(() => {
-  if (!searchQuery.value) return transactions.value
-  const query = searchQuery.value.toLowerCase()
-  return transactions.value.filter(tx => 
-    tx.userName?.toLowerCase().includes(query) || 
-    tx.userEmail?.toLowerCase().includes(query) ||
-    tx.eventTitle?.toLowerCase().includes(query) ||
-    tx.description?.toLowerCase().includes(query)
-  )
-})
-
-const paginatedTransactions = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return filteredTransactions.value.slice(start, end)
-})
-
-const openDetails = (tx: PointTransaction) => {
-  selectedTransaction.value = tx
-  detailsDialogOpen.value = true
-}
+const {
+  isLoading,
+  detailsDialogOpen,
+  selectedTransaction,
+  searchQuery,
+  filteredTransactions,
+  paginatedTransactions,
+  currentPage,
+  itemsPerPage,
+  fetchTransactions,
+  openDetails,
+} = useAdminPoints()
 
 onMounted(() => {
   fetchTransactions()
