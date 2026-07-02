@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
-import { eventAdminService } from '~/services/eventAdmin.js'
 import type { Event } from '~/types'
-import EventForm from './components/EventForm.vue'
+import { eventAdminService } from '~/services/eventAdmin.js'
 
 definePageMeta({
   layout: 'admin',
@@ -111,15 +110,11 @@ onMounted(() => {
               {{ event.location || '未設定地點' }}
             </p>
           </div>
-
-          <div class="shrink-0 text-slate-300">
-            <AppIcon name="chevron_right" />
-          </div>
         </div>
       </div>
     </main>
 
-    <EventForm
+    <AdminEventForm
       v-model:show="eventFormVisible"
       :event-id="editingEventId"
       @saved="loadEvents"

@@ -141,14 +141,14 @@ onMounted(async () => {
     </main>
 
     <!-- Member Modals -->
-    <MemberForm
+    <AdminMemberForm
       v-model:show="showAddModal"
       mode="add"
       :loading="isCreating"
       @submit="handleAddMember"
     />
 
-    <MemberForm
+    <AdminMemberForm
       v-model:show="showEditModal"
       mode="edit"
       :profile="selectedProfile"

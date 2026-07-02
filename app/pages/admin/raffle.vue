@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import type { Event } from '~/types'
-import AdminRaffleDrawStage from '~/components/admin/raffle/components/DrawStage.vue'
-import RaffleForm from './components/RaffleForm.vue'
 
 definePageMeta({
   layout: 'admin',
@@ -164,7 +162,7 @@ const openDrawStage = () => {
       </template>
     </main>
 
-    <RaffleForm
+    <AdminRaffleForm
       v-model:show="showPrizeModal"
       :mode="formMode"
       :initial-prize="editingPrize"

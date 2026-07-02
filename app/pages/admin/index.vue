@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import EventForm from './components/EventForm.vue'
 import PointsBreakdownModal from './components/PointsBreakdownModal.vue'
 
 definePageMeta({
@@ -129,7 +128,7 @@ onMounted(() => {
       close-on-click-action
     />
 
-    <EventForm 
+    <AdminEventForm 
       v-model:show="eventFormVisible"
       :event-id="editingEventId"
       @saved="loadEvents"

@@ -23,7 +23,7 @@ SET search_path = public
 AS $$
 BEGIN
   IF NEW.last_sign_in_at IS NOT NULL
-     AND (OLD.last_sign_in_at IS NULL OR NEW.last_sign_in_at <> OLD.last_sign_in_at)
+    AND (OLD.last_sign_in_at IS NULL OR NEW.last_sign_in_at <> OLD.last_sign_in_at)
   THEN
     UPDATE public.event_registrations
     SET first_login_enabled = TRUE
