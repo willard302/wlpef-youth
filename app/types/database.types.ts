@@ -85,6 +85,7 @@ export type Database = {
       event_registrations: {
         Row: {
           created_at: string | null
+          demo_user: boolean | null
           donation_year: boolean
           email: string
           event_id: string | null
@@ -102,6 +103,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          demo_user?: boolean | null
           donation_year?: boolean
           email: string
           event_id?: string | null
@@ -119,6 +121,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          demo_user?: boolean | null
           donation_year?: boolean
           email?: string
           event_id?: string | null
@@ -323,6 +326,7 @@ export type Database = {
           name: string | null
           points: number | null
           prize: string
+          round: number
           user_id: string
         }
         Insert: {
@@ -332,6 +336,7 @@ export type Database = {
           name?: string | null
           points?: number | null
           prize: string
+          round: number
           user_id: string
         }
         Update: {
@@ -341,6 +346,7 @@ export type Database = {
           name?: string | null
           points?: number | null
           prize?: string
+          round?: number
           user_id?: string
         }
         Relationships: [
@@ -365,6 +371,33 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      draw_raffle: {
+        Args: { p_count: number; p_event_id: string }
+        Returns: {
+          created_at: string
+          event_id: string
+          id: string
+          name: string | null
+          points: number | null
+          prize: string
+          round: number
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "raffle_winners"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_active_raffle: { Args: never; Returns: Json }
+      get_raffle_candidates: {
+        Args: { p_event_id: string }
+        Returns: {
+          id: string
+          name: string
+        }[]
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       process_event_registration_points: {
         Args: { reg_id?: string }
