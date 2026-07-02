@@ -6,12 +6,19 @@ definePageMeta({
 })
 
 const {
+  countdown,
+  isRefreshing,
   active,
   myWinningPrizes,
   lastError,
   polling,
-  myId,
-  poll,
+  statusLabel,
+  statusDotClass,
+  memberDisplay,
+  showWinModal,
+  closeWinModal,
+  updateCountdown,
+  handleRefresh,
 } = useRaffleNotice({
   onWin(wins) {
     void showDialog({
@@ -25,45 +32,6 @@ const {
 
 const { userProfile } = useUser()
 
-// ── 狀態文字與顏色 ─────────────────────────────────────
-const statusLabel = computed(() => {
-  if (!polling.value) return '未開始'
-  if (active.value) return '進行中'
-  return '準備中'
-})
-
-const statusDotClass = computed(() => {
-  if (active.value) return 'bg-emerald-400'
-  if (polling.value) return 'bg-amber-400'
-  return 'bg-slate-400'
-})
-
-// ── 刷新旋轉動畫 ──────────────────────────────────────
-const isRefreshing = ref(false)
-
-async function handleRefresh() {
-  if (isRefreshing.value) return
-  isRefreshing.value = true
-  await poll()
-  setTimeout(() => {
-    isRefreshing.value = false
-  }, 800)
-}
-
-// ── 倒計時（示例：距離整點） ───────────────────────────
-const countdown = ref('--:--:--')
-
-function updateCountdown() {
-  const now = new Date()
-  const next = new Date(now)
-  next.setHours(next.getHours() + 1, 0, 0, 0)
-  const diff = Math.max(0, next.getTime() - now.getTime())
-  const h = Math.floor(diff / 3600000)
-  const m = Math.floor((diff % 3600000) / 60000)
-  const s = Math.floor((diff % 60000) / 1000)
-  countdown.value = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
 let countdownTimer: ReturnType<typeof setInterval> | null = null
 onMounted(() => {
   updateCountdown()
@@ -71,21 +39,6 @@ onMounted(() => {
 })
 onBeforeUnmount(() => {
   if (countdownTimer) clearInterval(countdownTimer)
-})
-
-// ── 中獎彈窗（手動觸發展示） ───────────────────────────
-const showWinModal = ref(false)
-
-function closeWinModal() {
-  showWinModal.value = false
-}
-
-// ── 會員編號顯示 ──────────────────────────────────────
-const memberDisplay = computed(() => {
-  const id = myId.value
-  if (!id) return '------'
-  const account = id.split('@')[0]
-  return `#${account?.toUpperCase()}`
 })
 
 // ── 抽獎資格（已繳費即符合） ──────────────────────────

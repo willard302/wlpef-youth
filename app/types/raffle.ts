@@ -56,3 +56,15 @@ export interface DrawStageEvent {
   id: string
   title: string
 }
+
+export interface PrizeFormPayload {
+  prize: string
+  name: string
+  count: number
+  drawOrder: number
+}
+
+export interface PrizeFormMode {
+  mode?: 'create' | 'edit'
+  initialPrize?: Partial<PrizeFormPayload> | null
+}

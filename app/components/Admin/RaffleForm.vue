@@ -1,15 +1,5 @@
 <script setup lang="ts">
-interface PrizeFormPayload {
-  prize: string
-  name: string
-  count: number
-  drawOrder: number
-}
-
-interface PrizeFormMode {
-  mode?: 'create' | 'edit'
-  initialPrize?: Partial<PrizeFormPayload> | null
-}
+import type { PrizeFormMode, PrizeFormPayload } from '~/types';
 
 const show = defineModel<boolean>('show', { required: true })
 const props = withDefaults(defineProps<PrizeFormMode>(), {
