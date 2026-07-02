@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { Quick_Actions } from '~/config/admin.js'
 import EventForm from './components/EventForm.vue'
 import PointsBreakdownModal from './components/PointsBreakdownModal.vue'
 
@@ -10,6 +9,7 @@ definePageMeta({
 
 const router = useRouter()
 const {
+  Quick_Actions,
   isLoading,
   selectedEvent,
   showEventPicker,
