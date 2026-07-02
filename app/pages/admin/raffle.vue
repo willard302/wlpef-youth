@@ -186,3 +186,8 @@ const openDrawStage = () => {
     />
   </div>
 </template>
+<style scoped>
+  :deep(.van-swipe-cell__right) {
+    overflow: hidden;
+  }
+</style>
