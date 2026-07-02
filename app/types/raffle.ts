@@ -42,16 +42,6 @@ export interface RaffleEvent {
   endAt: string
 }
 
-export interface RaffleWinnerRow {
-  id: string
-  event_id: string
-  user_id: string
-  round: number
-  name: string | null
-  points: number | null
-  created_at: string
-}
-
 export interface DrawStageEvent {
   id: string
   title: string

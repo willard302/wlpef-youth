@@ -1,177 +1,31 @@
 <script setup lang="ts">
-import type { DrawStageEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
-import { normalizeRafflePrizeSettings } from '~/utils/raffle'
+import type { AdminRaffleDrawStageEmit, AdminRaffleDrawStageProps } from '~/composables/admin/raffleDrawStage'
 
-const props = defineProps<{
-  show: boolean
-  event: DrawStageEvent | null
-  candidateCount: number | null
-  winners: RaffleWinnerRow[]
-  prizeRows: RafflePrizeSetting[]
-  prizeDirty: boolean
-  withinWindow: boolean
-  isActive: boolean
-  loading: boolean
-  drawing: boolean
-  onStart: () => Promise<void>
-  onStop: () => Promise<void>
-  onDrawOne: () => Promise<boolean>
-}>()
+const props = defineProps<AdminRaffleDrawStageProps>()
+const emit = defineEmits<AdminRaffleDrawStageEmit>()
 
-const emit = defineEmits<{
-  (e: 'update:show', value: boolean): void
-}>()
-
-const nameList = ref([
-  '吳林勳', '蔡明惠', '陳建中', '林俊翔', '王大明', 
-  '張小芬', '李成果', '趙四方', '劉德華', '張學友'
-]);
-
-const currentIndex = ref(0);
-const isRolling = ref(false); // 控制是否正在滾動
-const showWinnerPopup = ref(false)
-const latestWinners = ref<RaffleWinnerRow[]>([])
-const drawStartWinnerCount = ref(0)
-
-const winnerNames = computed(() => {
-  return new Set(
-    latestWinners.value.map(winner => winner.name || winner.user_id).filter(Boolean)
-  )
-})
-
-const maskName = (name:string) => {
-  if (!name) return '';
-  if (name.length <= 2) {
-    return name.substring(0, 1) + '○';
-  }
-  return name.substring(0, 1) + '○' + name.substring(2);
-};
-
-const displayName = (name: string) => {
-  return winnerNames.value.has(name) ? name : maskName(name)
-}
-
-const showModel = computed({
-  get: () => props.show,
-  set: value => emit('update:show', value),
-})
-
-const winnersByRound = computed(() => {
-  const map = new Map<number, RaffleWinnerRow[]>()
-  for (const winner of props.winners) {
-    const items = map.get(winner.round) ?? []
-    items.push(winner)
-    map.set(winner.round, items)
-  }
-  return [...map.entries()].sort((a, b) => a[0] - b[0])
-})
-
-const nextRound = computed(() => props.winners.reduce((max, winner) => Math.max(max, winner.round), 0) + 1)
-
-const orderedPrizeRows = computed(() => normalizeRafflePrizeSettings(props.prizeRows))
-
-const currentPrize = computed(() => {
-  return orderedPrizeRows.value[nextRound.value - 1] ?? null
-})
-
-const currentPrizeLabel = computed(() => {
-  if (!props.event) return '尚未選擇活動'
-  if (!orderedPrizeRows.value.length) return '尚未設定獎項'
-  if (!currentPrize.value) return nextRound.value > orderedPrizeRows.value.length ? '已抽完所有獎項' : '未設定獎項'
-  return `${currentPrize.value.prize}：${formatPrizeLabel(currentPrize.value)}`
-})
-
-const statusLabel = computed(() => {
-  if (props.isActive) return '抽獎進行中'
-  if (props.event) return '等待開始'
-  return '尚未選擇活動'
-})
-
-const statusTone = computed(() => {
-  if (props.isActive) return 'bg-emerald-100 text-emerald-700'
-  if (props.event) return 'bg-amber-100 text-amber-700'
-  return 'bg-slate-100 text-slate-500'
-})
-
-const handleClose = () => {
-  showModel.value = false
-}
-
-const handleStart = async() => {
-  if (props.isActive) return
-  if (!props.withinWindow) {
-    try {
-      await showConfirmDialog({
-        title: '不在活動時段',
-        message: '現在不在此活動的時間窗內（活動前 30 分 ~ 結束後 30 分），一般使用者的頁面不會輪詢、收不到中獎通知。仍要開始抽獎嗎？',
-        confirmButtonText: '仍要開始',
-        confirmButtonColor: '#f59e0b',
-      })
-    }
-    catch {
-      return
-    }
-  }
-
-  await props.onStart()
-}
-
-const formatPrizeLabel = (prize: RafflePrizeSetting) => {
-  return prize.name || '未命名獎項'
-}
-
-const handlePrimaryAction = async() => {
-  if (isRolling.value) {
-    isRolling.value = false
-    return
-  }
-
-  if (!props.isActive) {
-    await handleStart()
-  }
-
-  isRolling.value = true
-
-  await nextTick()
-  if (!props.isActive) return
-
-  if (props.prizeDirty) {
-    return
-  }
-
-  await props.onDrawOne()
-}
-
-watch(
-  () => props.drawing,
-  (isDrawing, wasDrawing) => {
-    if (isDrawing) {
-      drawStartWinnerCount.value = props.winners.length
-      isRolling.value = true
-      return
-    }
-
-    if (!wasDrawing) return
-    const appended = props.winners.slice(drawStartWinnerCount.value)
-    if (!appended.length) return
-
-    latestWinners.value = appended
-    isRolling.value = false
-
-    const firstWinnerName = appended[0] ? (appended[0].name || appended[0].user_id) : ''
-    if (firstWinnerName) {
-      const existingIndex = nameList.value.findIndex(name => name === firstWinnerName)
-      if (existingIndex === -1) {
-        nameList.value.unshift(firstWinnerName)
-        currentIndex.value = 0
-      }
-      else {
-        currentIndex.value = existingIndex
-      }
-    }
-
-    showWinnerPopup.value = true
-  }
+const {
+  nameList,
+  currentIndex,
+  isRolling,
+  showModel,
+  showWinnerPopup,
+  latestWinners,
+  currentPrizeLabel,
+  winnersByRound,
+  winnerNames,
+  statusLabel,
+  statusTone,
+  canDrawCurrentPrize,
+  canStopRaffle,
+  primaryActionText,
+  displayName,
+  handleClose,
+  handlePrimaryAction,
+  handleStop
+} = useAdminRaffleDrawStage(
+  props,
+  emit
 )
 </script>
 
@@ -189,17 +43,14 @@ watch(
         <header class="px-4 pt-4 pb-3">
           <div class="glass-card px-4 py-3 flex items-center justify-between gap-3">
             <div class="min-w-0">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-[0.25em]">抽獎介面</p>
+              <div class="flex">
+                <p class="text-[10px] font-bold uppercase tracking-[0.25em]" :class="statusTone">{{ statusLabel }}</p>
+              </div>
               <h2 class="text-lg font-black text-slate-900 truncate">
                 {{ event?.title || '尚未選擇活動' }}
               </h2>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="px-3 py-1 rounded-full text-xs font-bold" :class="statusTone">
-                {{ statusLabel }}
-              </span>
-              <van-button size="small" round plain icon="cross" @click="handleClose" />
-            </div>
+            <van-button size="small" round plain icon="cross" @click="handleClose" />
           </div>
         </header>
 
@@ -224,7 +75,7 @@ watch(
               <van-swipe-item
                 v-for="(name, index) in nameList"
                 :key="index"
-                :class="{ 'is-winner': winnerNames.has(name) }"
+                :class="{ 'is-active': index === currentIndex, 'is-winner': winnerNames.has(name) }"
               >
                 <div class="name-text text-center">{{ displayName(name) }}</div>
               </van-swipe-item>
@@ -234,13 +85,23 @@ watch(
           <section class="glass-card p-4 space-y-3">
             <van-button
               :loading="loading || drawing"
-              :disabled="prizeDirty"
+              :disabled="!canDrawCurrentPrize"
               :icon="isActive ? 'play-circle-o' : 'play-circle-o'"
-              :text="isRolling ? '停止' : '開始'"
+              :text="primaryActionText"
               color="#0ea5e9"
               round
               size="large"
               @click="handlePrimaryAction"
+            />
+            <van-button
+              v-if="isActive"
+              plain
+              round
+              size="large"
+              type="danger"
+              text="結束抽獎"
+              :disabled="!canStopRaffle"
+              @click="handleStop"
             />
           </section>
 
