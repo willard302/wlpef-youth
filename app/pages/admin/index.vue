@@ -1,7 +1,5 @@
 <script setup lang="ts">
-import { format as fnsFormat } from 'date-fns'
-import { eventAdminService } from '~/services/eventAdmin.js'
-import type { Event } from '~/types'
+import { Quick_Actions } from '~/config/admin.js'
 import EventForm from './components/EventForm.vue'
 import PointsBreakdownModal from './components/PointsBreakdownModal.vue'
 
@@ -10,135 +8,23 @@ definePageMeta({
   middleware: ['auth', 'admin'],
 })
 
-const { openMenu } = useSideMenu()
-const { addToast } = useToast()
 const router = useRouter()
+const {
+  isLoading,
+  selectedEvent,
+  showEventPicker,
+  pointsBreakdownVisible,
+  eventFormVisible,
+  editingEventId,
+  stats,
+  headerActions,
+  eventPickerActions,
+  displayStats,
+  openEventEditor,
+  loadEvents
+} = useAdminHome()
 
-const quickActions = [
-  { label: '活動管理', icon: 'edit_calendar', path: '/admin/events', color: 'bg-sky-500' },
-  { label: '報名管理', icon: 'assignment_ind', path: '/admin/registrations', color: 'bg-indigo-500' },
-  { label: '活動出席', icon: 'verified', path: '/admin/attendance', color: 'bg-teal-500' },
-  { label: '會員管理', icon: 'group', path: '/admin/members', color: 'bg-violet-500' },
-  { label: '點數紀錄', icon: 'history', path: '/admin/points-history', color: 'bg-amber-500' },
-  { label: '抽獎控制', icon: 'casino', path: '/admin/raffle', color: 'bg-rose-500' },
-]
 
-const headerActions = [
-  { label: 'checkin', icon: 'qr_code_scanner', action: () => router.push('/admin/checkin') },
-  { label: 'menu', icon: 'menu', action: openMenu }
-]
-
-const isLoading = ref(true)
-const events = ref<Event[]>([])
-const selectedEvent = ref<Event | null>(null)
-const showEventPicker = ref(false)
-const pointsBreakdownVisible = ref(false)
-const eventFormVisible = ref(false)
-const editingEventId = ref<string | null>(null)
-
-const stats = ref({
-  totalProfiles: 0,
-  eventRegistrations: 0,
-  eventCheckins: 0,
-  totalPoints: 0,
-  pointsBreakdown: { registration: 0, checkin: 0 }
-})
-
-const openEventEditor = (id: string | null = null) => {
-  editingEventId.value = id
-  eventFormVisible.value = true
-}
-
-const loadDashboardStats = async () => {
-  if (!selectedEvent.value) return
-  
-  isLoading.value = true
-  try {
-    const data = await eventAdminService.fetchAdminDashboardStats(selectedEvent.value.id)
-    stats.value = data
-  } catch (err: any) {
-    addToast('載入統計數據失敗', 'error')
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const loadEvents = async () => {
-  try {
-    const data = await eventAdminService.fetchAllEventsForAdmin()
-    events.value = data
-    if (data.length > 0 ) {
-
-      if (!selectedEvent.value) {
-        selectedEvent.value = data[0]!!
-      }
-
-      await loadDashboardStats()
-    } else {
-      isLoading.value = false
-    }
-  } catch (err: any) {
-    addToast('載入活動列表失敗', 'error')
-    isLoading.value = false
-  }
-}
-
-const selectEvent = (event: Event) => {
-  selectedEvent.value = event
-  showEventPicker.value = false
-  loadDashboardStats()
-}
-
-const eventPickerActions = computed(() => {
-  return events.value.map(event => ({
-    name: event.title,
-    subname: event.startAt ? fnsFormat(new Date(event.startAt), 'yyyy/MM/dd') : '',
-    callback: () => selectEvent(event)
-  }))
-})
-
-const displayStats = computed(() => [
-  { 
-    id: 'profiles',
-    label: '會員人數', 
-    value: stats.value.totalProfiles.toString(), 
-    icon: 'person_check', 
-    color: 'text-blue-500', 
-    bg: 'bg-blue-50',
-    clickable: true,
-    path: '/admin/members'
-  },
-  { 
-    id: 'registrations',
-    label: '報名人數', 
-    value: stats.value.eventRegistrations.toString(), 
-    icon: 'how_to_reg', 
-    color: 'text-indigo-500', 
-    bg: 'bg-indigo-50',
-    clickable: true,
-    path: '/admin/registrations'
-  },
-  { 
-    id: 'checkins',
-    label: '出席人數', 
-    value: stats.value.eventCheckins.toString(), 
-    icon: 'check_circle', 
-    color: 'text-emerald-500', 
-    bg: 'bg-emerald-50',
-    clickable: true,
-    path: '/admin/attendance'
-  },
-  { 
-    id: 'points',
-    label: '點數發放', 
-    value: stats.value.totalPoints >= 1000 ? `${(stats.value.totalPoints / 1000).toFixed(0)}k` : stats.value.totalPoints.toString(), 
-    icon: 'database', 
-    color: 'text-amber-500', 
-    bg: 'bg-amber-50',
-    clickable: true,
-    action: () => { pointsBreakdownVisible.value = true }
-  },
-])
 
 onMounted(() => {
   loadEvents()
@@ -220,7 +106,7 @@ onMounted(() => {
         <h3 class="px-2 text-sm font-bold text-slate-500 uppercase tracking-widest">快速功能</h3>
         <div class="grid grid-cols-3 gap-y-6 gap-x-2">
           <button
-            v-for="action in quickActions"
+            v-for="action in Quick_Actions"
             :key="action.label"
             @click="router.push(action.path)"
             class="flex flex-col items-center gap-2"
