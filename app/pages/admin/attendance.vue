@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Event, EventCheckin } from '~/types'
 import { format as fnsFormat } from 'date-fns'
 
 definePageMeta({
@@ -7,35 +6,20 @@ definePageMeta({
   middleware: ['auth', 'admin']
 })
 
-const { selectedEvent, isPickerLoading, changeEvent } = useAdminEventPicker()
-const { searchQuery } = useSearch()
-
-const attendance = ref<EventCheckin[]>([])
-
-const selectedAttendance = ref<EventCheckin | null>(null)
-const showAttendanceDetail = ref(false)
-
-const openAttendanceDetail = (item: EventCheckin) => {
-  selectedAttendance.value = item
-  showAttendanceDetail.value = true
-}
-
-const handleEventChange = async(event: Event) => {
-  await changeEvent(event)
-}
-
-const filteredAttendance = computed(() => {
-  const keyword = searchQuery.value.trim().toLowerCase()
-  if (!keyword) return attendance.value
-
-  return attendance.value.filter((item) => {
-    return (
-      item.userName?.toLowerCase().includes(keyword) ||
-      item.email.toLowerCase().includes(keyword) ||
-      item.checkinMethod?.toLowerCase().includes(keyword)
-    )
-  })
-})
+const {
+  selectedEvent,
+  isPickerLoading,
+  isLoadingAttendance,
+  attendance,
+  selectedAttendance,
+  showAttendanceDetail,
+  filteredAttendance,
+  attendanceCount,
+  registrationCount,
+  searchQuery,
+  handleEventChange,
+  openAttendanceDetail,
+} = useAdminAttendance()
 </script>
 
 <template>
@@ -51,15 +35,15 @@ const filteredAttendance = computed(() => {
       <!-- Stats Summary -->
       <div v-if="selectedEvent && !isPickerLoading" class="grid grid-cols-2 gap-4">
         <div class="stat-card">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">總出席人數</p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">報到人數</p>
           <div class="flex items-end justify-between">
-            <p class="text-2xl font-black text-slate-800">{{ attendance.length }}</p>
+            <p class="text-2xl font-black text-slate-800">{{ attendanceCount }}</p>
             <AppIcon name="verified" class="text-emerald-500" />
           </div>
         </div>
         <div class="stat-card">
-          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">完成報名且報到</p>
-          <p class="text-2xl font-black text-emerald-500">100%</p>
+          <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">報名人數</p>
+          <p class="text-2xl font-black text-sky-600">{{ registrationCount }}</p>
         </div>
       </div>
 
@@ -68,10 +52,10 @@ const filteredAttendance = computed(() => {
         <div class="flex items-center justify-between px-2">
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">出席名單</h4>
           <div class="flex items-center gap-3 text-[11px] font-bold text-slate-400">
-            <span v-if="!isPickerLoading && attendance.length > 0">
+            <span v-if="!isPickerLoading && !isLoadingAttendance && attendance.length > 0">
               {{ filteredAttendance.length }} / {{ attendance.length }}
             </span>
-            <span v-if="isPickerLoading" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
+            <span v-if="isPickerLoading || isLoadingAttendance" class="size-4 border-2 border-sky-500 border-t-transparent rounded-full animate-spin"></span>
           </div>
         </div>
         
@@ -80,7 +64,7 @@ const filteredAttendance = computed(() => {
           placeholder="搜尋姓名、Email..."
         />
 
-        <van-loading v-if="isPickerLoading" type="spinner" vertical>載入名單中...</van-loading>
+        <van-loading v-if="isPickerLoading || isLoadingAttendance" type="spinner" vertical>載入名單中...</van-loading>
 
         <div v-else-if="attendance.length === 0" class="bg-white/50 border-2 border-dashed border-slate-200 rounded-[2rem] py-12 flex flex-col items-center justify-center text-center">
           <AppIcon name="person_off" :size="36" class="text-slate-200 mb-2" />
