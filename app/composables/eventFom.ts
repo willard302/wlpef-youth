@@ -1,8 +1,9 @@
+import type { Event, CreateEventPayload } from "~/types"
 import { addHours, format, parseISO, set } from 'date-fns'
-import type { CreateEventPayload, Event } from '~/types'
+
 import { eventService } from '~/services/event'
 
-export function useCalendarEditor() {
+export const useEventForm = () => {
   const router = useRouter()
   const route = useRoute()
   const { addToast } = useToast()

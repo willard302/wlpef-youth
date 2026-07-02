@@ -21,7 +21,7 @@ const {
   deleteEvent,
   formatDisplayDate,
   formatDisplayTime,
-} = useCalendarEditor()
+} = useEventForm()
 
 const showStartDatePicker = ref(false)
 const showStartTimePicker = ref(false)
