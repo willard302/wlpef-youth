@@ -164,8 +164,9 @@ export type Database = {
           id: string
           location: string | null
           participants: string[] | null
-          raffle_threshold: number | null
+          raffle_active: boolean | null
           raffle_prizes: Json | null
+          raffle_threshold: number | null
           registration_bonus: number | null
           start_at: string
           status: string | null
@@ -183,8 +184,9 @@ export type Database = {
           id?: string
           location?: string | null
           participants?: string[] | null
-          raffle_threshold?: number | null
+          raffle_active?: boolean | null
           raffle_prizes?: Json | null
+          raffle_threshold?: number | null
           registration_bonus?: number | null
           start_at: string
           status?: string | null
@@ -202,8 +204,9 @@ export type Database = {
           id?: string
           location?: string | null
           participants?: string[] | null
-          raffle_threshold?: number | null
+          raffle_active?: boolean | null
           raffle_prizes?: Json | null
+          raffle_threshold?: number | null
           registration_bonus?: number | null
           start_at?: string
           status?: string | null
@@ -311,6 +314,51 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      raffle_winners: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          name: string | null
+          points: number | null
+          prize: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          name?: string | null
+          points?: number | null
+          prize: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          name?: string | null
+          points?: number | null
+          prize?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "raffle_winners_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "raffle_winners_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

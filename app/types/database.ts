@@ -28,3 +28,7 @@ export type ProfileUpdate = TableUpdate<'profiles'>
 export type PointTransactionRow = TableRow<'point_transactions'>
 export type PointTransactionInsert = TableInsert<'point_transactions'>
 export type PointTransactionUpdate = TableUpdate<'point_transactions'>
+
+export type RaffleWinnerRow = TableRow<'raffle_winners'>
+export type RaffleWinnerInsert = TableInsert<'raffle_winners'>
+export type RaffleWinnerUpdate = TableUpdate<'raffle_winners'>
