@@ -23,6 +23,9 @@ export type AdminRaffleDrawStageEmit = {
 }
 
 const getWinnerName = (winner: RaffleWinnerRow) => winner.name || winner.user_id
+const MIN_ROLLING_MS = 5000
+
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 const maskName = (name: string) => {
   if (!name) return ''
@@ -44,6 +47,7 @@ export const useAdminRaffleDrawStage = (
   const showWinnerPopup = ref(false)
   const latestWinners = ref<RaffleWinnerRow[]>([])
   const drawStartWinnerCount = ref(0)
+  const rollingStartedAt = ref(0)
 
   const showModel = computed({
     get: () => props.show,
@@ -151,6 +155,7 @@ export const useAdminRaffleDrawStage = (
     const started = props.isActive || await handleStart()
     if (!started) return
 
+    rollingStartedAt.value = Date.now()
     isRolling.value = true
     const drewWinner = await props.onDrawOne()
     if (!drewWinner && !props.drawing) isRolling.value = false
@@ -179,6 +184,27 @@ export const useAdminRaffleDrawStage = (
     showModel.value = false
   }
 
+  const revealWinners = (winners: RaffleWinnerRow[]) => {
+    isRolling.value = false
+    if (!winners.length) return
+
+    latestWinners.value = winners
+
+    const firstWinnerName = winners[0] ? getWinnerName(winners[0]) : ''
+    if (firstWinnerName) {
+      const existingIndex = nameList.value.findIndex(name => name === firstWinnerName)
+      if (existingIndex === -1) {
+        nameList.value.unshift(firstWinnerName)
+        currentIndex.value = 0
+      }
+      else {
+        currentIndex.value = existingIndex
+      }
+    }
+
+    showWinnerPopup.value = true
+  }
+
   watch(
     fallbackNames,
     (names) => {
@@ -199,30 +225,20 @@ export const useAdminRaffleDrawStage = (
     (isDrawing, wasDrawing) => {
       if (isDrawing) {
         drawStartWinnerCount.value = props.winners.length
+        rollingStartedAt.value = Date.now()
         isRolling.value = true
         return
       }
 
       if (!wasDrawing) return
       const appended = props.winners.slice(drawStartWinnerCount.value)
-      isRolling.value = false
-      if (!appended.length) return
-
-      latestWinners.value = appended
-
-      const firstWinnerName = appended[0] ? getWinnerName(appended[0]) : ''
-      if (firstWinnerName) {
-        const existingIndex = nameList.value.findIndex(name => name === firstWinnerName)
-        if (existingIndex === -1) {
-          nameList.value.unshift(firstWinnerName)
-          currentIndex.value = 0
-        }
-        else {
-          currentIndex.value = existingIndex
-        }
+      const remainingMs = Math.max(0, MIN_ROLLING_MS - (Date.now() - rollingStartedAt.value))
+      if (remainingMs > 0) {
+        wait(remainingMs).then(() => revealWinners(appended))
+        return
       }
 
-      showWinnerPopup.value = true
+      revealWinners(appended)
     }
   )
 
