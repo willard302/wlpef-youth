@@ -64,6 +64,7 @@ const {
 
           <div class="swipe-wrapper">
             <van-swipe
+              v-if="nameList.length"
               v-model="currentIndex"
               vertical
               :autoplay="isRolling ? 100 : 0"
@@ -80,6 +81,7 @@ const {
                 <div class="name-text text-center">{{ displayName(name) }}</div>
               </van-swipe-item>
             </van-swipe>
+            <div v-else class="name-empty text-center">尚無合格名單</div>
           </div>
 
           <section class="glass-card p-4 space-y-3">
@@ -235,6 +237,14 @@ const {
   transition: all 0.1s ease;
   height: 60px;
   line-height: 60px;
+}
+
+.name-empty {
+  height: 60px;
+  line-height: 60px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #94a3b8;
 }
 
 /* 當前選中（中間）的名字樣式 */

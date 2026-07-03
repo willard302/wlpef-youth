@@ -5,6 +5,7 @@ export interface AdminRaffleDrawStageProps {
   show: boolean
   event: DrawStageEvent | null
   candidateCount: number | null
+  candidateNames: string[]
   winners: RaffleWinnerRow[]
   prizeRows: RafflePrizeSetting[]
   prizeDirty: boolean
@@ -20,19 +21,6 @@ export interface AdminRaffleDrawStageProps {
 export type AdminRaffleDrawStageEmit = {
   (e: 'update:show', value: boolean): void
 }
-
-const fallbackNames = [
-  '吳林勳',
-  '蔡明惠',
-  '陳建中',
-  '林俊翔',
-  '王大明',
-  '張小芬',
-  '李成果',
-  '趙四方',
-  '劉德華',
-  '張學友',
-]
 
 const getWinnerName = (winner: RaffleWinnerRow) => winner.name || winner.user_id
 
@@ -50,7 +38,7 @@ export const useAdminRaffleDrawStage = (
   props: Readonly<AdminRaffleDrawStageProps>,
   emit: AdminRaffleDrawStageEmit
 ) => {
-  const nameList = ref<string[]>([...fallbackNames])
+  const nameList = ref<string[]>([])
   const currentIndex = ref(0)
   const isRolling = ref(false)
   const showWinnerPopup = ref(false)
@@ -89,6 +77,17 @@ export const useAdminRaffleDrawStage = (
 
   const winnerNames = computed(() => {
     return new Set(latestWinners.value.map(getWinnerName).filter(Boolean))
+  })
+
+  const fallbackNames = computed(() => {
+    const seen = new Set<string>()
+    return props.candidateNames
+      .map(name => `${name}`.trim())
+      .filter((name) => {
+        if (!name || seen.has(name)) return false
+        seen.add(name)
+        return true
+      })
   })
 
   const displayName = (name: string) => {
@@ -179,6 +178,21 @@ export const useAdminRaffleDrawStage = (
   const handleClose = () => {
     showModel.value = false
   }
+
+  watch(
+    fallbackNames,
+    (names) => {
+      const winningNames = props.winners.map(getWinnerName).filter(Boolean)
+      const merged = [...names]
+      for (const name of winningNames) {
+        if (!merged.includes(name)) merged.unshift(name)
+      }
+
+      nameList.value = merged
+      if (currentIndex.value >= nameList.value.length) currentIndex.value = 0
+    },
+    { immediate: true }
+  )
 
   watch(
     () => props.drawing,

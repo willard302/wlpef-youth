@@ -47,6 +47,11 @@ export interface RaffleEvent {
   endAt: string
 }
 
+export interface RaffleCandidate {
+  id: string
+  name: string | null
+}
+
 export interface DrawStageEvent {
   id: string
   title: string

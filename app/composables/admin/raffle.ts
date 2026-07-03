@@ -1,4 +1,4 @@
-import type { RaffleEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
+import type { RaffleCandidate, RaffleEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
 import { GATING_BUFFER_MINUTES } from '~/config/raffle'
 import { raffleAdminService } from '~/services/raffleAdmin'
 import { getRafflePrizeCountByRound, getRafflePrizeSettingByRound, normalizeRafflePrizeSettings } from '~/utils/raffle'
@@ -8,6 +8,7 @@ export const useAdminRaffle = () => {
 
   const selectedEvent = ref<RaffleEvent | null>(null)
   const prizeDraft = ref<RafflePrizeSetting[]>([])
+  const candidates = ref<RaffleCandidate[]>([])
   const candidateCount = ref<number | null>(null)
   const winners = ref<RaffleWinnerRow[]>([])
   const loading = ref(false)
@@ -30,6 +31,16 @@ export const useAdminRaffle = () => {
   const prizeRows = computed(() => {
     const rows = normalizeRafflePrizeSettings(prizeDraft.value)
     return rows.length ? rows : [{ prize: '', name: '', count: 1, drawOrder: 1 }]
+  })
+  const candidateNames = computed(() => {
+    const seen = new Set<string>()
+    return candidates.value
+      .map(candidate => `${candidate.name || candidate.id}`.trim())
+      .filter((name) => {
+        if (!name || seen.has(name)) return false
+        seen.add(name)
+        return true
+      })
   })
 
   // 選中活動「現在」是否落在時間窗 [start-buffer, end+buffer] 內（給開始抽獎防呆用）
@@ -145,16 +156,18 @@ export const useAdminRaffle = () => {
   const refreshSelected = async() => {
     const eventId = selectedEvent.value?.id
     if (!eventId) return
-    const [count, wins] = await Promise.all([
-      raffleAdminService.fetchCandidateCount(eventId).catch(() => null),
+    const [freshCandidates, wins] = await Promise.all([
+      raffleAdminService.fetchCandidates(eventId).catch(() => []),
       raffleAdminService.fetchWinners(eventId),
     ])
-    candidateCount.value = count
+    candidates.value = freshCandidates
+    candidateCount.value = freshCandidates.length
     winners.value = wins
   }
 
   const onSelectEvent = async(event: any) => {
     selectedEvent.value = event
+    candidates.value = []
     candidateCount.value = null
     winners.value = []
     prizeDraft.value = normalizeRafflePrizeSettings(event?.rafflePrizes)
@@ -253,6 +266,8 @@ export const useAdminRaffle = () => {
   return {
     showPrizeModal,
     selectedEvent,
+    candidates,
+    candidateNames,
     candidateCount,
     winners,
     prizeDraft,

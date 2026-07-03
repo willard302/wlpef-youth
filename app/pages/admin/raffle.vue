@@ -10,6 +10,7 @@ const { selectedEvent, changeEvent } = useAdminEventPicker()
 
 const {
   showPrizeModal,
+  candidateNames,
   candidateCount,
   winners,
   prizeRows,
@@ -173,6 +174,7 @@ const openDrawStage = () => {
       v-model:show="showDrawStage"
       :event="selectedEvent"
       :candidate-count="candidateCount"
+      :candidate-names="candidateNames"
       :winners="winners"
       :prize-rows="prizeRows"
       :prize-dirty="prizeDirty"

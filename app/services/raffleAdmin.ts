@@ -1,4 +1,4 @@
-import type { RaffleEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
+import type { RaffleCandidate, RaffleEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
 import { normalizeRafflePrizeSettings } from '~/utils/raffle'
 
 // 抽獎控制台資料層。raffle_winners / draw_raffle / get_raffle_candidates 尚未進
@@ -30,11 +30,16 @@ export const raffleAdminService = {
     }))
   },
 
-  // 合格人數（admin only RPC）
-  async fetchCandidateCount(eventId: string): Promise<number> {
+  // 合格名單（admin only RPC）
+  async fetchCandidates(eventId: string): Promise<RaffleCandidate[]> {
     const { data, error } = await getSupabase().rpc('get_raffle_candidates', { p_event_id: eventId })
     if (error) throw error
-    return (data ?? []).length
+    return (data ?? []) as RaffleCandidate[]
+  },
+
+  async fetchCandidateCount(eventId: string): Promise<number> {
+    const candidates = await this.fetchCandidates(eventId)
+    return candidates.length
   },
 
   async fetchRafflePrizes(eventId: string): Promise<RafflePrizeSetting[]> {
