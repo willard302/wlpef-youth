@@ -14,7 +14,7 @@
 > 全程不使用 Supabase Realtime（避開免費版 ~200 連線上限），改以 HTTP 輪詢 + Vercel CDN 快取，把 500 支手機的流量壓到「每約 2 秒回源 1 次」。
 
 - 合格條件：`profiles.points >= events.raffle_threshold` 且 `role <> 'admin'`；同活動已中獎者後續排除。
-- 獎項設定：`events.raffle_prizes` 先預設好 `[{ order, name, count }]`，`round` 仍作為資料庫中的輪次識別，但前端顯示會依 `order` 轉成「第幾獎：獎項名稱」。
+- 獎項設定：`events.raffle_prizes` 先預設好 `[{ prize, name, count, drawOrder }]`（`prize` 為獎別標籤、`name` 為獎項名稱、`drawOrder` 為抽獎順序）。`round` 仍作為資料庫中的輪次識別；「輪次 → 獎項」以 `raffle_prizes` 依 `drawOrder` 排序後的**位置（第 N 個對第 N 輪）** 對應，前後端一致（早期欄位名為 `order`，現保留為 legacy fallback）。
 - 通知形式：**僅 App 內提示**（不做背景 Web Push）。手機鎖屏/切背景會暫停，重開才補看到。
 - 可接受延遲：3~5 秒（實測最壞約 5 秒內）。
 
@@ -65,7 +65,7 @@ RLS（`raffle_winners`）：登入者可 SELECT；ALL 僅 admin（`is_admin`）�
 |---|---|---|
 | `draw_raffle(p_event_id, p_count)` | authenticated（內部驗 admin） | 一次交易內隨機抽 `count`（1~100）人、排除 admin 與已中獎者、`round` 自動 +1、寫入並回傳本輪中獎者 |
 | `get_raffle_candidates(p_event_id)` | authenticated（內部驗 admin） | 回傳合格者 `id, name`（後台顯示合格人數 / 未來大螢幕跑馬燈） |
-| `get_active_raffle()` | **anon** + authenticated | 回傳目前 `raffle_active` 活動的中獎名單，只吐 `userId/name/round/prize`；供輪詢端點用，`prize` 依 `raffle_prizes[].order` 對應 |
+| `get_active_raffle()` | **anon** + authenticated | 回傳目前 `raffle_active` 活動的中獎名單，只吐 `userId/name/round/prize`；供輪詢端點用。`userId` = `raffle_winners.user_id` = `profiles.id`（auth uid）；`prize` 依 `raffle_prizes` 以 `drawOrder` 排序後的位置對應 `round` |
 
 > `draw_raffle` / `get_raffle_candidates` **不開放 anon**；只有 `get_active_raffle` 開放 anon，且只吐公開的中獎資訊。
 
@@ -76,7 +76,7 @@ RLS（`raffle_winners`）：登入者可 SELECT；ALL 僅 admin（`is_admin`）�
 - 以**既有公開 anon key**（`SUPABASE_KEY`）server 端 `$fetch` 呼叫 `get_active_raffle()` RPC，**不需 service role key**。
 - 回應非個人化、不設 cookie，帶 `Cache-Control: public, s-maxage=2, stale-while-revalidate=5` → Vercel CDN 吸收絕大多數流量。
 - 回傳：`{ active: false }` 或 `{ active: true, eventId, round, winners: [{ userId, name, round, prize }] }`。
-- 「是不是我」比對在**前端**做（端點對所有人一致才可被快取）。
+- 「是不是我」比對在**前端**做（端點對所有人一致才可被快取）：以登入者的 **auth uid（`user.sub`，等於 `profiles.id`）** 比對 `winners[].userId`；email 僅用於畫面顯示，不可作為比對鍵。
 
 ## 4. 前端
 
@@ -84,7 +84,7 @@ RLS（`raffle_winners`）：登入者可 SELECT；ALL 僅 admin（`is_admin`）�
 
 | 檔案 | 角色 |
 |---|---|
-| `app/composables/useRaffleNotice.ts` | 核心：輪詢端點、比對登入者 id、新輪次中獎觸發 `onWin`（含已通知去重）。`auto` 選項控制是否自動開始 |
+| `app/composables/useRaffleNotice.ts` | 核心：輪詢端點、以 `matchId`（`user.sub` = auth uid）比對 `winners[].userId`、新輪次中獎觸發 `onWin`（含已通知去重）。`myId`（email）僅供 `memberDisplay` 顯示。`auto` 選項控制是否自動開始 |
 | `app/composables/useRaffleNotifier.ts` | 包一層**雙層 gating**，掛在會員版型 |
 | `app/layouts/default.vue` | 呼叫 `useRaffleNotifier()` → 所有**會員頁**全域生效 |
 
@@ -140,6 +140,9 @@ flowchart TD
 | | `RAFFLE_SWR_SECONDS` | 5 | stale-while-revalidate |
 | `app/config/raffle.ts` | `POLL_INTERVAL_MS` | 3000 | 手機輪詢間隔 |
 | | `GATING_BUFFER_MINUTES` | 30 | 第一層 gating 時間窗前後緩衝 |
+| | `RAFFLE_NOTIFY_STYLE` | `'dialog'` | 中獎通知呈現方式：`'dialog'`=vant `showDialog` 程式化快顯；`'modal'`=自訂玻璃卡彈窗 `RaffleWinModal`。呼叫端可用 `useRaffleNotice({ notifyStyle })` 覆寫 |
+
+> `'modal'` 模式的自訂彈窗需靠 `app/layouts/default.vue` 掛載的 `<RaffleWinModal>` 才能全站顯示（`/raffle` 頁另有自掛一份）；`'dialog'` 模式為程式化彈窗，免掛版型。切換方式由 `useRaffleNotice` 內部依此設定統一處理，`useRaffleNotifier` 與 `/raffle` 皆不再各自呼叫 `showDialog`。
 
 ## 6. 主辦操作手冊（活動當天）
 

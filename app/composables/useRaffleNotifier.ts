@@ -12,17 +12,9 @@ export function useRaffleNotifier() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const supabase = useSupabaseClient() as any
 
-  const notice = useRaffleNotice({
-    auto: false,
-    onWin(wins) {
-      void showDialog({
-        title: '🎉 恭喜中獎！',
-        message: `你抽中 ${wins.map(win => win.label).join('、')}！`,
-        confirmButtonText: '太棒了',
-        theme: 'round-button',
-      })
-    },
-  })
+  // 通知呈現（dialog / modal）由 useRaffleNotice 依 config（RAFFLE_NOTIFY_STYLE）統一處理；
+  // 這裡只負責第一層 gating（時間窗）與 start/stop。
+  const notice = useRaffleNotice({ auto: false })
 
   const BUFFER_MS = GATING_BUFFER_MINUTES * 60 * 1000
   const windows = ref<{ start: number, end: number }[]>([])

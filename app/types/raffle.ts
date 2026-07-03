@@ -17,11 +17,16 @@ export interface ActiveRaffleResponse {
   winners?: RaffleWinner[]
 }
 
+/** 中獎通知呈現方式：'dialog' = vant showDialog 快顯；'modal' = 自訂玻璃卡彈窗 */
+export type RaffleNotifyStyle = 'dialog' | 'modal'
+
 export interface UseRaffleNoticeOptions {
-  /** 偵測到「本帳號」在新輪次中獎時呼叫，帶入尚未通知過的獎項資訊 */
+  /** 偵測到「本帳號」在新輪次中獎時呼叫，帶入尚未通知過的獎項資訊（內建通知外的額外行為） */
   onWin?: (wins: RaffleWinDisplay[]) => void
   /** 是否在 mount 時自動開始輪詢（預設 true）。gated 模式下傳 false，由外層控制 start/stop */
   auto?: boolean
+  /** 中獎通知呈現方式；未指定則採用 config 的 RAFFLE_NOTIFY_STYLE */
+  notifyStyle?: RaffleNotifyStyle
 }
 
 export interface RafflePrizeSetting {

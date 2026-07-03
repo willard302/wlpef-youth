@@ -1,4 +1,4 @@
-import { POLL_INTERVAL_MS } from '~/config/raffle'
+import { POLL_INTERVAL_MS, RAFFLE_NOTIFY_STYLE } from '~/config/raffle'
 import type { UseRaffleNoticeOptions, ActiveRaffleResponse, RaffleWinDisplay } from '~/types'
 
 /**
@@ -21,7 +21,11 @@ export const useRaffleNotice = (options?: UseRaffleNoticeOptions) => {
 
   let timer: ReturnType<typeof setInterval> | null = null
 
+  // 顯示用：畫面（memberDisplay）以 email 呈現會員編號
   const myId = computed(() => user.value?.email ?? null)
+  // 比對用：winners[].userId = raffle_winners.user_id = profiles.id（auth uid）；
+  // 與 useRaffleNotifier / middleware 一致取 user.sub，切勿用 email 比對（型別不同永遠比不中）
+  const matchId = computed(() => user.value?.sub ?? null)
 
   const statusLabel = computed(() => {
     if (!polling.value) return '未開始'
@@ -63,6 +67,21 @@ export const useRaffleNotice = (options?: UseRaffleNoticeOptions) => {
       // localStorage 不可用時略過（最多退回每次都跳，不致出錯）
     }
   }
+  // 中獎通知呈現方式（可由呼叫端覆寫，否則採全域 config 預設）
+  const notifyStyle = options?.notifyStyle ?? RAFFLE_NOTIFY_STYLE
+  // 依 notifyStyle 切換：'modal' 開自訂彈窗（需版型掛載 RaffleWinModal）；'dialog' 走 vant showDialog
+  const notifyWin = (wins: RaffleWinDisplay[]) => {
+    if (notifyStyle === 'modal') {
+      showWinModal.value = true
+      return
+    }
+    void showDialog({
+      title: '🎉 恭喜中獎！',
+      message: `你抽中 ${wins.map(w => w.label).join('、')}！`,
+      confirmButtonText: '太棒了',
+      theme: 'round-button',
+    })
+  }
   const poll = async() => {
     try {
       const data = await $fetch<ActiveRaffleResponse>('/api/lottery/active')
@@ -70,14 +89,21 @@ export const useRaffleNotice = (options?: UseRaffleNoticeOptions) => {
       lastError.value = null
       active.value = !!data.active
 
-      if (!data.active || !myId.value) {
+      if (!data.active || !matchId.value) {
         myWinningRounds.value = []
         myWinningPrizes.value = []
         return
       }
 
-      const mine = (data.winners ?? []).filter(w => w.userId === myId.value)
+      const mine = (data.winners ?? []).filter(w => w.userId === matchId.value)
       myWinningRounds.value = mine.map(w => w.round).sort((a, b) => a - b)
+      // 由中獎資料建出顯示用清單（獎項名稱優先取 DB 帶回的 prize，否則退回「第 N 獎」）
+      myWinningPrizes.value = mine
+        .map(w => ({
+          round: w.round,
+          label: w.prize && w.prize.trim() ? w.prize.trim() : `第 ${w.round} 獎`,
+        }))
+        .sort((a, b) => a.round - b.round)
 
       const eventId = data.eventId
       if (eventId) {
@@ -85,6 +111,7 @@ export const useRaffleNotice = (options?: UseRaffleNoticeOptions) => {
         const fresh = myWinningPrizes.value.filter(w => !notified.has(w.round))
         if (fresh.length) {
           addNotified(eventId, fresh.map(w => w.round))
+          notifyWin(fresh)
           options?.onWin?.(fresh)
         }
       }
@@ -145,10 +172,10 @@ export const useRaffleNotice = (options?: UseRaffleNoticeOptions) => {
     statusDotClass,
     memberDisplay,
     showWinModal,
+    closeWinModal,
     start,
     stop,
     poll,
-    closeWinModal,
     handleRefresh,
     updateCountdown,
   }

@@ -9,7 +9,8 @@ const { tabbarItems, activeIndex } = useTabbarConfig()
 const showTabbar = computed(() => route.meta.showTabbar !== false)
 
 // 全域中獎通知（含雙層 gating：活動時間窗 + raffle_active）
-useRaffleNotifier()
+// notifyStyle='modal' 時的自訂彈窗需靠此處掛載的 RaffleWinModal 才能全站顯示
+const { showWinModal, myWinningPrizes, closeWinModal } = useRaffleNotifier()
 
 
 </script>
@@ -49,6 +50,9 @@ useRaffleNotifier()
 
     <!-- QR Code Popup -->
     <QRCode v-model:show="qrPopupVisible" />
+
+    <!-- 全域中獎彈窗（notifyStyle='modal' 時生效；'dialog' 時恆為關閉不顯示） -->
+    <RaffleWinModal :open="showWinModal" :wins="myWinningPrizes" @close="closeWinModal" />
   </div>
 </template>
 

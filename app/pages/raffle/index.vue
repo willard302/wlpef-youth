@@ -5,6 +5,7 @@ definePageMeta({
   showTabbar: true,
 })
 
+// 通知呈現（dialog / modal）由 useRaffleNotice 依 config 或 notifyStyle 統一處理
 const {
   countdown,
   isRefreshing,
@@ -19,16 +20,7 @@ const {
   closeWinModal,
   updateCountdown,
   handleRefresh,
-} = useRaffleNotice({
-  onWin(wins) {
-    void showDialog({
-      title: '🎉 恭喜中獎！',
-      message: `你抽中 ${wins.map(win => win.label).join('、')}！`,
-      confirmButtonText: '太棒了',
-      theme: 'round-button',
-    })
-  },
-})
+} = useRaffleNotice()
 
 const { userProfile } = useUser()
 
@@ -150,30 +142,8 @@ const isEligible = computed(() => !!userProfile.value)
 
     </main>
 
-    <!-- ── 中獎彈窗 ───────────────────────────────────── -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div
-          v-if="showWinModal"
-          class="fixed inset-0 z-[200] flex items-center justify-center px-6"
-          @click.self="closeWinModal"
-        >
-          <!-- 背景遮罩 -->
-          <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-md" @click="closeWinModal" />
-
-          <!-- 彈窗卡片 -->
-          <div class="relative z-10 w-full max-w-sm glass-card p-8 text-center space-y-5">
-            <!-- 裝飾 logo -->
-            <LogoIcon />
-
-            <div class="space-y-1">
-              <h2 class="text-2xl font-black text-slate-900">恭喜中獎！</h2>
-              <p class="text-sm text-slate-500">您已被選為本次抽獎的幸運得主！</p>
-            </div>
-          </div>
-        </div>
-      </Transition>
-    </Teleport>
+    <!-- 中獎彈窗（notifyStyle='modal' 時生效；'dialog' 時走 showDialog、此處恆關閉） -->
+    <RaffleWinModal :open="showWinModal" :wins="myWinningPrizes" @close="closeWinModal" />
   </div>
 </template>
 
@@ -186,16 +156,5 @@ const isEligible = computed(() => !!userProfile.value)
 /* ── Glass Card（沿用 global.css 基礎，局部加強） ── */
 .glass-card {
   @apply rounded-3xl border border-white/60 bg-white/40 backdrop-blur-xl shadow-lg;
-}
-
-/* ── Modal 進出場動畫 ── */
-.modal-enter-active,
-.modal-leave-active {
-  transition: opacity 0.25s ease, transform 0.25s ease;
-}
-.modal-enter-from,
-.modal-leave-to {
-  opacity: 0;
-  transform: scale(0.95);
 }
 </style>

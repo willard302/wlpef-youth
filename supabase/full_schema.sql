@@ -619,9 +619,22 @@ BEGIN
           'name', w.name,
           'round', w.round,
           'prize', NULLIF((
-            SELECT BTRIM(COALESCE(elem ->> 'name', ''))
-            FROM jsonb_array_elements(COALESCE(v_prizes, '[]'::jsonb)) WITH ORDINALITY AS prize(elem, ord)
-            WHERE COALESCE(NULLIF((elem ->> 'order')::int, 0), ord::int) = w.round
+            SELECT BTRIM(COALESCE(p.elem ->> 'name', ''))
+            FROM (
+              SELECT
+                elem,
+                ROW_NUMBER() OVER (
+                  ORDER BY
+                    COALESCE(
+                      NULLIF((elem ->> 'drawOrder')::int, 0),  -- 現行主鍵
+                      NULLIF((elem ->> 'order')::int, 0),      -- legacy fallback
+                      ord::int                                 -- 最終以原始位置
+                    ),
+                    ord
+                ) AS pos
+              FROM jsonb_array_elements(COALESCE(v_prizes, '[]'::jsonb)) WITH ORDINALITY AS t(elem, ord)
+            ) p
+            WHERE p.pos = w.round
             LIMIT 1
           ), '')
         )
