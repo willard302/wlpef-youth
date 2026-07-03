@@ -193,8 +193,11 @@ CREATE TABLE IF NOT EXISTS public.event_registrations (
   google_sheet_row_id TEXT,
   form_submitted_at TIMESTAMPTZ DEFAULT NOW(),
   synced_at    TIMESTAMPTZ,
-  donation_year BOOLEAN DEFAULT FALSE,
-  registration_fee BOOLEAN DEFAULT FALSE,
+  donation_year BOOLEAN DEFAULT FALSE NOT NULL,
+  registration_fee BOOLEAN DEFAULT FALSE NOT NULL,
+  first_login_enabled BOOLEAN NOT NULL DEFAULT FALSE, -- 對應會員是否完成首次登入（由 auth.users 觸發同步）
+  demo_user    BOOLEAN DEFAULT FALSE,          -- 測試 / 示範資料標記
+  invitation_sent_at TIMESTAMPTZ,              -- 邀請寄送時間
   registration_points_granted_at TIMESTAMPTZ,
   raw_data     JSONB,
   created_at   TIMESTAMPTZ  DEFAULT NOW(),
@@ -208,6 +211,21 @@ CREATE INDEX IF NOT EXISTS idx_event_registrations_matched_user_id
 CREATE INDEX IF NOT EXISTS idx_event_registrations_pending_points
   ON public.event_registrations (event_id, matched_user_id)
   WHERE registration_points_granted_at IS NULL AND matched_user_id IS NOT NULL;
+
+-- 既有 DB 相容：補上後續版本新增的欄位
+ALTER TABLE public.event_registrations
+  ADD COLUMN IF NOT EXISTS demo_user BOOLEAN DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS invitation_sent_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS first_login_enabled BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- 待邀請查詢（demo 帳號、未寄邀請）
+CREATE INDEX IF NOT EXISTS idx_event_registrations_pending_invitation
+  ON public.event_registrations (matched_user_id, demo_user, invitation_sent_at)
+  WHERE matched_user_id IS NULL AND demo_user = TRUE AND invitation_sent_at IS NULL;
+
+-- admin 篩選 / 儀表板彙總用
+CREATE INDEX IF NOT EXISTS idx_event_registrations_first_login_enabled
+  ON public.event_registrations (event_id, first_login_enabled);
 
 CREATE TABLE IF NOT EXISTS public.checkin_records (
   id           UUID         DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -264,6 +282,34 @@ CREATE TRIGGER tr_sync_event_participants_from_registrations
   AFTER INSERT OR UPDATE OR DELETE ON public.event_registrations
   FOR EACH ROW
   EXECUTE FUNCTION public.sync_event_participants_from_registrations();
+
+-- 首次登入同步：auth.users 首次寫入 last_sign_in_at 時，
+-- 將對應 event_registrations.first_login_enabled 設為 TRUE
+CREATE OR REPLACE FUNCTION public.sync_registration_first_login_enabled()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  IF NEW.last_sign_in_at IS NOT NULL
+    AND (OLD.last_sign_in_at IS NULL OR NEW.last_sign_in_at <> OLD.last_sign_in_at)
+  THEN
+    UPDATE public.event_registrations
+    SET first_login_enabled = TRUE
+    WHERE matched_user_id = NEW.id
+      AND first_login_enabled = FALSE;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS tr_sync_registration_first_login_enabled ON auth.users;
+CREATE TRIGGER tr_sync_registration_first_login_enabled
+  AFTER UPDATE OF last_sign_in_at ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.sync_registration_first_login_enabled();
 
 -- Checkins RLS
 CREATE POLICY "Users can view own checkins"
@@ -658,3 +704,20 @@ $$;
 
 REVOKE ALL ON FUNCTION public.get_active_raffle() FROM public;
 GRANT EXECUTE ON FUNCTION public.get_active_raffle() TO anon, authenticated;
+
+-- 追加獎項到 events.raffle_prizes（admin 端新增獎項用；前端 raffleAdmin 服務呼叫）
+CREATE OR REPLACE FUNCTION public.append_raffle_prizes(event_id uuid, new_prizes jsonb)
+RETURNS jsonb
+LANGUAGE plpgsql
+AS $$
+DECLARE
+  updated_prizes jsonb;
+BEGIN
+  UPDATE public.events
+  SET raffle_prizes = COALESCE(raffle_prizes, '[]'::jsonb) || new_prizes
+  WHERE id = event_id
+  RETURNING raffle_prizes INTO updated_prizes;
+
+  RETURN updated_prizes;
+END;
+$$;
