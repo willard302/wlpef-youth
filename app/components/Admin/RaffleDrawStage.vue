@@ -13,6 +13,7 @@ const {
   latestWinners,
   currentPrizeLabel,
   winnersByRound,
+  getRoundPrizeLabel,
   winnerNames,
   statusLabel,
   statusTone,
@@ -123,7 +124,7 @@ const {
                 class="rounded-2xl border border-slate-200 bg-white/80 p-4 space-y-2"
               >
                 <div class="flex items-center justify-between">
-                  <p class="text-sm font-black text-slate-900">第 {{ round }} 輪</p>
+                  <p class="text-sm font-black text-slate-900">{{ getRoundPrizeLabel(round) }}</p>
                   <span class="text-xs font-bold text-slate-500">{{ items.length }} 位</span>
                 </div>
                 <div class="space-y-1">
@@ -135,7 +136,6 @@ const {
                     <span class="font-medium text-slate-700 truncate">
                       {{ winner.name || winner.user_id }}
                     </span>
-                    <span class="text-xs text-slate-400">{{ winner.created_at }}</span>
                   </div>
                 </div>
               </div>

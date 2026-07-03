@@ -79,6 +79,11 @@ export const useAdminRaffleDrawStage = (
     return [...map.entries()].sort((a, b) => a[0] - b[0])
   })
 
+  const getRoundPrizeLabel = (round: number) => {
+    const prize = orderedPrizeRows.value.find(row => row.drawOrder === round) ?? orderedPrizeRows.value[round - 1]
+    return prize ? formatPrizeLabel(prize) : `第 ${round} 輪`
+  }
+
   const winnerNames = computed(() => {
     return new Set(latestWinners.value.map(getWinnerName).filter(Boolean))
   })
@@ -254,6 +259,7 @@ export const useAdminRaffleDrawStage = (
     currentPrize,
     currentPrizeLabel,
     winnersByRound,
+    getRoundPrizeLabel,
     winnerNames,
     displayName,
     statusLabel,
