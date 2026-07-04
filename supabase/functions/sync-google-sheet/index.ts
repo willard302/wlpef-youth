@@ -5,6 +5,10 @@ type EventRow = {
   id: string
   title: string
   google_sheet_id: string | null
+  feedback_response_sheet_id: string | null
+  feedback_sync_enabled: boolean | null
+  feedback_sync_start_offset_minutes: number | null
+  feedback_bonus_points: number | null
   start_at?: string
   end_at?: string
   status?: string | null
@@ -29,22 +33,38 @@ type SheetRegistration = {
   registration_fee?: boolean
 }
 
+type SheetFeedbackResponse = {
+  event_id: string
+  matched_user_id: string | null
+  email: string
+  google_sheet_row_id: string
+  form_submitted_at: string
+  synced_at: string
+  raw_data?: Record<string, any>
+}
+
 type SyncResult = {
   eventId: string
-  sheetId: string
-  importedCount: number
-  matchedCount: number
-  skippedCount: number
+  registrationSheetId?: string
+  feedbackSheetId?: string
+  registrationImportedCount: number
+  registrationMatchedCount: number
+  registrationSkippedCount: number
+  feedbackImportedCount: number
+  feedbackMatchedCount: number
+  feedbackSkippedCount: number
   error?: string
 }
 
 type SyncRequestBody = {
   eventId?: string
   sheetId?: string
+  feedbackSheetId?: string
   title?: string
   mode?: "recent"
   recentPastDays?: number
   recentFutureDays?: number
+  syncTarget?: "registration" | "feedback" | "both"
 }
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -373,79 +393,196 @@ function toRegistrations(
   return { registrations, skippedCount, duplicateCount }
 }
 
+function toFeedbackResponses(
+  event: EventRow,
+  rows: string[][],
+  profilesByEmail: Map<string, ProfileRow>,
+) {
+  if (rows.length <= 1) return { responses: [], skippedCount: 0, duplicateCount: 0 }
+
+  const headers = rows[0] || []
+  const timestampIndex = findHeaderIndex(headers, HEADER_ALIASES.timestamp)
+  const emailIndex = findHeaderIndex(headers, HEADER_ALIASES.email, 1)
+  const syncedAt = new Date().toISOString()
+  let skippedCount = 0
+  let duplicateCount = 0
+
+  const seenEmails = new Set<string>()
+
+  const responses = rows.slice(1).flatMap((row, index): SheetFeedbackResponse[] => {
+    const email = normalizeEmail(row[emailIndex])
+    if (!email) {
+      skippedCount += 1
+      return []
+    }
+
+    if (seenEmails.has(email)) {
+      duplicateCount += 1
+      return []
+    }
+
+    seenEmails.add(email)
+
+    const matchedProfile = profilesByEmail.get(email)
+    const timestampValue = timestampIndex >= 0 ? pickString(row[timestampIndex]) : ""
+    const submittedAt = parseSubmittedAt(timestampValue, syncedAt)
+
+    const rawData: Record<string, any> = {}
+    headers.forEach((header, i) => {
+      const key = (header || `column_${i}`).trim()
+      rawData[key] = row[i] || ""
+    })
+
+    const response: SheetFeedbackResponse = {
+      event_id: event.id,
+      matched_user_id: matchedProfile?.id || null,
+      email,
+      google_sheet_row_id: `${event.id}:feedback_row_${index + 2}`,
+      form_submitted_at: submittedAt,
+      synced_at: syncedAt,
+      raw_data: rawData,
+    }
+
+    return [response]
+  })
+
+  return { responses, skippedCount, duplicateCount }
+}
+
+const shouldSyncFeedbackNow = (event: EventRow) => {
+  if (!event.feedback_sync_enabled || !event.feedback_response_sheet_id || !event.end_at) {
+    return false
+  }
+
+  const offsetMinutes = Math.max(0, Number(event.feedback_sync_start_offset_minutes || 20))
+  const syncStartAt = new Date(new Date(event.end_at).getTime() - offsetMinutes * 60 * 1000)
+  return Date.now() >= syncStartAt.getTime()
+}
+
 async function syncEvent(
   supabaseAdmin: any,
   event: EventRow,
   googleToken: string,
+  syncTarget: NonNullable<SyncRequestBody['syncTarget']>,
+  forceFeedbackSync = false,
 ): Promise<SyncResult> {
   try {
-    if (!event.google_sheet_id) {
-      throw new Error(`Event ${event.id} is missing google_sheet_id`)
-    }
+    const shouldSyncRegistration = syncTarget !== "feedback" && !!event.google_sheet_id
+    const shouldSyncFeedback = syncTarget !== "registration"
 
-    const rows = await fetchSheetRows(event.google_sheet_id, googleToken)
-    const profilesByEmail = await loadProfilesByEmails(supabaseAdmin, extractSheetEmails(rows))
-    const { registrations, skippedCount } = toRegistrations(event, rows, profilesByEmail)
+    let registrationImportedCount = 0
+    let registrationMatchedCount = 0
+    let registrationSkippedCount = 0
+    let feedbackImportedCount = 0
+    let feedbackMatchedCount = 0
+    let feedbackSkippedCount = 0
 
-    if (registrations.length > 0) {
-      const { error } = await supabaseAdmin
-        .from("event_registrations")
-        .upsert(registrations, {
-          onConflict: "event_id,email",
-          ignoreDuplicates: false,
-        })
+    if (shouldSyncRegistration) {
+      const rows = await fetchSheetRows(event.google_sheet_id!, googleToken)
+      const profilesByEmail = await loadProfilesByEmails(supabaseAdmin, extractSheetEmails(rows))
+      const { registrations, skippedCount } = toRegistrations(event, rows, profilesByEmail)
 
-      if (error) throw new Error(`Upsert failed: ${error.message}`)
-    }
+      if (registrations.length > 0) {
+        const { error } = await supabaseAdmin
+          .from("event_registrations")
+          .upsert(registrations, {
+            onConflict: "event_id,email",
+            ignoreDuplicates: false,
+          })
 
-    const allEmails = [...new Set(registrations.map(r => r.email).filter(Boolean))]
-
-    if (allEmails.length > 0) {
-      const { data: eventData, error: eventError } = await supabaseAdmin
-        .from("events")
-        .select("participants")
-        .eq("id", event.id)
-        .single()
-
-      if (!eventError) {
-        const currentParticipants = eventData?.participants || []
-        const participants = [...new Set([...currentParticipants, ...allEmails])]
-        await supabaseAdmin.from("events").update({ participants }).eq("id", event.id)
+        if (error) throw new Error(`Registration upsert failed: ${error.message}`)
       }
+
+      const allEmails = [...new Set(registrations.map(r => r.email).filter(Boolean))]
+
+      if (allEmails.length > 0) {
+        const { data: eventData, error: eventError } = await supabaseAdmin
+          .from("events")
+          .select("participants")
+          .eq("id", event.id)
+          .single()
+
+        if (!eventError) {
+          const currentParticipants = eventData?.participants || []
+          const participants = [...new Set([...currentParticipants, ...allEmails])]
+          await supabaseAdmin.from("events").update({ participants }).eq("id", event.id)
+        }
+      }
+
+      registrationImportedCount = registrations.length
+      registrationMatchedCount = allEmails.length
+      registrationSkippedCount = skippedCount
+    }
+
+    const canSyncFeedback = forceFeedbackSync || shouldSyncFeedbackNow(event)
+    if (shouldSyncFeedback && canSyncFeedback && event.feedback_response_sheet_id) {
+      const feedbackRows = await fetchSheetRows(event.feedback_response_sheet_id, googleToken)
+      const profilesByEmail = await loadProfilesByEmails(supabaseAdmin, extractSheetEmails(feedbackRows))
+      const { responses, skippedCount } = toFeedbackResponses(event, feedbackRows, profilesByEmail)
+
+      if (responses.length > 0) {
+        const { error } = await supabaseAdmin
+          .from("event_feedback_responses")
+          .upsert(responses, {
+            onConflict: "event_id,email",
+            ignoreDuplicates: false,
+          })
+
+        if (error) throw new Error(`Feedback upsert failed: ${error.message}`)
+      }
+
+      const allFeedbackEmails = [...new Set(responses.map(r => r.email).filter(Boolean))]
+      feedbackImportedCount = responses.length
+      feedbackMatchedCount = allFeedbackEmails.length
+      feedbackSkippedCount = skippedCount
     }
 
     return {
       eventId: event.id,
-      sheetId: event.google_sheet_id,
-      importedCount: registrations.length,
-      matchedCount: allEmails.length,
-      skippedCount,
+      registrationSheetId: event.google_sheet_id || undefined,
+      feedbackSheetId: event.feedback_response_sheet_id || undefined,
+      registrationImportedCount,
+      registrationMatchedCount,
+      registrationSkippedCount,
+      feedbackImportedCount,
+      feedbackMatchedCount,
+      feedbackSkippedCount,
     }
   } catch (err: any) {
     return {
       eventId: event.id,
-      sheetId: event.google_sheet_id || "",
-      importedCount: 0,
-      matchedCount: 0,
-      skippedCount: 0,
+      registrationSheetId: event.google_sheet_id || undefined,
+      feedbackSheetId: event.feedback_response_sheet_id || undefined,
+      registrationImportedCount: 0,
+      registrationMatchedCount: 0,
+      registrationSkippedCount: 0,
+      feedbackImportedCount: 0,
+      feedbackMatchedCount: 0,
+      feedbackSkippedCount: 0,
       error: err.message,
     }
   }
 }
 
 async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise<EventRow[]> {
+  const syncTarget = body.syncTarget || "both"
+
   if (body?.eventId) {
     if (body?.sheetId) {
       return [{
         id: body.eventId,
         title: body.title || body.eventId,
-        google_sheet_id: body.sheetId
+        google_sheet_id: body.sheetId,
+        feedback_response_sheet_id: body.feedbackSheetId || null,
+        feedback_sync_enabled: true,
+        feedback_sync_start_offset_minutes: 20,
+        feedback_bonus_points: 0,
       }]
     }
 
     const { data, error } = await supabaseAdmin
       .from("events")
-      .select("id,title,google_sheet_id,start_at,end_at,status")
+      .select("id,title,google_sheet_id,feedback_response_sheet_id,feedback_sync_enabled,feedback_sync_start_offset_minutes,feedback_bonus_points,start_at,end_at,status")
       .eq("id", body.eventId)
       .maybeSingle()
 
@@ -454,8 +591,12 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
       throw new Error(`Event ${body.eventId} not found`)
     }
 
-    if (!data.google_sheet_id) {
+    if (syncTarget !== 'feedback' && !data.google_sheet_id) {
       throw new Error(`Event ${body.eventId} is missing google_sheet_id`)
+    }
+
+    if (syncTarget !== 'registration' && !data.feedback_response_sheet_id) {
+      throw new Error(`Event ${body.eventId} is missing feedback_response_sheet_id`)
     }
 
     if (data.status !== "published") {
@@ -473,15 +614,18 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
 
   const { data, error } = await supabaseAdmin
     .from("events")
-    .select("id,title,google_sheet_id,start_at,end_at,status")
-    .not("google_sheet_id", "is", null)
+    .select("id,title,google_sheet_id,feedback_response_sheet_id,feedback_sync_enabled,feedback_sync_start_offset_minutes,feedback_bonus_points,start_at,end_at,status")
     .eq("status", "published")
     .gte("end_at", recentWindowStart)
     .lte("start_at", recentWindowEnd)
 
   if (error) throw new Error(`Failed to load events for sync: ${error.message}`)
 
-  return (data || []).filter((event: EventRow) => !!event.google_sheet_id)
+  return (data || []).filter((event: EventRow) => {
+    if (syncTarget === 'registration') return !!event.google_sheet_id
+    if (syncTarget === 'feedback') return !!event.feedback_response_sheet_id && !!event.feedback_sync_enabled
+    return !!event.google_sheet_id || (!!event.feedback_response_sheet_id && !!event.feedback_sync_enabled)
+  })
 }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -529,6 +673,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({})) as SyncRequestBody
     const events = await resolveEvents(supabaseAdmin, body)
+    const syncTarget = body.syncTarget || "both"
+    const forceFeedbackSync = !!body.eventId && syncTarget !== 'registration'
 
     if (events.length === 0) {
       return Response.json({ message: "No events to sync", results: [] }, { headers: corsHeaders })
@@ -538,7 +684,7 @@ Deno.serve(async (req) => {
 
     const results: SyncResult[] = []
     for (const event of events) {
-      results.push(await syncEvent(supabaseAdmin, event, googleToken))
+      results.push(await syncEvent(supabaseAdmin, event, googleToken, syncTarget, forceFeedbackSync))
     }
 
     // 觸發點數結算

@@ -15,6 +15,13 @@ type EventFormState = {
   status: CreateEventPayload['status']
   googleSheetId: string
   googleFormUrl: string
+  feedbackFormUrl: string
+  feedbackFormGoogleId: string
+  feedbackResponseSheetId: string
+  feedbackSyncEnabled: boolean
+  feedbackSyncStartOffsetMinutes: number
+  feedbackBonusPoints: number
+  feedbackVisibilityMode: NonNullable<CreateEventPayload['feedback_visibility_mode']>
   registrationBonus: number
   checkinBonus: number
   raffleThreshold: number
@@ -34,6 +41,13 @@ const createDefaultFormData = (): EventFormState => ({
   status: 'draft',
   googleSheetId: '',
   googleFormUrl: '',
+  feedbackFormUrl: '',
+  feedbackFormGoogleId: '',
+  feedbackResponseSheetId: '',
+  feedbackSyncEnabled: false,
+  feedbackSyncStartOffsetMinutes: 20,
+  feedbackBonusPoints: 0,
+  feedbackVisibilityMode: 'test',
   registrationBonus: 0,
   checkinBonus: 0,
   raffleThreshold: 0,
@@ -95,6 +109,13 @@ export const useEventForm = () => {
       status: event.status,
       googleSheetId: event.googleSheetId || '',
       googleFormUrl: event.googleFormUrl || '',
+      feedbackFormUrl: event.feedbackFormUrl || '',
+      feedbackFormGoogleId: event.feedbackFormGoogleId || '',
+      feedbackResponseSheetId: event.feedbackResponseSheetId || '',
+      feedbackSyncEnabled: event.feedbackSyncEnabled,
+      feedbackSyncStartOffsetMinutes: event.feedbackSyncStartOffsetMinutes,
+      feedbackBonusPoints: event.feedbackBonusPoints,
+      feedbackVisibilityMode: event.feedbackVisibilityMode,
       registrationBonus: event.registrationBonus,
       checkinBonus: event.checkinBonus,
       raffleThreshold: event.raffleThreshold,
@@ -174,6 +195,29 @@ export const useEventForm = () => {
       return { valid: false, error: 'Point settings cannot be negative' }
     }
 
+    if (formData.value.feedbackSyncStartOffsetMinutes < 0 || formData.value.feedbackBonusPoints < 0) {
+      return { valid: false, error: '回饋同步設定不可為負數' }
+    }
+
+    if (!['test', 'live'].includes(formData.value.feedbackVisibilityMode)) {
+      return { valid: false, error: '回饋顯示模式設定不正確' }
+    }
+
+    if (formData.value.feedbackSyncEnabled && !formData.value.feedbackResponseSheetId.trim()) {
+      return { valid: false, error: '開啟回饋同步時，請填寫回饋回應試算表 ID' }
+    }
+
+    if (formData.value.feedbackFormUrl.trim()) {
+      try {
+        const url = new URL(formData.value.feedbackFormUrl.trim())
+        if (!['http:', 'https:'].includes(url.protocol)) {
+          return { valid: false, error: '回饋表單連結格式不正確' }
+        }
+      } catch {
+        return { valid: false, error: '回饋表單連結格式不正確' }
+      }
+    }
+
     return { valid: true }
   }
 
@@ -197,6 +241,13 @@ export const useEventForm = () => {
         status: formData.value.status,
         google_sheet_id: formData.value.googleSheetId.trim() || undefined,
         google_form_url: formData.value.googleFormUrl.trim(),
+        feedback_form_url: formData.value.feedbackFormUrl.trim() || undefined,
+        feedback_form_google_id: formData.value.feedbackFormGoogleId.trim() || undefined,
+        feedback_response_sheet_id: formData.value.feedbackResponseSheetId.trim() || undefined,
+        feedback_sync_enabled: formData.value.feedbackSyncEnabled,
+        feedback_sync_start_offset_minutes: Number(formData.value.feedbackSyncStartOffsetMinutes) || 0,
+        feedback_bonus_points: Number(formData.value.feedbackBonusPoints) || 0,
+        feedback_visibility_mode: formData.value.feedbackVisibilityMode,
         registration_bonus: Number(formData.value.registrationBonus) || 0,
         checkin_bonus: Number(formData.value.checkinBonus) || 0,
         raffle_threshold: Number(formData.value.raffleThreshold) || 0,

@@ -7,6 +7,7 @@ const props = defineProps<{
   show: boolean
   selectedEvent: Event | null
   canViewAllEventStatus?: boolean
+  canSeeStaffFeatures?: boolean
   isRegistered?: boolean
   isCheckedIn?: boolean
   checkingRegistration?: boolean
@@ -15,6 +16,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:show': [val: boolean]
   'register': []
+  'feedback': []
 }>()
 
 const eventDetailVisible = computed({
@@ -26,10 +28,13 @@ const canViewAllEventStatus = computed(() => props.canViewAllEventStatus ?? fals
 const isRegistered = computed(() => props.isRegistered ?? false)
 const isCheckedIn = computed(() => props.isCheckedIn ?? false)
 const checkingRegistration = computed(() => props.checkingRegistration ?? false)
+const canSeeStaffFeatures = computed(() => props.canSeeStaffFeatures ?? false)
 const selectedEvent = computed(() => props.selectedEvent)
 
 const selectedEventStatus = computed(() => selectedEvent.value?.status)
 const selectedEventHasForm = computed(() => Boolean(selectedEvent.value?.googleFormUrl))
+const selectedEventHasFeedbackForm = computed(() => Boolean(selectedEvent.value?.feedbackFormUrl))
+const selectedEventFeedbackMode = computed(() => selectedEvent.value?.feedbackVisibilityMode ?? 'test')
 const selectedEventDateLabel = computed(() => {
   if (!selectedEvent.value) return ''
   return selectedEvent.value.time && selectedEvent.value.period
@@ -40,6 +45,16 @@ const selectedEventDateLabel = computed(() => {
 const handleRegister = () => {
   emit('register')
 }
+
+const handleFeedback = () => {
+  emit('feedback')
+}
+
+const canShowFeedbackAction = computed(() => {
+  if (!selectedEvent.value || !selectedEventHasFeedbackForm.value) return false
+  if (selectedEventFeedbackMode.value === 'live') return true
+  return canSeeStaffFeatures.value
+})
 
 const isActionDisabled = computed(() => {
   if (!props.selectedEvent) return true
@@ -146,6 +161,15 @@ const actionLabel = computed(() => {
           * 點數將於一分鐘內自動發放。
         </p>
         <p v-else-if="checkingRegistration" class="text-[10px] text-center text-slate-400 mt-2">正在確認狀態...</p>
+
+        <button
+          v-if="canShowFeedbackAction"
+          @click="handleFeedback"
+          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm bg-amber-50 text-amber-700 hover:bg-amber-100 active:scale-[0.98]"
+        >
+          <AppIcon name="edit_note" />
+          <span>前往回饋問券</span>
+        </button>
       </div>
     </div>
   </van-action-sheet>

@@ -48,7 +48,17 @@ export const eventAdminService = {
   async syncGoogleSheet(eventId: string, sheetId: string): Promise<any> {
     const supabase = getSupabase()
     const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
-      body: { eventId, sheetId }
+      body: { eventId, sheetId, syncTarget: 'registration' }
+    })
+
+    if (error) throw error
+    return data
+  },
+
+  async syncFeedbackSheet(eventId: string): Promise<any> {
+    const supabase = getSupabase()
+    const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
+      body: { eventId, syncTarget: 'feedback' }
     })
 
     if (error) throw error

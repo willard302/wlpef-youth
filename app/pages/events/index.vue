@@ -87,6 +87,14 @@ const isRegistered = ref(false)
 const isCheckedIn = ref(false)
 const checkingRegistration = ref(false)
 
+const canSeeStaffFeatures = computed(() => {
+  return (
+    userProfile.value?.role === 'admin' ||
+    userProfile.value?.role === 'staff' ||
+    userProfile.value?.scan_permission === true
+  )
+})
+
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
 
 const loadUpcomingEvent = async () => {
@@ -195,6 +203,18 @@ const handleRegister = async () => {
   }
 
   window.open(formUrl, '_blank', 'noopener,noreferrer')
+}
+
+const handleOpenFeedback = () => {
+  if (!selectedEvent.value) return
+
+  const feedbackUrl = selectedEvent.value.feedbackFormUrl
+  if (!feedbackUrl) {
+    addToast('此活動尚未設定回饋問券', 'error')
+    return
+  }
+
+  window.open(feedbackUrl, '_blank', 'noopener,noreferrer')
 }
 
 onMounted(async () => {
@@ -369,10 +389,12 @@ onMounted(async () => {
       v-model:show="eventDetailVisible"
       :selectedEvent="selectedEvent"
       :can-view-all-event-status="canViewAllEventStatus"
+      :can-see-staff-features="canSeeStaffFeatures"
       :is-registered="isRegistered"
       :is-checked-in="isCheckedIn"
       :checking-registration="checkingRegistration"
       @register="handleRegister"
+      @feedback="handleOpenFeedback"
     />
   </div>
 </template>

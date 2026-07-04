@@ -43,6 +43,9 @@ export const mapToEvent = (row: EventRow): Event => {
   const startAt = parseISO(row.start_at)
   const endAt = parseISO(row.end_at)
   const hours = startAt.getHours()
+  const feedbackFormGoogleId = (row as any).feedback_form_google_id as string | null
+  const feedbackFormUrl = ((row as any).feedback_form_url as string | null)
+    || (feedbackFormGoogleId ? `https://docs.google.com/forms/d/${feedbackFormGoogleId}/viewform` : null)
 
   return {
     id: row.id,
@@ -56,6 +59,13 @@ export const mapToEvent = (row: EventRow): Event => {
     status: (row.status ?? 'draft') as Event['status'],
     googleSheetId: row.google_sheet_id ?? undefined,
     googleFormUrl: row.google_form_url ?? undefined,
+    feedbackFormUrl: feedbackFormUrl ?? undefined,
+    feedbackFormGoogleId: feedbackFormGoogleId ?? undefined,
+    feedbackResponseSheetId: ((row as any).feedback_response_sheet_id as string | null) ?? undefined,
+    feedbackSyncEnabled: ((row as any).feedback_sync_enabled as boolean | null) ?? false,
+    feedbackSyncStartOffsetMinutes: ((row as any).feedback_sync_start_offset_minutes as number | null) ?? 20,
+    feedbackBonusPoints: ((row as any).feedback_bonus_points as number | null) ?? 0,
+    feedbackVisibilityMode: (((row as any).feedback_visibility_mode as Event['feedbackVisibilityMode'] | null) ?? 'test'),
     registrationBonus: row.registration_bonus ?? 0,
     checkinBonus: row.checkin_bonus ?? 0,
     raffleThreshold: row.raffle_threshold ?? 0,
