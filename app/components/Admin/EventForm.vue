@@ -16,29 +16,27 @@ const {
   isDeleting,
   isInitializing,
   isEditMode,
+  bonusItems,
+  showStartDatePicker,
+  showStartTimePicker,
+  showEndDatePicker,
+  showEndTimePicker,
   initEditor,
   saveEvent,
   deleteEvent,
   formatDisplayDate,
   formatDisplayTime,
+  getDateColumns,
+  getTimeColumns,
+  onStartDateConfirm,
+  onStartTimeConfirm,
+  onEndDateConfirm,
+  onEndTimeConfirm,
 } = useEventForm()
-
-const showStartDatePicker = ref(false)
-const showStartTimePicker = ref(false)
-const showEndDatePicker = ref(false)
-const showEndTimePicker = ref(false)
 
 const eventFormVisible = computed({
   get: () => props.show,
   set: (value) => emit('update:show', value)
-})
-
-const bonusItems = computed(() => {
-  return [
-    { label: '報名獎勵點數', icon: 'how_to_reg', value: formData.value.registrationBonus },
-    { label: '簽到獎勵點數', icon: 'fact_check', value: formData.value.checkinBonus },
-    { label: '抽獎門檻（點數）', icon: 'trophy', value: formData.value.raffleThreshold}
-  ]
 })
 
 watch(() => props.show, (newVal) => {
@@ -60,37 +58,6 @@ const handleDelete = async () => {
     eventFormVisible.value = false
   })
 }
-
-const onStartDateConfirm = (result: any) => {
-  formData.value.startDate = result.selectedValues.join('-')
-  showStartDatePicker.value = false
-}
-
-const onStartTimeConfirm = (result: any) => {
-  formData.value.startTime = result.selectedValues.join(':')
-  showStartTimePicker.value = false
-}
-
-const onEndDateConfirm = (result: any) => {
-  formData.value.endDate = result.selectedValues.join('-')
-  showEndDatePicker.value = false
-}
-
-const onEndTimeConfirm = (result: any) => {
-  formData.value.endTime = result.selectedValues.join(':')
-  showEndTimePicker.value = false
-}
-
-const getDateColumns = (dateStr: string) => {
-  if (!dateStr) return []
-  return dateStr.split('-')
-}
-
-const getTimeColumns = (timeStr: string) => {
-  if (!timeStr) return []
-  return timeStr.split(':')
-}
-
 </script>
 
 <template>
@@ -251,7 +218,7 @@ const getTimeColumns = (timeStr: string) => {
               <AppIcon :name="bonus.icon" class="text-slate-400" />
               <label class="text-sm font-medium text-slate-700 flex-1">{{ bonus.label }}</label>
               <input
-                v-model.number="bonus.value"
+                v-model.number="formData[bonus.field]"
                 type="number"
                 min="0"
                 class="w-20 bg-white/40 px-2 py-1 rounded-lg text-right text-sm text-[#2b9dee] outline-none"

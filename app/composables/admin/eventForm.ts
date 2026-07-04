@@ -3,6 +3,42 @@ import { addHours, format, parseISO, set } from 'date-fns'
 
 import { eventService } from '~/services/event'
 
+type EventFormState = {
+  title: string
+  description: string
+  location: string
+  startDate: string
+  startTime: string
+  endDate: string
+  endTime: string
+  allDay: boolean
+  status: CreateEventPayload['status']
+  googleSheetId: string
+  googleFormUrl: string
+  registrationBonus: number
+  checkinBonus: number
+  raffleThreshold: number
+}
+
+type BonusField = 'registrationBonus' | 'checkinBonus' | 'raffleThreshold'
+
+const createDefaultFormData = (): EventFormState => ({
+  title: '',
+  description: '',
+  location: '',
+  startDate: '',
+  startTime: '',
+  endDate: '',
+  endTime: '',
+  allDay: false,
+  status: 'draft',
+  googleSheetId: '',
+  googleFormUrl: '',
+  registrationBonus: 0,
+  checkinBonus: 0,
+  raffleThreshold: 0,
+})
+
 export const useEventForm = () => {
   const router = useRouter()
   const route = useRoute()
@@ -12,31 +48,28 @@ export const useEventForm = () => {
   const isSaving = ref(false)
   const isDeleting = ref(false)
   const isInitializing = ref(false)
+  const showStartDatePicker = ref(false)
+  const showStartTimePicker = ref(false)
+  const showEndDatePicker = ref(false)
+  const showEndTimePicker = ref(false)
 
   const editingEventId = ref<string | null>(null)
   const isEditMode = computed(() => editingEventId.value !== null)
 
-  const formData = ref({
-    title: '',
-    description: '',
-    location: '',
-    startDate: '',
-    startTime: '',
-    endDate: '',
-    endTime: '',
-    allDay: false,
-    status: 'draft' as CreateEventPayload['status'],
-    googleSheetId: '',
-    googleFormUrl: '',
-    registrationBonus: 0,
-    checkinBonus: 0,
-    raffleThreshold: 0,
-  })
+  const formData = ref<EventFormState>(createDefaultFormData())
+
+  const bonusItems: Array<{ label: string; icon: string; field: BonusField }> = [
+    { label: '報名獎勵點數', icon: 'how_to_reg', field: 'registrationBonus' },
+    { label: '簽到獎勵點數', icon: 'fact_check', field: 'checkinBonus' },
+    { label: '抽獎門檻（點數）', icon: 'trophy', field: 'raffleThreshold' },
+  ]
 
   let savedStartTime = '14:00'
   let savedEndTime = '15:30'
 
   const initForm = (dateStr?: string) => {
+    formData.value = createDefaultFormData()
+
     const base = dateStr ? parseISO(dateStr) : new Date()
     const start = set(base, { hours: 14, minutes: 0, seconds: 0, milliseconds: 0 })
     const end = addHours(start, 1.5)
@@ -50,20 +83,22 @@ export const useEventForm = () => {
   }
 
   const fillFormFromEvent = (event: Event) => {
-    formData.value.title = event.title
-    formData.value.description = event.description
-    formData.value.location = event.location
-    formData.value.startDate = format(event.startAt, 'yyyy-MM-dd')
-    formData.value.startTime = format(event.startAt, 'HH:mm')
-    formData.value.endDate = format(event.endAt, 'yyyy-MM-dd')
-    formData.value.endTime = format(event.endAt, 'HH:mm')
-    formData.value.allDay = event.allDay
-    formData.value.status = event.status
-    formData.value.googleSheetId = event.googleSheetId || ''
-    formData.value.googleFormUrl = event.googleFormUrl || ''
-    formData.value.registrationBonus = event.registrationBonus
-    formData.value.checkinBonus = event.checkinBonus
-    formData.value.raffleThreshold = event.raffleThreshold
+    formData.value = {
+      title: event.title,
+      description: event.description,
+      location: event.location,
+      startDate: format(event.startAt, 'yyyy-MM-dd'),
+      startTime: format(event.startAt, 'HH:mm'),
+      endDate: format(event.endAt, 'yyyy-MM-dd'),
+      endTime: format(event.endAt, 'HH:mm'),
+      allDay: event.allDay,
+      status: event.status,
+      googleSheetId: event.googleSheetId || '',
+      googleFormUrl: event.googleFormUrl || '',
+      registrationBonus: event.registrationBonus,
+      checkinBonus: event.checkinBonus,
+      raffleThreshold: event.raffleThreshold,
+    }
     savedStartTime = formData.value.startTime
     savedEndTime = formData.value.endTime
   }
@@ -229,12 +264,54 @@ export const useEventForm = () => {
 
   const formatDisplayTime = (timeStr: string): string => timeStr || '未選擇'
 
+  const getDateColumns = (dateStr: string): string[] => {
+    if (!dateStr) return []
+    return dateStr.split('-')
+  }
+
+  const getTimeColumns = (timeStr: string): string[] => {
+    if (!timeStr) return []
+    return timeStr.split(':')
+  }
+
+  const setPickerValue = (
+    field: 'startDate' | 'startTime' | 'endDate' | 'endTime',
+    values: string[],
+  ) => {
+    formData.value[field] = values.join(field.endsWith('Date') ? '-' : ':')
+  }
+
+  const onStartDateConfirm = (result: { selectedValues: string[] }) => {
+    setPickerValue('startDate', result.selectedValues)
+    showStartDatePicker.value = false
+  }
+
+  const onStartTimeConfirm = (result: { selectedValues: string[] }) => {
+    setPickerValue('startTime', result.selectedValues)
+    showStartTimePicker.value = false
+  }
+
+  const onEndDateConfirm = (result: { selectedValues: string[] }) => {
+    setPickerValue('endDate', result.selectedValues)
+    showEndDatePicker.value = false
+  }
+
+  const onEndTimeConfirm = (result: { selectedValues: string[] }) => {
+    setPickerValue('endTime', result.selectedValues)
+    showEndTimePicker.value = false
+  }
+
   return {
     formData,
+    bonusItems,
     isSaving,
     isDeleting,
     isInitializing,
     isEditMode,
+    showStartDatePicker,
+    showStartTimePicker,
+    showEndDatePicker,
+    showEndTimePicker,
     initForm,
     initEditor,
     validateForm,
@@ -242,5 +319,11 @@ export const useEventForm = () => {
     deleteEvent,
     formatDisplayDate,
     formatDisplayTime,
+    getDateColumns,
+    getTimeColumns,
+    onStartDateConfirm,
+    onStartTimeConfirm,
+    onEndDateConfirm,
+    onEndTimeConfirm,
   }
 }
