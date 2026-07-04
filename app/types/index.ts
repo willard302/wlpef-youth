@@ -1,11 +1,9 @@
 export * from './database'
 
-export * from './activity'
-export * from './raffle'
-export * from './auth'
 export * from './navigation'
+export * from './auth'
+export * from './raffle'
 export * from './event'
-export * from './payment'
 export * from './points'
 export * from './user'
 export * from './checkin'

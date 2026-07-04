@@ -1,5 +1,13 @@
 export type EventStatus = 'draft' | 'published' | 'closed'
 
+export interface Activity {
+  type: 'event'
+  date: string
+  title: string
+  duration: string
+  icon: string
+}
+
 export interface RafflePrize {
   prize: string
   name: string
