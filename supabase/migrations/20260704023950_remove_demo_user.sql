@@ -1,0 +1,1 @@
+alter table "public"."event_registrations" drop column if exists "demo_user";
