@@ -45,20 +45,18 @@ export const eventAdminService = {
   },
 
   // 觸發 Google 試算表同步 (呼叫 Edge Function)
-  async syncGoogleSheet(eventId: string, sheetId: string): Promise<any> {
+  async syncGoogleSheet(
+    eventId: string,
+    options: {
+      sheetId?: string
+      feedbackSheetId?: string
+      syncTarget?: 'registration' | 'feedback' | 'both'
+    }
+  ): Promise<any> {
     const supabase = getSupabase()
+    const { sheetId, feedbackSheetId, syncTarget = 'registration' } = options
     const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
-      body: { eventId, sheetId, syncTarget: 'registration' }
-    })
-
-    if (error) throw error
-    return data
-  },
-
-  async syncFeedbackSheet(eventId: string): Promise<any> {
-    const supabase = getSupabase()
-    const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
-      body: { eventId, syncTarget: 'feedback' }
+      body: { eventId, sheetId, feedbackSheetId, syncTarget }
     })
 
     if (error) throw error

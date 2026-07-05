@@ -11,7 +11,6 @@ export const useAdminRegistrations = () => {
   const isSyncing = ref(false)
   const currentPage = ref(1)
   const itemsPerPage = 15
-  const feedbackStatusByUserId = ref<Record<string, 'granted' | 'submitted'>>({})
   const feedbackStatusByEmail = ref<Record<string, 'granted' | 'submitted'>>({})
 
   const selectedRegistration = ref<EventRegistration | null>(null)
@@ -27,21 +26,14 @@ export const useAdminRegistrations = () => {
   const fetchFeedbackStatuses = async(eventId: string) => {
     const { data, error } = await supabase
       .from('event_feedback_responses')
-      .select('matched_user_id, email, feedback_points_granted_at')
+      .select('email, feedback_points_granted_at')
       .eq('event_id', eventId)
 
     if (error) throw error
-
-    const byUserId: Record<string, 'granted' | 'submitted'> = {}
     const byEmail: Record<string, 'granted' | 'submitted'> = {}
 
     for (const row of data ?? []) {
       const status: 'granted' | 'submitted' = row.feedback_points_granted_at ? 'granted' : 'submitted'
-
-      if (row.matched_user_id) {
-        const existing = byUserId[row.matched_user_id]
-        if (!existing || status === 'granted') byUserId[row.matched_user_id] = status
-      }
 
       const normalized = normalizeEmail(row.email)
       if (normalized) {
@@ -50,22 +42,17 @@ export const useAdminRegistrations = () => {
       }
     }
 
-    feedbackStatusByUserId.value = byUserId
     feedbackStatusByEmail.value = byEmail
   }
 
   const clearFeedbackStatuses = () => {
-    feedbackStatusByUserId.value = {}
     feedbackStatusByEmail.value = {}
   }
 
   const resolveFeedbackStatus = (registration: EventRegistration): 'granted' | 'submitted' | 'none' => {
-    const byUser = registration.matchedUserId ? feedbackStatusByUserId.value[registration.matchedUserId] : undefined
     const byEmail = feedbackStatusByEmail.value[normalizeEmail(registration.email)]
-    const status = byUser || byEmail
-
-    if (status === 'granted') return 'granted'
-    if (status === 'submitted') return 'submitted'
+    if (byEmail === 'granted') return 'granted'
+    if (byEmail === 'submitted') return 'submitted'
     return 'none'
   }
 
@@ -91,21 +78,32 @@ export const useAdminRegistrations = () => {
 
     isSyncing.value = true
     try {
+      const syncTarget = selectedEvent.value.feedbackResponseSheetId ? 'both' : 'registration'
       const { results } = await eventAdminService.syncGoogleSheet(
         selectedEvent.value.id,
-        selectedEvent.value.googleSheetId,
+        {
+          sheetId: selectedEvent.value.googleSheetId,
+          feedbackSheetId: selectedEvent.value.feedbackResponseSheetId,
+          syncTarget,
+        },
       )
 
       const [firstResult] = results ?? []
-      addToast(
-        firstResult
-          ? `同步完成！匯入 ${firstResult.importedCount} 筆，比對成功 ${firstResult.matchedCount} 筆`
-          : '同步完成',
-        'success',
-      )
+      if (firstResult) {
+        const registrationMessage = `報名匯入 ${firstResult.registrationImportedCount || 0} 筆，比對成功 ${firstResult.registrationMatchedCount || 0} 筆`
+        const feedbackMessage = syncTarget !== 'registration'
+          ? `；回饋匯入 ${firstResult.feedbackImportedCount || 0} 筆，比對成功 ${firstResult.feedbackMatchedCount || 0} 筆`
+          : ''
+
+        addToast(`同步完成！${registrationMessage}${feedbackMessage}`, 'success')
+      }
+      else {
+        addToast('同步完成', 'success')
+      }
 
       if (!selectedEvent.value) return
       await changeEvent(selectedEvent.value)
+      await fetchFeedbackStatuses(selectedEvent.value.id)
     }
     catch (error: any) {
       console.error('Sync error:', error)
@@ -125,6 +123,7 @@ export const useAdminRegistrations = () => {
   }
 
   const getFeedbackStatus = (registration: EventRegistration) => {
+    
     const status = resolveFeedbackStatus(registration)
     if (status === 'granted') return '回饋已完成'
     if (status === 'submitted') return '已回饋'
