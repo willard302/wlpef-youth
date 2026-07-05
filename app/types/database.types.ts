@@ -394,6 +394,7 @@ export type Database = {
           id: string
           name: string | null
           points: number | null
+          revealed_at: string | null
           round: number
           user_id: string
         }
@@ -403,6 +404,7 @@ export type Database = {
           id?: string
           name?: string | null
           points?: number | null
+          revealed_at?: string | null
           round: number
           user_id: string
         }
@@ -412,6 +414,7 @@ export type Database = {
           id?: string
           name?: string | null
           points?: number | null
+          revealed_at?: string | null
           round?: number
           user_id?: string
         }

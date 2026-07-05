@@ -1,5 +1,6 @@
 import type { DrawStageEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
 import { normalizeRafflePrizeSettings } from '~/utils/raffle'
+import { raffleAdminService } from '~/services/raffleAdmin'
 
 export interface AdminRaffleDrawStageProps {
   show: boolean
@@ -186,12 +187,26 @@ export const useAdminRaffleDrawStage = (
   }
 
   const handleClose = () => {
+    // 安全措施：若管理員在動畫期間關閉，確保所有尚未公開的中獎者仍會被揭露
+    const eventId = props.event?.id
+    if (eventId) {
+      void raffleAdminService.revealAllPending(eventId).catch(() => {})
+    }
     showModel.value = false
   }
 
   const revealWinners = (winners: RaffleWinnerRow[]) => {
     isRolling.value = false
     if (!winners.length) return
+
+    // 動畫結束，立即公開這一輪中獎者，讓手機輪詢能看到
+    const eventId = props.event?.id
+    const round = winners[0]?.round
+    if (eventId && round != null) {
+      void raffleAdminService.revealRound(eventId, round).catch(() => {
+        // 靜默失敗：最壞情況是手機晚幾輪才看到，不影響大螢幕展示
+      })
+    }
 
     latestWinners.value = winners
 

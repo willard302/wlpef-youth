@@ -112,4 +112,25 @@ export const raffleAdminService = {
       .eq('round', round)
     if (error) throw error
   },
+
+  // 公開某一輪的中獎者（動畫結束後呼叫，讓手機輪詢能看到）
+  async revealRound(eventId: string, round: number): Promise<void> {
+    const { error } = await getSupabase()
+      .from('raffle_winners')
+      .update({ revealed_at: new Date().toISOString() })
+      .eq('event_id', eventId)
+      .eq('round', round)
+      .is('revealed_at', null)
+    if (error) throw error
+  },
+
+  // 公開該活動所有尚未揭露的中獎者（關閉抽獎介面時的安全措施）
+  async revealAllPending(eventId: string): Promise<void> {
+    const { error } = await getSupabase()
+      .from('raffle_winners')
+      .update({ revealed_at: new Date().toISOString() })
+      .eq('event_id', eventId)
+      .is('revealed_at', null)
+    if (error) throw error
+  },
 }
