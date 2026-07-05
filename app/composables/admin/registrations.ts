@@ -125,9 +125,9 @@ export const useAdminRegistrations = () => {
   const getFeedbackStatus = (registration: EventRegistration) => {
     
     const status = resolveFeedbackStatus(registration)
-    if (status === 'granted') return '回饋已完成'
-    if (status === 'submitted') return '已回饋'
-    return '未回饋'
+    if (status === 'granted') return '表單回饋已完成' // 已回饋且回饋點數已發放
+    if (status === 'submitted') return '表單回饋已完成'  // 已送出回饋，但尚未發放回饋點數
+    return '表單回饋未完'
   }
 
   const getFeedbackStatusClass = (registration: EventRegistration) => {
