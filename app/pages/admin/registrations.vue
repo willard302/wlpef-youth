@@ -21,7 +21,7 @@ const {
   disabledCount,
   searchQuery,
   handleEventChange,
-  handleSync,
+  handleSyncRegistrations,
   openRegistrationDetail,
   getPointsStatus,
   getFirstLoginStatus,
@@ -48,7 +48,7 @@ const {
           <div class="flex items-end justify-between">
             <p class="text-2xl font-black text-slate-800">{{ registrations.length }}</p>
             <button
-              @click="handleSync"
+              @click="handleSyncRegistrations"
               :disabled="isSyncing || !selectedEvent.googleSheetId"
               class="size-8 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center hover:bg-sky-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title="立即同步 Google 試算表"

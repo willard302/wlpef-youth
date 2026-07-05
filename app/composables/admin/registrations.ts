@@ -83,7 +83,7 @@ export const useAdminRegistrations = () => {
     }
   }
 
-  const handleSync = async() => {
+  const handleSyncRegistrations = async() => {
     if (!selectedEvent.value?.googleSheetId) {
       addToast('此活動未設定 Google 試算表 ID', 'error')
       return
@@ -180,7 +180,7 @@ export const useAdminRegistrations = () => {
     enabledCount,
     disabledCount,
     handleEventChange,
-    handleSync,
+    handleSyncRegistrations,
     openRegistrationDetail,
     getPointsStatus,
     getFirstLoginStatus,
