@@ -75,7 +75,12 @@ export function useUser() {
             }
           }
         )
-        .subscribe()
+        .subscribe((status, err) => {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+            console.warn('Realtime 連線失敗，降級為靜態模式', err)
+            setProfileSubscription(null)
+          }
+        })
 
       setProfileSubscription(channel)
     } catch (err) {
