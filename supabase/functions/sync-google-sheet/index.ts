@@ -6,8 +6,6 @@ type EventRow = {
   title: string
   google_sheet_id: string | null
   feedback_response_sheet_id: string | null
-  feedback_sync_enabled: boolean | null
-  feedback_sync_start_offset_minutes: number | null
   feedback_bonus_points: number | null
   start_at?: string
   end_at?: string
@@ -449,22 +447,11 @@ function toFeedbackResponses(
   return { responses, skippedCount, duplicateCount }
 }
 
-const shouldSyncFeedbackNow = (event: EventRow) => {
-  if (!event.feedback_sync_enabled || !event.feedback_response_sheet_id || !event.end_at) {
-    return false
-  }
-
-  const offsetMinutes = Math.max(0, Number(event.feedback_sync_start_offset_minutes || 20))
-  const syncStartAt = new Date(new Date(event.end_at).getTime() - offsetMinutes * 60 * 1000)
-  return Date.now() >= syncStartAt.getTime()
-}
-
 async function syncEvent(
   supabaseAdmin: any,
   event: EventRow,
   googleToken: string,
   syncTarget: NonNullable<SyncRequestBody['syncTarget']>,
-  forceFeedbackSync = false,
 ): Promise<SyncResult> {
   try {
     const shouldSyncRegistration = syncTarget !== "feedback" && !!event.google_sheet_id
@@ -514,8 +501,7 @@ async function syncEvent(
       registrationSkippedCount = skippedCount
     }
 
-    const canSyncFeedback = forceFeedbackSync || shouldSyncFeedbackNow(event)
-    if (shouldSyncFeedback && canSyncFeedback && event.feedback_response_sheet_id) {
+    if (shouldSyncFeedback && event.feedback_response_sheet_id) {
       const feedbackRows = await fetchSheetRows(event.feedback_response_sheet_id, googleToken)
       const profilesByEmail = await loadProfilesByEmails(supabaseAdmin, extractSheetEmails(feedbackRows))
       const { responses, skippedCount } = toFeedbackResponses(event, feedbackRows, profilesByEmail)
@@ -574,15 +560,13 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
         title: body.title || body.eventId,
         google_sheet_id: body.sheetId,
         feedback_response_sheet_id: body.feedbackSheetId || null,
-        feedback_sync_enabled: true,
-        feedback_sync_start_offset_minutes: 20,
         feedback_bonus_points: 0,
       }]
     }
 
     const { data, error } = await supabaseAdmin
       .from("events")
-      .select("id,title,google_sheet_id,feedback_response_sheet_id,feedback_sync_enabled,feedback_sync_start_offset_minutes,feedback_bonus_points,start_at,end_at,status")
+      .select("id,title,google_sheet_id,feedback_response_sheet_id,feedback_bonus_points,start_at,end_at,status")
       .eq("id", body.eventId)
       .maybeSingle()
 
@@ -614,7 +598,7 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
 
   const { data, error } = await supabaseAdmin
     .from("events")
-    .select("id,title,google_sheet_id,feedback_response_sheet_id,feedback_sync_enabled,feedback_sync_start_offset_minutes,feedback_bonus_points,start_at,end_at,status")
+    .select("id,title,google_sheet_id,feedback_response_sheet_id,feedback_bonus_points,start_at,end_at,status")
     .eq("status", "published")
     .gte("end_at", recentWindowStart)
     .lte("start_at", recentWindowEnd)
@@ -623,8 +607,8 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
 
   return (data || []).filter((event: EventRow) => {
     if (syncTarget === 'registration') return !!event.google_sheet_id
-    if (syncTarget === 'feedback') return !!event.feedback_response_sheet_id && !!event.feedback_sync_enabled
-    return !!event.google_sheet_id || (!!event.feedback_response_sheet_id && !!event.feedback_sync_enabled)
+    if (syncTarget === 'feedback') return !!event.feedback_response_sheet_id
+    return !!event.google_sheet_id || !!event.feedback_response_sheet_id
   })
 }
 Deno.serve(async (req) => {
@@ -674,7 +658,6 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({})) as SyncRequestBody
     const events = await resolveEvents(supabaseAdmin, body)
     const syncTarget = body.syncTarget || "both"
-    const forceFeedbackSync = !!body.eventId && syncTarget !== 'registration'
 
     if (events.length === 0) {
       return Response.json({ message: "No events to sync", results: [] }, { headers: corsHeaders })
@@ -684,7 +667,7 @@ Deno.serve(async (req) => {
 
     const results: SyncResult[] = []
     for (const event of events) {
-      results.push(await syncEvent(supabaseAdmin, event, googleToken, syncTarget, forceFeedbackSync))
+      results.push(await syncEvent(supabaseAdmin, event, googleToken, syncTarget))
     }
 
     // 觸發點數結算
