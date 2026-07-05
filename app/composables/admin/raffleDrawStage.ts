@@ -183,6 +183,11 @@ export const useAdminRaffleDrawStage = (
     }
 
     isRolling.value = false
+    // 結束前先公開所有尚未揭露的中獎者，確保在 raffle_active 變 false 之前手機能收到通知
+    const eventId = props.event?.id
+    if (eventId) {
+      await raffleAdminService.revealAllPending(eventId).catch(() => {})
+    }
     await props.onStop()
   }
 
@@ -204,7 +209,7 @@ export const useAdminRaffleDrawStage = (
     const round = winners[0]?.round
     if (eventId && round != null) {
       void raffleAdminService.revealRound(eventId, round).catch(() => {
-        // 靜默失敗：最壞情況是手機晚幾輪才看到，不影響大螢幕展示
+        // 靜默失敗：大螢幕展示不受影響；結束抽獎時 handleStop 的 revealAllPending 會補發
       })
     }
 
