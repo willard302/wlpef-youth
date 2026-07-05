@@ -25,6 +25,8 @@ const {
   openRegistrationDetail,
   getPointsStatus,
   getFirstLoginStatus,
+  getFeedbackStatus,
+  getFeedbackStatusClass,
   fnsFormat,
 } = useAdminRegistrations()
 </script>
@@ -124,15 +126,21 @@ const {
             <div class="flex flex-wrap gap-2">
               <span
                 class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
+                :class="reg.firstLoginEnabled ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
+              >
+                {{ getFirstLoginStatus(reg) }}
+              </span>
+              <span
+                class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
                 :class="reg.registrationPointsGrantedAt ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
               >
                 {{ getPointsStatus(reg) }}
               </span>
               <span
                 class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"
-                :class="reg.firstLoginEnabled ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
+                :class="getFeedbackStatusClass(reg)"
               >
-                {{ getFirstLoginStatus(reg) }}
+                {{ getFeedbackStatus(reg) }}
               </span>
             </div>
           </div>
