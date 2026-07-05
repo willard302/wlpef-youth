@@ -31,8 +31,6 @@ export interface Event {
   feedbackFormUrl?: string
   feedbackFormGoogleId?: string
   feedbackResponseSheetId?: string
-  feedbackSyncEnabled: boolean
-  feedbackSyncStartOffsetMinutes: number
   feedbackBonusPoints: number
   feedbackVisibilityMode: FeedbackVisibilityMode
   registrationBonus: number
@@ -61,8 +59,6 @@ export interface CreateEventPayload {
   feedback_form_url?: string
   feedback_form_google_id?: string
   feedback_response_sheet_id?: string
-  feedback_sync_enabled?: boolean
-  feedback_sync_start_offset_minutes?: number
   feedback_bonus_points?: number
   feedback_visibility_mode?: FeedbackVisibilityMode
   registration_bonus?: number

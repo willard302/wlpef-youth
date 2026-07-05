@@ -62,8 +62,6 @@ export const mapToEvent = (row: EventRow): Event => {
     feedbackFormUrl: feedbackFormUrl ?? undefined,
     feedbackFormGoogleId: feedbackFormGoogleId ?? undefined,
     feedbackResponseSheetId: ((row as any).feedback_response_sheet_id as string | null) ?? undefined,
-    feedbackSyncEnabled: ((row as any).feedback_sync_enabled as boolean | null) ?? false,
-    feedbackSyncStartOffsetMinutes: ((row as any).feedback_sync_start_offset_minutes as number | null) ?? 20,
     feedbackBonusPoints: ((row as any).feedback_bonus_points as number | null) ?? 0,
     feedbackVisibilityMode: (((row as any).feedback_visibility_mode as Event['feedbackVisibilityMode'] | null) ?? 'test'),
     registrationBonus: row.registration_bonus ?? 0,

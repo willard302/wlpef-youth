@@ -18,8 +18,6 @@ type EventFormState = {
   feedbackFormUrl: string
   feedbackFormGoogleId: string
   feedbackResponseSheetId: string
-  feedbackSyncEnabled: boolean
-  feedbackSyncStartOffsetMinutes: number
   feedbackBonusPoints: number
   feedbackVisibilityMode: NonNullable<CreateEventPayload['feedback_visibility_mode']>
   registrationBonus: number
@@ -44,8 +42,6 @@ const createDefaultFormData = (): EventFormState => ({
   feedbackFormUrl: '',
   feedbackFormGoogleId: '',
   feedbackResponseSheetId: '',
-  feedbackSyncEnabled: false,
-  feedbackSyncStartOffsetMinutes: 20,
   feedbackBonusPoints: 0,
   feedbackVisibilityMode: 'test',
   registrationBonus: 0,
@@ -112,8 +108,6 @@ export const useEventForm = () => {
       feedbackFormUrl: event.feedbackFormUrl || '',
       feedbackFormGoogleId: event.feedbackFormGoogleId || '',
       feedbackResponseSheetId: event.feedbackResponseSheetId || '',
-      feedbackSyncEnabled: event.feedbackSyncEnabled,
-      feedbackSyncStartOffsetMinutes: event.feedbackSyncStartOffsetMinutes,
       feedbackBonusPoints: event.feedbackBonusPoints,
       feedbackVisibilityMode: event.feedbackVisibilityMode,
       registrationBonus: event.registrationBonus,
@@ -195,16 +189,12 @@ export const useEventForm = () => {
       return { valid: false, error: 'Point settings cannot be negative' }
     }
 
-    if (formData.value.feedbackSyncStartOffsetMinutes < 0 || formData.value.feedbackBonusPoints < 0) {
+    if (formData.value.feedbackBonusPoints < 0) {
       return { valid: false, error: '回饋同步設定不可為負數' }
     }
 
     if (!['test', 'live'].includes(formData.value.feedbackVisibilityMode)) {
       return { valid: false, error: '回饋顯示模式設定不正確' }
-    }
-
-    if (formData.value.feedbackSyncEnabled && !formData.value.feedbackResponseSheetId.trim()) {
-      return { valid: false, error: '開啟回饋同步時，請填寫回饋回應試算表 ID' }
     }
 
     if (formData.value.feedbackFormUrl.trim()) {
@@ -244,8 +234,6 @@ export const useEventForm = () => {
         feedback_form_url: formData.value.feedbackFormUrl.trim() || undefined,
         feedback_form_google_id: formData.value.feedbackFormGoogleId.trim() || undefined,
         feedback_response_sheet_id: formData.value.feedbackResponseSheetId.trim() || undefined,
-        feedback_sync_enabled: formData.value.feedbackSyncEnabled,
-        feedback_sync_start_offset_minutes: Number(formData.value.feedbackSyncStartOffsetMinutes) || 0,
         feedback_bonus_points: Number(formData.value.feedbackBonusPoints) || 0,
         feedback_visibility_mode: formData.value.feedbackVisibilityMode,
         registration_bonus: Number(formData.value.registrationBonus) || 0,
