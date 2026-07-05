@@ -1,20 +1,11 @@
-import {
-  add,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isSameDay,
-  isSameMonth,
-  startOfDay,
-  startOfMonth,
-  startOfWeek,
-  sub,
+import { 
+  add, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay,
+  isSameMonth, startOfDay, startOfMonth, startOfWeek, sub 
 } from 'date-fns'
 import type { Role, Event } from '~/types'
 import { eventService } from '~/services/event'
 
-export function useCalendar() {
+export const useEvents = () => {
   const { userProfile } = useUser()
 
   const isCalendarLoading = ref(false)

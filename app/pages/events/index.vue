@@ -1,8 +1,5 @@
 <script setup lang="ts">
 import EventDetailModal from './components/EventDetailModal.vue'
-import { format as fnsFormat } from 'date-fns'
-import type { Event } from '~/types'
-import { eventService } from '~/services/event'
 import { EVENT_STATUS_CLASS_MAP, EVENT_STATUS_LABEL_MAP } from '~/utils/eventStatus'
 
 definePageMeta({
@@ -12,11 +9,12 @@ definePageMeta({
   tabbarKey: 'events'
 })
 
-const router = useRouter()
 const { addToast } = useToast()
-
+const { openMenu } = useSideMenu()
 const { deleteEventToDatabase } = useAdminEvents()
+
 const { userProfile, isLoading: isUserLoading } = useUser()
+
 const {
   selectedDate,
   monthYear,
@@ -33,114 +31,35 @@ const {
   format,
   loadEvents,
   isCalendarLoading,
-  isAdmin,
   canEditEvent,
   canDeleteEvent,
-  canViewAllEventStatus,
-} = useCalendar()
+  canViewAllEventStatus
+} = useEvents()
 
-const { openMenu } = useSideMenu()
+const { 
+  isEventLoading,
+  isOngoing,
+  isUpcomingCheckedIn,
+  isUpcomingRegistered,
+  upcomingEventDisplay,
+  upcomingRegistrationStatus,
+  upcomingEventData,
+  loadUpcomingEvent
+} = useEventUpcoming(canViewAllEventStatus)
 
-const isEventLoading = ref(true)
-const upcomingEventData = ref<Event | null>(null)
-const isOngoing = ref(false)
-const isUpcomingRegistrationLoading = ref(false)
-const isUpcomingRegistered = ref(false)
-const upcomingEventDisplay = computed(() => {
-  const event = upcomingEventData.value
-  if (!event) {
-    return {
-      title: '目前沒有活動',
-      meta: isAdmin.value ? '管理員：建立活動並發佈後會顯示在這裡' : '請稍後再查看最新活動',
-    }
-  }
-
-  const timeText = event.allDay
-    ? fnsFormat(event.startAt, 'MM/dd')
-    : fnsFormat(event.startAt, 'MM/dd HH:mm')
-
-  return {
-    id: event.id,
-    title: event.title,
-    meta: `${timeText} · ${event.location || '地點未定'}`,
-  }
-})
-
-
-const isUpcomingCheckedIn = ref(false)
-
-const upcomingRegistrationStatus = computed(() => {
-  const event = upcomingEventData.value
-  if (!event) return ''
-  if (canViewAllEventStatus.value) return EVENT_STATUS_LABEL_MAP[event.status]
-  if (isUpcomingRegistrationLoading.value) return '確認狀態中'
-  if (isUpcomingCheckedIn.value) return '已報到'
-  if (isUpcomingRegistered.value) return '已報名'
-  if (event.status === 'closed') return '報名已關閉'
-  return '未報名'
-})
-
-// Event Detail Modal State
-const eventDetailVisible = ref(false)
-const selectedEvent = ref<Event | null>(null)
-const isRegistered = ref(false)
-const isCheckedIn = ref(false)
-const checkingRegistration = ref(false)
-
-const canSeeStaffFeatures = computed(() => {
-  return (
-    userProfile.value?.role === 'admin' ||
-    userProfile.value?.role === 'staff' ||
-    userProfile.value?.scan_permission === true
-  )
-})
+const {
+  eventDetailVisible,
+  selectedEvent,
+  canSeeStaffFeatures,
+  isRegistered,
+  isCheckedIn,
+  checkingRegistration,
+  openEventDetail,
+  handleRegister,
+  handleOpenFeedback,
+} = useEventDetail(userProfile)
 
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
-
-const loadUpcomingEvent = async () => {
-  isEventLoading.value = true
-  isUpcomingRegistered.value = false
-  isUpcomingRegistrationLoading.value = false
-  isOngoing.value = false
-
-  try {
-    const status = canViewAllEventStatus.value ? undefined : 'published'
-    
-    // First, check for ongoing events
-    const ongoingEvents = await eventService.fetchOngoingEvents(status)
-    
-    if (ongoingEvents.length > 0) {
-      upcomingEventData.value = ongoingEvents[0] || null
-      isOngoing.value = true
-    } else {
-      // If no ongoing events, fetch upcoming events
-      const events = await eventService.fetchUpcomingEvents(1, status)
-      upcomingEventData.value = events[0] || null
-      isOngoing.value = false
-    }
-
-    if (upcomingEventData.value && !canViewAllEventStatus.value) {
-      isUpcomingRegistrationLoading.value = true
-      const [regStatus, checkinStatus] = await Promise.all([
-        eventService.checkRegistrationStatus(upcomingEventData.value.id),
-        eventService.checkCheckinStatus(upcomingEventData.value.id)
-      ])
-      isUpcomingRegistered.value = regStatus
-      isUpcomingCheckedIn.value = checkinStatus
-    }
-  } catch (error) {
-    console.error('Failed to load events', error)
-    upcomingEventData.value = null
-    isUpcomingRegistered.value = false
-  } finally {
-    isUpcomingRegistrationLoading.value = false
-    isEventLoading.value = false
-  }
-}
-
-const navigateToEditEvent = (eventId: string) => {
-  router.push({ path: '/admin/events', query: { id: eventId } })
-}
 
 const handleDeleteEvent = async (eventId: string) => {
   try {
@@ -162,59 +81,6 @@ const handleDeleteEvent = async (eventId: string) => {
   } catch (err: any) {
     addToast(err.message || '刪除活動失敗', 'error')
   }
-}
-
-const openEventDetail = async (event: Event) => {
-  if (!event) return
-  
-  // 如果是管理員，直接跳轉到編輯頁面
-  if (userProfile.value?.role === 'admin') {
-    navigateToEditEvent(event.id)
-    return
-  }
-
-  selectedEvent.value = event
-  eventDetailVisible.value = true
-  isRegistered.value = false
-  isCheckedIn.value = false
-  checkingRegistration.value = true
-  
-  try {
-    const [regStatus, checkinStatus] = await Promise.all([
-      eventService.checkRegistrationStatus(event.id),
-      eventService.checkCheckinStatus(event.id)
-    ])
-    isRegistered.value = regStatus
-    isCheckedIn.value = checkinStatus
-  } catch (err) {
-    console.error('Check status error:', err)
-  } finally {
-    checkingRegistration.value = false
-  }
-}
-
-const handleRegister = async () => {
-  if (!selectedEvent.value || isRegistered.value) return
-
-  const formUrl = selectedEvent.value.googleFormUrl
-  if (!formUrl) {
-    addToast('此活動尚未設定 Google 表單連結', 'error')
-    return
-  }
-
-  window.open(formUrl, '_blank', 'noopener,noreferrer')
-}
-
-const handleOpenFeedback = () => {
-  if (!selectedEvent.value) return
-
-  const feedbackUrl = selectedEvent.value.feedbackFormUrl
-  if (!feedbackUrl) {
-    addToast('此活動尚未設定回饋問券', 'error')
-    return
-  }
-
-  window.open(feedbackUrl, '_blank', 'noopener,noreferrer')
 }
 
 onMounted(async () => {
