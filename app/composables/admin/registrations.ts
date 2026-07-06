@@ -131,8 +131,8 @@ export const useAdminRegistrations = () => {
   const getFeedbackStatus = (registration: EventRegistration) => {
     
     const status = resolveFeedbackStatus(registration)
-    if (status === 'granted') return '表單回饋已完成' // 已回饋且回饋點數已發放
-    if (status === 'submitted') return '表單回饋已完成'  // 已送出回饋，但尚未發放回饋點數
+    if (status === 'granted') return '表單回饋完成' // 已回饋且回饋點數已發放
+    if (status === 'submitted') return '表單回饋完成'  // 已送出回饋，但尚未發放回饋點數
     return '表單回饋未完'
   }
 
@@ -140,7 +140,7 @@ export const useAdminRegistrations = () => {
     const status = resolveFeedbackStatus(registration)
     if (status === 'granted') return 'bg-cyan-50 text-cyan-700 border border-cyan-100'
     if (status === 'submitted') return 'bg-sky-50 text-sky-700 border border-sky-100'
-    return 'bg-slate-50 text-slate-500 border border-slate-100'
+    return 'hidden'
   }
   
   const filteredRegistrations = computed(() => {
