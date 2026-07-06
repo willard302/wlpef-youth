@@ -270,6 +270,7 @@ export type Database = {
           all_day: boolean | null
           checkin_bonus: number | null
           checkin_form_bonus_points: number
+          checkin_form_sync_enabled: boolean
           checkin_form_url: string | null
           checkin_response_sheet_id: string | null
           checkin_visibility_mode: string
@@ -298,6 +299,7 @@ export type Database = {
           all_day?: boolean | null
           checkin_bonus?: number | null
           checkin_form_bonus_points?: number
+          checkin_form_sync_enabled?: boolean
           checkin_form_url?: string | null
           checkin_response_sheet_id?: string | null
           checkin_visibility_mode?: string
@@ -326,6 +328,7 @@ export type Database = {
           all_day?: boolean | null
           checkin_bonus?: number | null
           checkin_form_bonus_points?: number
+          checkin_form_sync_enabled?: boolean
           checkin_form_url?: string | null
           checkin_response_sheet_id?: string | null
           checkin_visibility_mode?: string
