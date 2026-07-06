@@ -12,6 +12,7 @@ export const useAdminRegistrations = () => {
   const currentPage = ref(1)
   const itemsPerPage = 15
   const feedbackStatusByEmail = ref<Record<string, 'granted' | 'submitted'>>({})
+  const checkedInRegistrationIds = ref<Set<string>>(new Set())
 
   const selectedRegistration = ref<EventRegistration | null>(null)
   const registrationDetailVisible = ref(false)
@@ -49,6 +50,19 @@ export const useAdminRegistrations = () => {
     feedbackStatusByEmail.value = {}
   }
 
+  const loadCheckedInRegistrationIds = async(eventId: string) => {
+    const attendance = await eventAdminService.fetchAttendanceByEventId(eventId)
+    checkedInRegistrationIds.value = new Set(
+      attendance
+        .map(item => item.registrationId)
+        .filter((id): id is string => Boolean(id))
+    )
+  }
+
+  const clearCheckedInRegistrationIds = () => {
+    checkedInRegistrationIds.value = new Set()
+  }
+
   const resolveFeedbackStatus = (registration: EventRegistration): 'granted' | 'submitted' | 'none' => {
     const byEmail = feedbackStatusByEmail.value[normalizeEmail(registration.email)]
     if (byEmail === 'granted') return 'granted'
@@ -61,12 +75,16 @@ export const useAdminRegistrations = () => {
     await changeEvent(event)
 
     try {
-      await fetchFeedbackStatuses(event.id)
+      await Promise.all([
+        fetchFeedbackStatuses(event.id),
+        loadCheckedInRegistrationIds(event.id),
+      ])
     }
     catch (error) {
-      console.error('Load feedback statuses error:', error)
+      console.error('Load member statuses error:', error)
       clearFeedbackStatuses()
-      addToast('載入會員回饋狀態失敗', 'error')
+      clearCheckedInRegistrationIds()
+      addToast('載入會員狀態失敗', 'error')
     }
   }
 
@@ -109,7 +127,10 @@ export const useAdminRegistrations = () => {
 
       if (!selectedEvent.value) return
       await changeEvent(selectedEvent.value)
-      await fetchFeedbackStatuses(selectedEvent.value.id)
+      await Promise.all([
+        fetchFeedbackStatuses(selectedEvent.value.id),
+        loadCheckedInRegistrationIds(selectedEvent.value.id),
+      ])
     }
     catch (error: any) {
       console.error('Sync error:', error)
@@ -126,6 +147,10 @@ export const useAdminRegistrations = () => {
 
   const getFirstLoginStatus = (registration: EventRegistration) => {
     return registration.firstLoginEnabled ? '已啟用' : '未啟用'
+  }
+
+  const isCheckedIn = (registration: EventRegistration) => {
+    return checkedInRegistrationIds.value.has(registration.id)
   }
 
   const getFeedbackStatus = (registration: EventRegistration) => {
@@ -189,6 +214,7 @@ export const useAdminRegistrations = () => {
     openRegistrationDetail,
     getPointsStatus,
     getFirstLoginStatus,
+    isCheckedIn,
     getFeedbackStatus,
     getFeedbackStatusClass,
     fnsFormat,
