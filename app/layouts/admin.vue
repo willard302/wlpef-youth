@@ -12,7 +12,7 @@ const { menuVisible } = useSideMenu()
     </div>
 
     <!-- Toast 通知 -->
-    <div class="absolute top-0 right-0 z-[110] p-4 space-y-2 pointer-events-none">
+    <div class="absolute top-0 right-0 z-[3000] p-4 space-y-2 pointer-events-none">
       <Toast
         v-for="toast in toasts"
         :key="toast.id"

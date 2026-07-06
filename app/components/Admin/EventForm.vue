@@ -297,6 +297,20 @@ const handleDelete = async () => {
               正式模式：會員與 staff 都可看見打卡表單連結；測試模式：僅 staff 可見。
             </p>
             <div class="h-[1px] bg-white/30 mx-3"></div>
+            <div class="flex items-center justify-between px-3 py-4">
+              <div class="flex items-center gap-3">
+                <AppIcon name="sync" class="text-slate-400" />
+                <div>
+                  <p class="text-sm font-medium text-slate-700">啟用打卡表單同步</p>
+                  <p class="text-[11px] text-slate-500">開啟後才會從打卡回應試算表同步到資料庫。</p>
+                </div>
+              </div>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input v-model="formData.checkinFormSyncEnabled" type="checkbox" class="sr-only peer" />
+                <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2b9dee]"></div>
+              </label>
+            </div>
+            <div class="h-[1px] bg-white/30 mx-3"></div>
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="playlist_add_check" class="text-slate-400 mt-0.5" />
               <input
@@ -316,6 +330,12 @@ const handleDelete = async () => {
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
               />
             </div>
+            <p
+              v-if="formData.checkinResponseSheetId && !formData.checkinFormSyncEnabled"
+              class="px-3 pb-1 text-[11px] leading-relaxed text-amber-600"
+            >
+              已設定打卡回應試算表，但同步尚未啟用。
+            </p>
             <div class="h-[1px] bg-white/30 mx-3"></div>
             <div class="flex items-center gap-3 px-3 py-4">
               <AppIcon name="workspace_premium" class="text-slate-400" />

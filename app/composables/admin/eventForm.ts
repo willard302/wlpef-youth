@@ -23,6 +23,7 @@ type EventFormState = {
   checkinResponseSheetId: string
   checkinFormBonusPoints: number
   checkinVisibilityMode: NonNullable<CreateEventPayload['checkin_visibility_mode']>
+  checkinFormSyncEnabled: boolean
   registrationBonus: number
   checkinBonus: number
   raffleThreshold: number
@@ -50,6 +51,7 @@ const createDefaultFormData = (): EventFormState => ({
   checkinResponseSheetId: '',
   checkinFormBonusPoints: 0,
   checkinVisibilityMode: 'test',
+  checkinFormSyncEnabled: false,
   registrationBonus: 0,
   checkinBonus: 0,
   raffleThreshold: 0,
@@ -119,6 +121,7 @@ export const useEventForm = () => {
       checkinResponseSheetId: event.checkinResponseSheetId || '',
       checkinFormBonusPoints: event.checkinFormBonusPoints,
       checkinVisibilityMode: event.checkinVisibilityMode,
+      checkinFormSyncEnabled: event.checkinFormSyncEnabled,
       registrationBonus: event.registrationBonus,
       checkinBonus: event.checkinBonus,
       raffleThreshold: event.raffleThreshold,
@@ -236,6 +239,10 @@ export const useEventForm = () => {
       }
     }
 
+    if (formData.value.checkinFormSyncEnabled && !formData.value.checkinResponseSheetId.trim()) {
+      return { valid: false, error: '啟用打卡表單同步時，請設定打卡回應試算表 ID' }
+    }
+
     return { valid: true }
   }
 
@@ -267,6 +274,7 @@ export const useEventForm = () => {
         checkin_response_sheet_id: formData.value.checkinResponseSheetId.trim() || undefined,
         checkin_form_bonus_points: Number(formData.value.checkinFormBonusPoints) || 0,
         checkin_visibility_mode: formData.value.checkinVisibilityMode,
+        checkin_form_sync_enabled: formData.value.checkinFormSyncEnabled,
         registration_bonus: Number(formData.value.registrationBonus) || 0,
         checkin_bonus: Number(formData.value.checkinBonus) || 0,
         raffle_threshold: Number(formData.value.raffleThreshold) || 0,

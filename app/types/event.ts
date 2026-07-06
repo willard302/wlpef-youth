@@ -36,6 +36,7 @@ export interface Event {
   checkinResponseSheetId?: string
   checkinFormBonusPoints: number
   checkinVisibilityMode: FeedbackVisibilityMode
+  checkinFormSyncEnabled: boolean
   registrationBonus: number
   checkinBonus: number
   raffleThreshold: number
@@ -67,6 +68,7 @@ export interface CreateEventPayload {
   checkin_response_sheet_id?: string
   checkin_form_bonus_points?: number
   checkin_visibility_mode?: FeedbackVisibilityMode
+  checkin_form_sync_enabled?: boolean
   registration_bonus?: number
   checkin_bonus?: number
   raffle_threshold?: number

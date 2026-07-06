@@ -66,6 +66,7 @@ export const mapToEvent = (row: EventRow): Event => {
     checkinResponseSheetId: ((row as any).checkin_response_sheet_id as string | null) ?? undefined,
     checkinFormBonusPoints: ((row as any).checkin_form_bonus_points as number | null) ?? 0,
     checkinVisibilityMode: (((row as any).checkin_visibility_mode as Event['checkinVisibilityMode'] | null) ?? 'test'),
+    checkinFormSyncEnabled: ((row as any).checkin_form_sync_enabled as boolean | null) ?? false,
     registrationBonus: row.registration_bonus ?? 0,
     checkinBonus: row.checkin_bonus ?? 0,
     raffleThreshold: row.raffle_threshold ?? 0,
