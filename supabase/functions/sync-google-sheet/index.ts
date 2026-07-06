@@ -7,6 +7,7 @@ type EventRow = {
   google_sheet_id: string | null
   feedback_response_sheet_id: string | null
   checkin_response_sheet_id: string | null
+  checkin_form_sync_enabled: boolean
   feedback_bonus_points: number | null
   checkin_form_bonus_points: number | null
   start_at?: string
@@ -593,7 +594,7 @@ async function syncEvent(
   try {
     const shouldSyncRegistration = (syncTarget === "registration" || syncTarget === "both") && !!event.google_sheet_id
     const shouldSyncFeedback = syncTarget === "feedback" || syncTarget === "both"
-    const shouldSyncCheckin = syncTarget === "checkin" || syncTarget === "both"
+    const shouldSyncCheckin = (syncTarget === "checkin" || syncTarget === "both") && event.checkin_form_sync_enabled
 
     let registrationImportedCount = 0
     let registrationMatchedCount = 0
@@ -730,6 +731,7 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
         google_sheet_id: body.sheetId,
         feedback_response_sheet_id: body.feedbackSheetId || null,
         checkin_response_sheet_id: body.checkinSheetId || null,
+        checkin_form_sync_enabled: true,
         feedback_bonus_points: 0,
         checkin_form_bonus_points: 0,
       }]
@@ -737,7 +739,7 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
 
     const { data, error } = await supabaseAdmin
       .from("events")
-      .select("id,title,google_sheet_id,feedback_response_sheet_id,checkin_response_sheet_id,feedback_bonus_points,checkin_form_bonus_points,start_at,end_at,status")
+      .select("id,title,google_sheet_id,feedback_response_sheet_id,checkin_response_sheet_id,checkin_form_sync_enabled,feedback_bonus_points,checkin_form_bonus_points,start_at,end_at,status")
       .eq("id", body.eventId)
       .maybeSingle()
 
@@ -754,12 +756,16 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
       throw new Error(`Event ${body.eventId} is missing feedback_response_sheet_id`)
     }
 
+    if (syncTarget === 'checkin' && !data.checkin_form_sync_enabled) {
+      throw new Error(`Event ${body.eventId} has checkin form sync disabled`)
+    }
+
     if (syncTarget === 'checkin' && !data.checkin_response_sheet_id) {
       throw new Error(`Event ${body.eventId} is missing checkin_response_sheet_id`)
     }
 
-    if (syncTarget === 'both' && !data.feedback_response_sheet_id && !data.checkin_response_sheet_id) {
-      throw new Error(`Event ${body.eventId} is missing both feedback_response_sheet_id and checkin_response_sheet_id`)
+    if (syncTarget === 'both' && !data.feedback_response_sheet_id && (!data.checkin_form_sync_enabled || !data.checkin_response_sheet_id)) {
+      throw new Error(`Event ${body.eventId} is missing feedback_response_sheet_id and no checkin sync source is enabled`)
     }
 
     if (data.status !== "published") {
@@ -777,7 +783,7 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
 
   const { data, error } = await supabaseAdmin
     .from("events")
-    .select("id,title,google_sheet_id,feedback_response_sheet_id,checkin_response_sheet_id,feedback_bonus_points,checkin_form_bonus_points,start_at,end_at,status")
+    .select("id,title,google_sheet_id,feedback_response_sheet_id,checkin_response_sheet_id,checkin_form_sync_enabled,feedback_bonus_points,checkin_form_bonus_points,start_at,end_at,status")
     .eq("status", "published")
     .gte("end_at", recentWindowStart)
     .lte("start_at", recentWindowEnd)
@@ -787,8 +793,8 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
   return (data || []).filter((event: EventRow) => {
     if (syncTarget === 'registration') return !!event.google_sheet_id
     if (syncTarget === 'feedback') return !!event.feedback_response_sheet_id
-    if (syncTarget === 'checkin') return !!event.checkin_response_sheet_id
-    return !!event.google_sheet_id || !!event.feedback_response_sheet_id || !!event.checkin_response_sheet_id
+    if (syncTarget === 'checkin') return event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id
+    return !!event.google_sheet_id || !!event.feedback_response_sheet_id || (event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id)
   })
 }
 Deno.serve(async (req) => {
