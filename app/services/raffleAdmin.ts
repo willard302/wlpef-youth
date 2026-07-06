@@ -1,11 +1,6 @@
 import type { RaffleCandidate, RaffleEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
 import { normalizeRafflePrizeSettings } from '~/utils/raffle'
 
-// 抽獎控制台資料層。raffle_winners / draw_raffle / get_raffle_candidates 尚未進
-// generated types，故對這些呼叫以 any 取用（套 migration 後重產 database.types.ts 可移除）。
-
-
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getSupabase = () => useSupabaseClient() as any
 
