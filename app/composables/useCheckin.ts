@@ -89,7 +89,7 @@ export const useCheckin = () => {
 
     try {
 
-      await eventAdminService.verifyOperatorScanPermission()
+      await eventAdminService.verifyOperatorCanScan()
 
       if (html5QrCode) await stopScanner()
 

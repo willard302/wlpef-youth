@@ -135,8 +135,7 @@ const menuItems = computed<MenuItem[]>(() => {
 
   const canUseScanner =
     userProfile.value?.role === 'admin' ||
-    userProfile.value?.role === 'staff' ||
-    userProfile.value?.scan_permission === true
+    userProfile.value?.role === 'staff'
 
   if (canUseScanner) {
     memberItems.unshift({
