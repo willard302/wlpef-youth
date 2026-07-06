@@ -57,6 +57,7 @@ const {
   openEventDetail,
   handleRegister,
   handleOpenFeedback,
+  handleOpenCheckinForm,
 } = useEventDetail(userProfile)
 
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
@@ -261,6 +262,7 @@ onMounted(async () => {
       :checking-registration="checkingRegistration"
       @register="handleRegister"
       @feedback="handleOpenFeedback"
+      @checkin-form="handleOpenCheckinForm"
     />
   </div>
 </template>

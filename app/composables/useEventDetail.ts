@@ -75,6 +75,18 @@ export const useEventDetail = (userProfile: Ref<any>) => {
     window.open(feedbackUrl, '_blank', 'noopener,noreferrer')
   }
 
+  const handleOpenCheckinForm = () => {
+    if (!selectedEvent.value) return
+
+    const checkinFormUrl = selectedEvent.value.checkinFormUrl
+    if (!checkinFormUrl) {
+      addToast('此活動尚未設定打卡表單', 'error')
+      return
+    }
+
+    window.open(checkinFormUrl, '_blank', 'noopener,noreferrer')
+  }
+
   return {
     eventDetailVisible,
     selectedEvent,
@@ -85,6 +97,7 @@ export const useEventDetail = (userProfile: Ref<any>) => {
     openEventDetail,
     handleRegister,
     handleOpenFeedback,
+    handleOpenCheckinForm,
     navigateToEditEvent
   }
 }

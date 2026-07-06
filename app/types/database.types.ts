@@ -82,6 +82,63 @@ export type Database = {
           },
         ]
       }
+      event_checkin_responses: {
+        Row: {
+          checkin_form_points_granted_at: string | null
+          created_at: string | null
+          email: string
+          event_id: string | null
+          form_submitted_at: string | null
+          google_sheet_row_id: string | null
+          id: string
+          matched_user_id: string | null
+          normalized_email: string | null
+          raw_data: Json | null
+          synced_at: string | null
+        }
+        Insert: {
+          checkin_form_points_granted_at?: string | null
+          created_at?: string | null
+          email: string
+          event_id?: string | null
+          form_submitted_at?: string | null
+          google_sheet_row_id?: string | null
+          id?: string
+          matched_user_id?: string | null
+          normalized_email?: string | null
+          raw_data?: Json | null
+          synced_at?: string | null
+        }
+        Update: {
+          checkin_form_points_granted_at?: string | null
+          created_at?: string | null
+          email?: string
+          event_id?: string | null
+          form_submitted_at?: string | null
+          google_sheet_row_id?: string | null
+          id?: string
+          matched_user_id?: string | null
+          normalized_email?: string | null
+          raw_data?: Json | null
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checkin_responses_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_checkin_responses_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_feedback_responses: {
         Row: {
           created_at: string | null
@@ -212,12 +269,16 @@ export type Database = {
         Row: {
           all_day: boolean | null
           checkin_bonus: number | null
+          checkin_form_bonus_points: number
+          checkin_form_sync_enabled: boolean
+          checkin_form_url: string | null
+          checkin_response_sheet_id: string | null
+          checkin_visibility_mode: string
           created_at: string | null
           created_by: string | null
           description: string | null
           end_at: string
           feedback_bonus_points: number
-          feedback_form_google_id: string | null
           feedback_form_url: string | null
           feedback_response_sheet_id: string | null
           feedback_visibility_mode: string
@@ -237,12 +298,16 @@ export type Database = {
         Insert: {
           all_day?: boolean | null
           checkin_bonus?: number | null
+          checkin_form_bonus_points?: number
+          checkin_form_sync_enabled?: boolean
+          checkin_form_url?: string | null
+          checkin_response_sheet_id?: string | null
+          checkin_visibility_mode?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_at: string
           feedback_bonus_points?: number
-          feedback_form_google_id?: string | null
           feedback_form_url?: string | null
           feedback_response_sheet_id?: string | null
           feedback_visibility_mode?: string
@@ -262,12 +327,16 @@ export type Database = {
         Update: {
           all_day?: boolean | null
           checkin_bonus?: number | null
+          checkin_form_bonus_points?: number
+          checkin_form_sync_enabled?: boolean
+          checkin_form_url?: string | null
+          checkin_response_sheet_id?: string | null
+          checkin_visibility_mode?: string
           created_at?: string | null
           created_by?: string | null
           description?: string | null
           end_at?: string
           feedback_bonus_points?: number
-          feedback_form_google_id?: string | null
           feedback_form_url?: string | null
           feedback_response_sheet_id?: string | null
           feedback_visibility_mode?: string
@@ -391,6 +460,7 @@ export type Database = {
           id: string
           name: string | null
           points: number | null
+          revealed_at: string | null
           round: number
           user_id: string
         }
@@ -400,6 +470,7 @@ export type Database = {
           id?: string
           name?: string | null
           points?: number | null
+          revealed_at?: string | null
           round: number
           user_id: string
         }
@@ -409,6 +480,7 @@ export type Database = {
           id?: string
           name?: string | null
           points?: number | null
+          revealed_at?: string | null
           round?: number
           user_id?: string
         }
@@ -447,6 +519,7 @@ export type Database = {
           id: string
           name: string | null
           points: number | null
+          revealed_at: string | null
           round: number
           user_id: string
         }[]
