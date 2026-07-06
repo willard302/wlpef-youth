@@ -29,12 +29,10 @@ export interface Event {
   googleFormUrl?: string
   googleSheetId?: string
   feedbackFormUrl?: string
-  feedbackFormGoogleId?: string
   feedbackResponseSheetId?: string
   feedbackBonusPoints: number
   feedbackVisibilityMode: FeedbackVisibilityMode
   checkinFormUrl?: string
-  checkinFormGoogleId?: string
   checkinResponseSheetId?: string
   checkinFormBonusPoints: number
   checkinVisibilityMode: FeedbackVisibilityMode
@@ -62,12 +60,10 @@ export interface CreateEventPayload {
   google_sheet_id?: string
   google_form_url: string
   feedback_form_url?: string
-  feedback_form_google_id?: string
   feedback_response_sheet_id?: string
   feedback_bonus_points?: number
   feedback_visibility_mode?: FeedbackVisibilityMode
   checkin_form_url?: string
-  checkin_form_google_id?: string
   checkin_response_sheet_id?: string
   checkin_form_bonus_points?: number
   checkin_visibility_mode?: FeedbackVisibilityMode

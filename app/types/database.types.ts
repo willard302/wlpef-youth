@@ -270,7 +270,6 @@ export type Database = {
           all_day: boolean | null
           checkin_bonus: number | null
           checkin_form_bonus_points: number
-          checkin_form_google_id: string | null
           checkin_form_url: string | null
           checkin_response_sheet_id: string | null
           checkin_visibility_mode: string
@@ -279,7 +278,6 @@ export type Database = {
           description: string | null
           end_at: string
           feedback_bonus_points: number
-          feedback_form_google_id: string | null
           feedback_form_url: string | null
           feedback_response_sheet_id: string | null
           feedback_visibility_mode: string
@@ -300,7 +298,6 @@ export type Database = {
           all_day?: boolean | null
           checkin_bonus?: number | null
           checkin_form_bonus_points?: number
-          checkin_form_google_id?: string | null
           checkin_form_url?: string | null
           checkin_response_sheet_id?: string | null
           checkin_visibility_mode?: string
@@ -309,7 +306,6 @@ export type Database = {
           description?: string | null
           end_at: string
           feedback_bonus_points?: number
-          feedback_form_google_id?: string | null
           feedback_form_url?: string | null
           feedback_response_sheet_id?: string | null
           feedback_visibility_mode?: string
@@ -330,7 +326,6 @@ export type Database = {
           all_day?: boolean | null
           checkin_bonus?: number | null
           checkin_form_bonus_points?: number
-          checkin_form_google_id?: string | null
           checkin_form_url?: string | null
           checkin_response_sheet_id?: string | null
           checkin_visibility_mode?: string
@@ -339,7 +334,6 @@ export type Database = {
           description?: string | null
           end_at?: string
           feedback_bonus_points?: number
-          feedback_form_google_id?: string | null
           feedback_form_url?: string | null
           feedback_response_sheet_id?: string | null
           feedback_visibility_mode?: string

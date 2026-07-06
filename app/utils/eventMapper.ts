@@ -43,12 +43,8 @@ export const mapToEvent = (row: EventRow): Event => {
   const startAt = parseISO(row.start_at)
   const endAt = parseISO(row.end_at)
   const hours = startAt.getHours()
-  const feedbackFormGoogleId = (row as any).feedback_form_google_id as string | null
-  const feedbackFormUrl = ((row as any).feedback_form_url as string | null)
-    || (feedbackFormGoogleId ? `https://docs.google.com/forms/d/${feedbackFormGoogleId}/viewform` : null)
-  const checkinFormGoogleId = (row as any).checkin_form_google_id as string | null
-  const checkinFormUrl = ((row as any).checkin_form_url as string | null)
-    || (checkinFormGoogleId ? `https://docs.google.com/forms/d/${checkinFormGoogleId}/viewform` : null)
+  const feedbackFormUrl = (row as any).feedback_form_url as string | null
+  const checkinFormUrl = (row as any).checkin_form_url as string | null
 
   return {
     id: row.id,
@@ -63,12 +59,10 @@ export const mapToEvent = (row: EventRow): Event => {
     googleSheetId: row.google_sheet_id ?? undefined,
     googleFormUrl: row.google_form_url ?? undefined,
     feedbackFormUrl: feedbackFormUrl ?? undefined,
-    feedbackFormGoogleId: feedbackFormGoogleId ?? undefined,
     feedbackResponseSheetId: ((row as any).feedback_response_sheet_id as string | null) ?? undefined,
     feedbackBonusPoints: ((row as any).feedback_bonus_points as number | null) ?? 0,
     feedbackVisibilityMode: (((row as any).feedback_visibility_mode as Event['feedbackVisibilityMode'] | null) ?? 'test'),
     checkinFormUrl: checkinFormUrl ?? undefined,
-    checkinFormGoogleId: checkinFormGoogleId ?? undefined,
     checkinResponseSheetId: ((row as any).checkin_response_sheet_id as string | null) ?? undefined,
     checkinFormBonusPoints: ((row as any).checkin_form_bonus_points as number | null) ?? 0,
     checkinVisibilityMode: (((row as any).checkin_visibility_mode as Event['checkinVisibilityMode'] | null) ?? 'test'),

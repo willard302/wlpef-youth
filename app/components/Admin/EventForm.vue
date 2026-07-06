@@ -250,16 +250,6 @@ const handleDelete = async () => {
             </div>
             <div class="h-[1px] bg-white/30 mx-3"></div>
             <div class="flex items-start gap-3 px-3 py-4">
-              <AppIcon name="fingerprint" class="text-slate-400 mt-0.5" />
-              <input
-                v-model="formData.feedbackFormGoogleId"
-                type="text"
-                placeholder="回饋表單 Google ID（可選，無連結時可用）"
-                class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
-              />
-            </div>
-            <div class="h-[1px] bg-white/30 mx-3"></div>
-            <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="table_view" class="text-slate-400 mt-0.5" />
               <input
                 v-model="formData.feedbackResponseSheetId"
@@ -313,16 +303,6 @@ const handleDelete = async () => {
                 v-model="formData.checkinFormUrl"
                 type="url"
                 placeholder="打卡 Google 表單連結（選填）"
-                class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
-              />
-            </div>
-            <div class="h-[1px] bg-white/30 mx-3"></div>
-            <div class="flex items-start gap-3 px-3 py-4">
-              <AppIcon name="fingerprint" class="text-slate-400 mt-0.5" />
-              <input
-                v-model="formData.checkinFormGoogleId"
-                type="text"
-                placeholder="打卡表單 Google ID（可選，無連結時可用）"
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
               />
             </div>

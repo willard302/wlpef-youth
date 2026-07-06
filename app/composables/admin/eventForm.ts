@@ -16,12 +16,10 @@ type EventFormState = {
   googleSheetId: string
   googleFormUrl: string
   feedbackFormUrl: string
-  feedbackFormGoogleId: string
   feedbackResponseSheetId: string
   feedbackBonusPoints: number
   feedbackVisibilityMode: NonNullable<CreateEventPayload['feedback_visibility_mode']>
   checkinFormUrl: string
-  checkinFormGoogleId: string
   checkinResponseSheetId: string
   checkinFormBonusPoints: number
   checkinVisibilityMode: NonNullable<CreateEventPayload['checkin_visibility_mode']>
@@ -45,12 +43,10 @@ const createDefaultFormData = (): EventFormState => ({
   googleSheetId: '',
   googleFormUrl: '',
   feedbackFormUrl: '',
-  feedbackFormGoogleId: '',
   feedbackResponseSheetId: '',
   feedbackBonusPoints: 0,
   feedbackVisibilityMode: 'test',
   checkinFormUrl: '',
-  checkinFormGoogleId: '',
   checkinResponseSheetId: '',
   checkinFormBonusPoints: 0,
   checkinVisibilityMode: 'test',
@@ -116,12 +112,10 @@ export const useEventForm = () => {
       googleSheetId: event.googleSheetId || '',
       googleFormUrl: event.googleFormUrl || '',
       feedbackFormUrl: event.feedbackFormUrl || '',
-      feedbackFormGoogleId: event.feedbackFormGoogleId || '',
       feedbackResponseSheetId: event.feedbackResponseSheetId || '',
       feedbackBonusPoints: event.feedbackBonusPoints,
       feedbackVisibilityMode: event.feedbackVisibilityMode,
       checkinFormUrl: event.checkinFormUrl || '',
-      checkinFormGoogleId: event.checkinFormGoogleId || '',
       checkinResponseSheetId: event.checkinResponseSheetId || '',
       checkinFormBonusPoints: event.checkinFormBonusPoints,
       checkinVisibilityMode: event.checkinVisibilityMode,
@@ -266,12 +260,10 @@ export const useEventForm = () => {
         google_sheet_id: formData.value.googleSheetId.trim() || undefined,
         google_form_url: formData.value.googleFormUrl.trim(),
         feedback_form_url: formData.value.feedbackFormUrl.trim() || undefined,
-        feedback_form_google_id: formData.value.feedbackFormGoogleId.trim() || undefined,
         feedback_response_sheet_id: formData.value.feedbackResponseSheetId.trim() || undefined,
         feedback_bonus_points: Number(formData.value.feedbackBonusPoints) || 0,
         feedback_visibility_mode: formData.value.feedbackVisibilityMode,
         checkin_form_url: formData.value.checkinFormUrl.trim() || undefined,
-        checkin_form_google_id: formData.value.checkinFormGoogleId.trim() || undefined,
         checkin_response_sheet_id: formData.value.checkinResponseSheetId.trim() || undefined,
         checkin_form_bonus_points: Number(formData.value.checkinFormBonusPoints) || 0,
         checkin_visibility_mode: formData.value.checkinVisibilityMode,
