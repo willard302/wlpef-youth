@@ -78,12 +78,15 @@ export const useAdminRegistrations = () => {
 
     isSyncing.value = true
     try {
-      const syncTarget = selectedEvent.value.feedbackResponseSheetId ? 'both' : 'registration'
+      const syncTarget = selectedEvent.value.feedbackResponseSheetId || selectedEvent.value.checkinResponseSheetId
+        ? 'both'
+        : 'registration'
       const { results } = await eventAdminService.syncGoogleSheet(
         selectedEvent.value.id,
         {
           sheetId: selectedEvent.value.googleSheetId,
           feedbackSheetId: selectedEvent.value.feedbackResponseSheetId,
+          checkinSheetId: selectedEvent.value.checkinResponseSheetId,
           syncTarget,
         },
       )
@@ -94,8 +97,11 @@ export const useAdminRegistrations = () => {
         const feedbackMessage = syncTarget !== 'registration'
           ? `；回饋匯入 ${firstResult.feedbackImportedCount || 0} 筆，比對成功 ${firstResult.feedbackMatchedCount || 0} 筆`
           : ''
+        const checkinMessage = syncTarget !== 'registration'
+          ? `；打卡表單匯入 ${firstResult.checkinImportedCount || 0} 筆，比對成功 ${firstResult.checkinMatchedCount || 0} 筆`
+          : ''
 
-        addToast(`同步完成！${registrationMessage}${feedbackMessage}`, 'success')
+        addToast(`同步完成！${registrationMessage}${feedbackMessage}${checkinMessage}`, 'success')
       }
       else {
         addToast('同步完成', 'success')

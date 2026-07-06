@@ -282,6 +282,74 @@ const handleDelete = async () => {
           </section>
 
           <section class="glass-card rounded-2xl p-2 space-y-1">
+            <div class="flex items-center justify-between px-3 pt-4 pb-1">
+              <p class="text-xs font-bold tracking-widest uppercase text-slate-500">打卡表單設定</p>
+              <div class="inline-flex rounded-full bg-slate-100 p-1">
+                <button
+                  type="button"
+                  @click="formData.checkinVisibilityMode = 'test'"
+                  class="px-3 py-1 text-xs font-bold rounded-full transition-colors"
+                  :class="formData.checkinVisibilityMode === 'test' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500'"
+                >
+                  測試
+                </button>
+                <button
+                  type="button"
+                  @click="formData.checkinVisibilityMode = 'live'"
+                  class="px-3 py-1 text-xs font-bold rounded-full transition-colors"
+                  :class="formData.checkinVisibilityMode === 'live' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500'"
+                >
+                  正式
+                </button>
+              </div>
+            </div>
+            <p class="px-3 pb-3 text-[11px] leading-relaxed text-slate-500">
+              正式模式：會員與 staff 都可看見打卡表單連結；測試模式：僅 staff 可見。
+            </p>
+            <div class="h-[1px] bg-white/30 mx-3"></div>
+            <div class="flex items-start gap-3 px-3 py-4">
+              <AppIcon name="playlist_add_check" class="text-slate-400 mt-0.5" />
+              <input
+                v-model="formData.checkinFormUrl"
+                type="url"
+                placeholder="打卡 Google 表單連結（選填）"
+                class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
+              />
+            </div>
+            <div class="h-[1px] bg-white/30 mx-3"></div>
+            <div class="flex items-start gap-3 px-3 py-4">
+              <AppIcon name="fingerprint" class="text-slate-400 mt-0.5" />
+              <input
+                v-model="formData.checkinFormGoogleId"
+                type="text"
+                placeholder="打卡表單 Google ID（可選，無連結時可用）"
+                class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
+              />
+            </div>
+            <div class="h-[1px] bg-white/30 mx-3"></div>
+            <div class="flex items-start gap-3 px-3 py-4">
+              <AppIcon name="table_view" class="text-slate-400 mt-0.5" />
+              <input
+                v-model="formData.checkinResponseSheetId"
+                type="text"
+                placeholder="打卡回應試算表 ID"
+                class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
+              />
+            </div>
+            <div class="h-[1px] bg-white/30 mx-3"></div>
+            <div class="flex items-center gap-3 px-3 py-4">
+              <AppIcon name="workspace_premium" class="text-slate-400" />
+              <label class="text-sm font-medium text-slate-700 flex-1">打卡表單獎勵點數</label>
+              <input
+                v-model.number="formData.checkinFormBonusPoints"
+                type="number"
+                min="0"
+                class="w-20 bg-white/40 px-2 py-1 rounded-lg text-right text-sm text-[#2b9dee] outline-none"
+              />
+            </div>
+          </section>
+
+          <section class="glass-card rounded-2xl p-2 space-y-1">
             <div v-for="(bonus, bonusIndex) in bonusItems" :key="bonusIndex" class="flex items-center gap-3 px-3 py-4">
               <AppIcon :name="bonus.icon" class="text-slate-400" />
               <label class="text-sm font-medium text-slate-700 flex-1">{{ bonus.label }}</label>
