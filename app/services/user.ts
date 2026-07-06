@@ -199,7 +199,6 @@ export const userService = {
       email?: string
       name?: string
       role?: string
-      scanPermission?: boolean
     }
   ): Promise<void> {
     try {
@@ -214,7 +213,6 @@ export const userService = {
       dbData.email = profileData.email !== undefined ? profileData.email : (user.email || '')
       if (profileData.name !== undefined) dbData.name = profileData.name
       if (profileData.role !== undefined) dbData.role = profileData.role
-      if (profileData.scanPermission !== undefined) dbData.scan_permission = profileData.scanPermission
 
       if (!dbData.name) {
         const metadata = user.user_metadata || {}

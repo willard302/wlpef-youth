@@ -22,20 +22,10 @@ const formData = ref({
   email: '',
   name: '',
   role: 'member' as Role,
-  points: 0,
-  scanPermission: false
+  points: 0
 })
 
 const isResetting = ref(false)
-
-watch(
-  () => formData.value.role,
-  (role) => {
-    if (role === 'staff') {
-      formData.value.scanPermission = true
-    }
-  }
-)
 
 // Sync internal state when profile or show changes
 watch(() => props.show, (newVal) => {
@@ -45,16 +35,14 @@ watch(() => props.show, (newVal) => {
         email: props.profile.email || '',
         name: props.profile.name,
         role: (props.profile.role as Role) || 'member',
-        points: props.profile.points ?? 0,
-        scanPermission: props.profile.scan_permission
+        points: props.profile.points ?? 0
       }
     } else {
       formData.value = {
         email: '',
         name: '',
         role: 'member',
-        points: 0,
-        scanPermission: false
+        points: 0
       }
     }
   }

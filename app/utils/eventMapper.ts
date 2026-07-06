@@ -98,7 +98,6 @@ export const mapProfileRow = (profile: any, user: any = null): ProfileRow => {
     email: profile?.email || user?.mail,
     name: profile?.name || metadata.name || user?.email?.split('@')[0] || 'User',
     role: (profile?.role as Role) || 'member',
-    scan_permission: profile?.scan_permission ?? false,
     created_at: profile?.created_at || metadata.join_date || 'Since 2024',
     points: profile?.points ?? 0,
     avatar_url: profile?.avatar_url || metadata.avatar_url || null,

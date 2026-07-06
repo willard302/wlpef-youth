@@ -69,8 +69,7 @@ export function useUser() {
                 points: payload.new.points ?? userProfile.value.points,
                 name: payload.new.name ?? userProfile.value.name,
                 avatar_url: payload.new.avatar_url ?? userProfile.value.avatar_url,
-                role: payload.new.role ?? userProfile.value.role,
-                scan_permission: payload.new.scan_permission ?? userProfile.value.scan_permission
+                role: payload.new.role ?? userProfile.value.role
               }
             }
           }

@@ -76,7 +76,7 @@ export const eventAdminService = {
     }
   },
 
-  async verifyOperatorScanPermission(): Promise<void> {
+  async verifyOperatorCanScan(): Promise<void> {
     const supabase = getSupabase()
     const { data: { user: operatorUser } } = await supabase.auth.getUser()
 
@@ -84,7 +84,7 @@ export const eventAdminService = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .select('role, scan_permission')
+      .select('role')
       .eq('id', operatorUser.id)
       .maybeSingle()
     

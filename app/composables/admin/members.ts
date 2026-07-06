@@ -65,8 +65,7 @@ export const useAdminMembers = () => {
       await userAdminService.adminUpdateProfile(selectedProfile.value.id, {
         name: formData.name,
         role: formData.role,
-        points: formData.points,
-        scan_permission: formData.role === 'staff' ? true : formData.scanPermission
+        points: formData.points
       })
       addToast('會員資料更新成功', 'success')
       showEditModal.value = false
@@ -91,8 +90,7 @@ export const useAdminMembers = () => {
         email: formData.email,
         name: formData.name,
         role: formData.role,
-        points: formData.points,
-        scan_permission: formData.role === 'staff' ? true : formData.scanPermission
+        points: formData.points
       })
       addToast('會員建立成功並已發送邀請', 'success')
       showAddModal.value = false

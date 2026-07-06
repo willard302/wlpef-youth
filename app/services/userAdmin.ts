@@ -52,7 +52,6 @@ export const userAdminService = {
       if (profileData.name !== undefined) dbUpdate.name = profileData.name
       if (profileData.points !== undefined) dbUpdate.points = profileData.points
       if (profileData.role !== undefined) dbUpdate.role = profileData.role as Role
-      if (profileData.scan_permission !== undefined) dbUpdate.scan_permission = profileData.scan_permission
 
       const { error } = await supabase
         .from('profiles')
