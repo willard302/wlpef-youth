@@ -59,7 +59,7 @@ pnpm dev
 主要檔案：
 
 - Edge Function：`supabase/functions/send-event-reminder/index.ts`
-- 寄送紀錄表：`supabase/migrations/20260706020001_create_email_delivery_logs.sql`
+- 寄送紀錄表：`supabase/migrations/20260707020001_create_email_delivery_logs.sql`
 
 Supabase secrets 需要設定：
 
