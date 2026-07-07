@@ -28,6 +28,11 @@ const canUseScanner = computed(() => {
     userProfile.value?.role === 'raffle_staff'
 })
 
+const canManageRaffle = computed(() => {
+  return userProfile.value?.role === 'admin' ||
+    userProfile.value?.role === 'raffle_staff'
+})
+
 const profileBadges = computed(() => {
   const badges = [
     {
@@ -73,6 +78,10 @@ const menuItems = computed(() => {
 
   if (canUseScanner.value) {
     items.unshift({ icon: 'qr_code_scanner', label: '簽到掃描', path: '/admin/checkin' })
+  }
+
+  if (canManageRaffle.value) {
+    items.unshift({ icon: 'casino', label: '抽獎設置', path: '/admin/raffle' })
   }
 
   return items

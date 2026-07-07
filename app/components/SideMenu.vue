@@ -138,6 +138,10 @@ const menuItems = computed<MenuItem[]>(() => {
     userProfile.value?.role === 'staff' ||
     userProfile.value?.role === 'raffle_staff'
 
+  const canManageRaffle =
+    userProfile.value?.role === 'admin' ||
+    userProfile.value?.role === 'raffle_staff'
+
   if (canUseScanner) {
     memberItems.unshift({
       id: 'checkin-member',
@@ -149,6 +153,21 @@ const menuItems = computed<MenuItem[]>(() => {
       visible: true,
       action: () => {
         void router.push('/admin/checkin')
+      },
+    })
+  }
+
+  if (canManageRaffle) {
+    memberItems.unshift({
+      id: 'raffle-member',
+      label: '抽獎設置',
+      icon: 'casino',
+      bgClass: 'bg-rose-50',
+      textClass: 'text-rose-600',
+      hoverClass: 'hover:bg-rose-100',
+      visible: true,
+      action: () => {
+        void router.push('/admin/raffle')
       },
     })
   }
