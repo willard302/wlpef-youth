@@ -95,6 +95,8 @@
 - `events`: 活動主檔（時間、狀態、外部整合欄位、點數規則）
 - `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data、**invitation_sent_at**）
 - `point_transactions`: 點數異動紀錄
+  - `type`：`registration`（報名）/ `checkin`（現場簽到）/ `feedback`（回饋表單）/ `checkin_form`（打卡表單）/ `manual`（手動調整）/ `bonus`（其他獎勵）
+  - `UNIQUE(user_id, event_id, type)`：同一來源每人每活動最多發一次，各發點來源必須使用各自的 type
 - `checkin_records`: 簽到紀錄
 - `events`：另含 **`raffle_active`**（抽獎進行中開關）
 - `raffle_winners`: 抽獎中獎名單（event_id、user_id、round、name、points；`UNIQUE(event_id, user_id)`）
@@ -117,11 +119,18 @@
   - `SUPABASE_ANON_KEY`（程式亦支援 `SUPABASE_ANON_KEYS`）
 
 ### 6.3 `sync-google-sheet`
-- 用途：讀取 Google Sheet 報名資料，寫入 `event_registrations`
+- 用途：讀取 Google Sheet 報名／回饋／打卡表單資料，寫入 `event_registrations`、`event_feedback_responses`、`event_checkin_responses`，結尾觸發 `process_pending_points()` 結算點數
 - 支援：
-  - 指定單一活動同步（傳入 `eventId` + `sheetId`）
+  - 指定單一活動同步（傳入 `eventId` + `sheetId`），不受時間窗口限制
   - 預設只同步近期且 `status = published` 的活動，不再全站掃描所有有 `google_sheet_id` 的活動
-- 排程：目前 cron 會每分鐘同步近期且已發布的活動
+- 排程：目前 cron 會每分鐘同步近期且已發布的活動，各同步目標有獨立的截止規則（由 `trigger_google_sheet_sync()` 的 body 參數控制）：
+  - 報名 sheet：`recentPastDays: 0`，活動結束即停止同步
+  - 打卡表單 sheet：`checkinGraceMinutes: 120`，活動結束後 2 小時關閉
+  - 回饋表單 sheet：`feedbackDeadlineDayOffset: 1` + `feedbackDeadlineHour: 12`，活動結束後隔天中午 12 點（台灣時間 UTC+8）關閉
+- 調整截止規則：建新 migration 重建 `trigger_google_sheet_sync()`（參考 `20260707010001_form_sync_deadlines.sql`），只改 body 裡的參數後 `supabase db push`，下一分鐘 cron 即生效，Edge Function 不用重新部署
+  - 參數上限：`checkinGraceMinutes` 43200（30 天）、`feedbackDeadlineDayOffset` 30、`feedbackDeadlineHour` 0–23、`recentPastDays` 180、`recentFutureDays` 365，超過會被 Edge Function 壓回上限
+  - 未帶參數時的預設值與現行規則相同（120 分鐘／隔天 12 點）
+  - 不要直接在 SQL Editor 改線上 function，會造成 repo 與線上 schema drift；緊急改了要回頭補相同內容的 migration
 - 驗證：要求 `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
 - 需要環境變數：
   - `SUPABASE_URL`
@@ -129,11 +138,11 @@
   - `GCP_SERVICE_ACCOUNT`（JSON 字串，需具試算表唯讀權限）
 
 ### 6.4 `supabase/config.toml` 狀態
-目前設定檔已啟用：
-- `sync-google-sheet`
-- `merge-duplicate-account`
+六個 Edge Functions 均已列入設定檔，`verify_jwt` 與遠端實際狀態一致：
+- `sync-google-sheet`、`send-invitations`：`verify_jwt = false`（function 內自行驗證 service role / admin）
+- `merge-duplicate-account`、`check-user-registration`、`admin-create-user`、`reset-user-account`：`verify_jwt = true`
 
-`check-user-registration` 雖有程式碼，但尚未出現在 `supabase/config.toml` 區段；部署時請確認已手動 deploy 或補入設定。
+部署時 CLI 會以 `config.toml` 為準覆寫遠端 `verify_jwt`，新增 function 或調整驗證方式時務必同步更新此檔。
 
 ## 7. 本機開發與檢查
 

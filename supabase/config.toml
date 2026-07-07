@@ -18,7 +18,9 @@ entrypoint = "./functions/merge-duplicate-account/index.ts"
 
 [functions.check-user-registration]
 enabled = true
-verify_jwt = false
+# 前端以 supabase.functions.invoke 呼叫，未登入時自帶 anon key JWT 可通過驗證；
+# 保持 true 以阻擋不帶 anon key 的裸掃描（此 function 會回應 Email 是否已註冊）
+verify_jwt = true
 import_map = "./functions/check-user-registration/deno.json"
 entrypoint = "./functions/check-user-registration/index.ts"
 
@@ -33,3 +35,15 @@ enabled = true
 verify_jwt = false
 import_map = "./functions/send-event-reminder/deno.json"
 entrypoint = "./functions/send-event-reminder/index.ts"
+
+[functions.admin-create-user]
+enabled = true
+verify_jwt = true
+import_map = "./functions/admin-create-user/deno.json"
+entrypoint = "./functions/admin-create-user/index.ts"
+
+[functions.reset-user-account]
+enabled = true
+verify_jwt = true
+import_map = "./functions/reset-user-account/deno.json"
+entrypoint = "./functions/reset-user-account/index.ts"

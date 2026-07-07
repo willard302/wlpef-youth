@@ -9,25 +9,33 @@ export type TableRow<T extends TableName> = PublicTables[T]['Row']
 export type TableInsert<T extends TableName> = PublicTables[T]['Insert']
 export type TableUpdate<T extends TableName> = PublicTables[T]['Update']
 
-export type EventRow = TableRow<'events'>
-export type EventInsert = TableInsert<'events'>
-export type EventUpdate = TableUpdate<'events'>
+export type CheckinRow = TableRow<'checkin_records'>
+export type CheckinInsert = TableInsert<'checkin_records'>
+export type CheckinUpdate = TableUpdate<'checkin_records'>
+
+export type EventCheckInRow = TableRow<'event_checkin_responses'>
+export type EventCheckInInsert = TableInsert<'event_checkin_responses'>
+export type EventCheckInUpdate = TableUpdate<'event_checkin_responses'>
+
+export type EventFeedBackRow = TableRow<'event_feedback_responses'>
+export type EventFeedBackInsert = TableInsert<'event_feedback_responses'>
+export type EventFeedBackUpdate = TableUpdate<'event_feedback_responses'>
 
 export type RegistrationRow = TableRow<'event_registrations'>
 export type RegistrationInsert = TableInsert<'event_registrations'>
 export type RegistrationUpdate = TableUpdate<'event_registrations'>
 
-export type CheckinRow = TableRow<'checkin_records'>
-export type CheckinInsert = TableInsert<'checkin_records'>
-export type CheckinUpdate = TableUpdate<'checkin_records'>
-
-export type ProfileRow = TableRow<'profiles'>
-export type ProfileInsert = TableInsert<'profiles'>
-export type ProfileUpdate = TableUpdate<'profiles'>
+export type EventRow = TableRow<'events'>
+export type EventInsert = TableInsert<'events'>
+export type EventUpdate = TableUpdate<'events'>
 
 export type PointTransactionRow = TableRow<'point_transactions'>
 export type PointTransactionInsert = TableInsert<'point_transactions'>
 export type PointTransactionUpdate = TableUpdate<'point_transactions'>
+
+export type ProfileRow = TableRow<'profiles'>
+export type ProfileInsert = TableInsert<'profiles'>
+export type ProfileUpdate = TableUpdate<'profiles'>
 
 export type RaffleWinnerRow = TableRow<'raffle_winners'>
 export type RaffleWinnerInsert = TableInsert<'raffle_winners'>

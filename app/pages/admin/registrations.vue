@@ -25,6 +25,7 @@ const {
   openRegistrationDetail,
   getPointsStatus,
   getFirstLoginStatus,
+  isCheckedIn,
   getFeedbackStatus,
   getFeedbackStatusClass,
   fnsFormat,
@@ -135,6 +136,12 @@ const {
                 :class="reg.registrationPointsGrantedAt ? 'bg-amber-50 text-amber-600 border border-amber-100' : 'bg-slate-50 text-slate-500 border border-slate-100'"
               >
                 {{ getPointsStatus(reg) }}
+              </span>
+              <span
+                v-if="isCheckedIn(reg)"
+                class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide bg-blue-50 text-blue-700 border border-blue-100"
+              >
+                完成打卡
               </span>
               <span
                 class="px-2 py-0.5 rounded-lg text-[10px] font-bold tracking-wide"

@@ -17,6 +17,7 @@ const emit = defineEmits<{
   'update:show': [val: boolean]
   'register': []
   'feedback': []
+  'checkin-form': []
 }>()
 
 const eventDetailVisible = computed({
@@ -35,6 +36,8 @@ const selectedEventStatus = computed(() => selectedEvent.value?.status)
 const selectedEventHasForm = computed(() => Boolean(selectedEvent.value?.googleFormUrl))
 const selectedEventHasFeedbackForm = computed(() => Boolean(selectedEvent.value?.feedbackFormUrl))
 const selectedEventFeedbackMode = computed(() => selectedEvent.value?.feedbackVisibilityMode ?? 'test')
+const selectedEventHasCheckinForm = computed(() => Boolean(selectedEvent.value?.checkinFormUrl))
+const selectedEventCheckinMode = computed(() => selectedEvent.value?.checkinVisibilityMode ?? 'test')
 const selectedEventDateLabel = computed(() => {
   if (!selectedEvent.value) return ''
   return selectedEvent.value.time && selectedEvent.value.period
@@ -50,9 +53,19 @@ const handleFeedback = () => {
   emit('feedback')
 }
 
+const handleCheckinForm = () => {
+  emit('checkin-form')
+}
+
 const canShowFeedbackAction = computed(() => {
   if (!selectedEvent.value || !selectedEventHasFeedbackForm.value) return false
   if (selectedEventFeedbackMode.value === 'live') return true
+  return canSeeStaffFeatures.value
+})
+
+const canShowCheckinFormAction = computed(() => {
+  if (!selectedEvent.value || !selectedEventHasCheckinForm.value) return false
+  if (selectedEventCheckinMode.value === 'live') return true
   return canSeeStaffFeatures.value
 })
 
@@ -169,6 +182,15 @@ const actionLabel = computed(() => {
         >
           <AppIcon name="edit_note" />
           <span>前往回饋問券</span>
+        </button>
+
+        <button
+          v-if="canShowCheckinFormAction"
+          @click="handleCheckinForm"
+          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:scale-[0.98]"
+        >
+          <AppIcon name="playlist_add_check" />
+          <span>前往打卡表單</span>
         </button>
       </div>
     </div>

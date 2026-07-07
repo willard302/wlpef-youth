@@ -50,13 +50,14 @@ export const eventAdminService = {
     options: {
       sheetId?: string
       feedbackSheetId?: string
-      syncTarget?: 'registration' | 'feedback' | 'both'
+      checkinSheetId?: string
+      syncTarget?: 'registration' | 'feedback' | 'checkin' | 'both'
     }
   ): Promise<any> {
     const supabase = getSupabase()
-    const { sheetId, feedbackSheetId, syncTarget = 'registration' } = options
+    const { sheetId, feedbackSheetId, checkinSheetId, syncTarget = 'registration' } = options
     const { data, error } = await supabase.functions.invoke('sync-google-sheet', {
-      body: { eventId, sheetId, feedbackSheetId, syncTarget }
+      body: { eventId, sheetId, feedbackSheetId, checkinSheetId, syncTarget }
     })
 
     if (error) throw error
