@@ -138,11 +138,11 @@
   - `GCP_SERVICE_ACCOUNT`（JSON 字串，需具試算表唯讀權限）
 
 ### 6.4 `supabase/config.toml` 狀態
-目前設定檔已啟用：
-- `sync-google-sheet`
-- `merge-duplicate-account`
+六個 Edge Functions 均已列入設定檔，`verify_jwt` 與遠端實際狀態一致：
+- `sync-google-sheet`、`send-invitations`：`verify_jwt = false`（function 內自行驗證 service role / admin）
+- `merge-duplicate-account`、`check-user-registration`、`admin-create-user`、`reset-user-account`：`verify_jwt = true`
 
-`check-user-registration` 雖有程式碼，但尚未出現在 `supabase/config.toml` 區段；部署時請確認已手動 deploy 或補入設定。
+部署時 CLI 會以 `config.toml` 為準覆寫遠端 `verify_jwt`，新增 function 或調整驗證方式時務必同步更新此檔。
 
 ## 7. 本機開發與檢查
 
