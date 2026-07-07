@@ -53,6 +53,67 @@ pnpm dev
 - `SUPABASE_ANON_KEY`（`merge-duplicate-account` 會使用）
 - `GCP_SERVICE_ACCOUNT`（`sync-google-sheet` 需要，內容為 service account JSON）
 
+## 活動提醒 Email
+推薦使用 Supabase Edge Function `send-event-reminder` 串接 Brevo Transactional Email API。這個方案不使用 SMTP port，適合在 Supabase 遠端手動觸發約 300 封活動提醒信。
+
+主要檔案：
+
+- Edge Function：`supabase/functions/send-event-reminder/index.ts`
+- 寄送紀錄表：`supabase/migrations/20260707020001_create_email_delivery_logs.sql`
+
+Supabase secrets 需要設定：
+
+```env
+BREVO_API_KEY=
+BREVO_SENDER_EMAIL=
+BREVO_SENDER_NAME=WLPEF Youth
+BREVO_REPLY_TO_EMAIL=
+BREVO_REPLY_TO_NAME=
+BREVO_EVENT_REMINDER_TEMPLATE_ID=
+```
+
+`BREVO_EVENT_REMINDER_TEMPLATE_ID` 可選；若未設定，Function 會使用內建的最小 HTML/Text 內容。若使用 Brevo template，template 變數請使用 `{{params.name}}`、`{{params.email}}`、`{{params.eventTitle}}`、`{{params.eventStartAt}}`、`{{params.eventEndAt}}`、`{{params.eventLocation}}`。
+
+設定 secrets 並部署：
+
+```bash
+supabase secrets set BREVO_API_KEY=...
+supabase secrets set BREVO_SENDER_EMAIL=...
+supabase secrets set BREVO_SENDER_NAME="WLPEF Youth"
+supabase secrets set BREVO_EVENT_REMINDER_TEMPLATE_ID=...
+supabase db push
+supabase functions deploy send-event-reminder
+```
+
+Dry-run 只列出本次會寄給誰，不會呼叫 Brevo：
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/send-event-reminder" \
+  -H "Authorization: Bearer <admin-or-service-role-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"eventId":"<event-id>","campaignKey":"event-reminder-20260712","dryRun":true}'
+```
+
+測試寄到自己的信箱，不會寫入正式寄送紀錄：
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/send-event-reminder" \
+  -H "Authorization: Bearer <admin-or-service-role-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"eventId":"<event-id>","campaignKey":"event-reminder-20260712","dryRun":false,"limit":5,"testTo":"you@example.com"}'
+```
+
+正式寄出：
+
+```bash
+curl -X POST "https://<project-ref>.supabase.co/functions/v1/send-event-reminder" \
+  -H "Authorization: Bearer <admin-or-service-role-token>" \
+  -H "Content-Type: application/json" \
+  -d '{"eventId":"<event-id>","campaignKey":"event-reminder-20260712","dryRun":false}'
+```
+
+同一個 `eventId` + `campaignKey` 只會寄給尚未成功寄送的人。若 7/8 先寄一次，7/10 再用同一個 `campaignKey` 觸發，會自動排除 7/8 已成功寄送的信箱，只寄給後來新增或前次失敗的報名者。
+
 ## 抽獎中獎即時通知
 活動抽獎環節：後台 `/admin/raffle` 開獎，合格者手機在 App 內即時跳「恭喜中獎」。
 不使用 Realtime（避開免費版連線上限），手機輪詢 `GET /api/lottery/active`（以 anon key 呼叫 `get_active_raffle()`、`s-maxage=2` 走 Vercel CDN 快取），**不需 service role key**——只要 `SUPABASE_URL` / `SUPABASE_KEY` 設定正確即可（本機與 Vercel 皆同）。

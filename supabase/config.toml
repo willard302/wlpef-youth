@@ -30,6 +30,12 @@ verify_jwt = false
 import_map = "./functions/send-invitations/deno.json"
 entrypoint = "./functions/send-invitations/index.ts"
 
+[functions.send-event-reminder]
+enabled = true
+verify_jwt = false
+import_map = "./functions/send-event-reminder/deno.json"
+entrypoint = "./functions/send-event-reminder/index.ts"
+
 [functions.admin-create-user]
 enabled = true
 verify_jwt = true
