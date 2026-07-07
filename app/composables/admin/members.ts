@@ -29,7 +29,8 @@ export const useAdminMembers = () => {
     return profiles.value.filter((profile) => {
       return (
         profile.name.toLowerCase().includes(keyword) ||
-        (profile.email?.toLowerCase().includes(keyword) ?? false)
+        (profile.email?.toLowerCase().includes(keyword) ?? false) ||
+        (profile.role?.toLowerCase().includes(keyword) ?? false)
       )
     })
   })
