@@ -17,11 +17,12 @@ const {
   itemsPerPage,
   filteredProfiles,
   paginatedProfiles,
+  sortOrder,
   loadProfiles,
   handleAddMember,
   handleUpdateMember,
   openEditModal,
-
+  toggleSort,
 } = useAdminMembers()
 
 
@@ -68,6 +69,14 @@ onMounted(async () => {
       <section class="space-y-4">
         <div class="flex items-center justify-between px-2">
           <h4 class="text-sm font-bold text-slate-500 uppercase tracking-widest">會員清單</h4>
+          <button
+            @click="toggleSort"
+            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 bg-white border border-slate-200 hover:border-sky-400 hover:text-sky-600 transition-all"
+            :title="`按點數 ${sortOrder === 'asc' ? '降序' : '升序'} 排序`"
+          >
+            <AppIcon name="sort" :size="16" />
+            點數 {{ sortOrder === 'asc' ? '↑' : '↓' }}
+          </button>
         </div>
 
         <AppLoading v-if="isLoading && profiles.length === 0" />

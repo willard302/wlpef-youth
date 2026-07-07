@@ -17,22 +17,30 @@ export const useAdminMembers = () => {
 
   const currentPage = ref(1)
   const itemsPerPage = 15
-
+  const sortOrder = ref<'asc' | 'desc'>('desc')
 
   const filteredProfiles = computed(() => {
     const keyword = searchQuery.value.trim().toLowerCase()
 
-    if (!keyword) {
-      return profiles.value
+    let result = profiles.value
+
+    if (keyword) {
+      result = result.filter((profile) => {
+        return (
+          profile.name.toLowerCase().includes(keyword) ||
+          (profile.email?.toLowerCase().includes(keyword) ?? false) ||
+          (profile.role?.toLowerCase().includes(keyword) ?? false)
+        )
+      })
     }
 
-    return profiles.value.filter((profile) => {
-      return (
-        profile.name.toLowerCase().includes(keyword) ||
-        (profile.email?.toLowerCase().includes(keyword) ?? false) ||
-        (profile.role?.toLowerCase().includes(keyword) ?? false)
-      )
+    // Sort by points
+    result.sort((a, b) => {
+      const pointsDiff = a.points - b.points
+      return sortOrder.value === 'asc' ? pointsDiff : -pointsDiff
     })
+
+    return result
   })
 
   const paginatedProfiles = computed(() => {
@@ -45,6 +53,11 @@ export const useAdminMembers = () => {
   const openEditModal = (profile: ProfileRow) => {
     selectedProfile.value = profile
     showEditModal.value = true
+  }
+
+  const toggleSort = () => {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+    currentPage.value = 1
   }
 
   const loadProfiles = async () => {
@@ -116,9 +129,11 @@ export const useAdminMembers = () => {
     filteredProfiles,
     paginatedProfiles,
     searchQuery,
+    sortOrder,
     openEditModal,
     loadProfiles,
     handleUpdateMember,
     handleAddMember,
+    toggleSort,
   }
 }
