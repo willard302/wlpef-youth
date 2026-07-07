@@ -80,15 +80,28 @@ type SyncRequestBody = {
   mode?: "recent"
   recentPastDays?: number
   recentFutureDays?: number
-  formsPastDays?: number
+  checkinGraceMinutes?: number
+  feedbackDeadlineDayOffset?: number
+  feedbackDeadlineHour?: number
   syncTarget?: "registration" | "feedback" | "checkin" | "both"
 }
 
-// recent 模式下各同步目標的窗口起點（ms epoch）；指定 eventId 的手動同步不設窗口
+// recent 模式下各同步目標的截止規則；指定 eventId 的手動同步不設窗口
+// - 報名 sheet：end_at >= now - recentPastDays
+// - 打卡表單：活動結束後 checkinGraceMinutes 分鐘內
+// - 回饋表單：活動結束後第 feedbackDeadlineDayOffset 天的 feedbackDeadlineHour 點（台灣時間）前
 type SyncWindows = {
+  nowMs: number
   registrationStartMs: number
-  formsStartMs: number
+  checkinGraceMs: number
+  feedbackDeadlineDayOffset: number
+  feedbackDeadlineHour: number
 }
+
+const HOUR_MS = 60 * 60 * 1000
+const DAY_MS = 24 * HOUR_MS
+// 台灣時間（UTC+8，無夏令時間），用於計算回饋表單「隔天中午」截止點
+const TAIPEI_UTC_OFFSET_MS = 8 * HOUR_MS
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 const GOOGLE_SCOPE = "https://www.googleapis.com/auth/spreadsheets.readonly"
@@ -601,11 +614,12 @@ async function syncEvent(
 ): Promise<SyncResult> {
   try {
     const inRegistrationWindow = !windows || isEndAtWithinWindow(event, windows.registrationStartMs)
-    const inFormsWindow = !windows || isEndAtWithinWindow(event, windows.formsStartMs)
+    const inFeedbackWindow = !windows || isFeedbackFormOpen(event, windows)
+    const inCheckinWindow = !windows || isCheckinFormOpen(event, windows)
 
     const shouldSyncRegistration = (syncTarget === "registration" || syncTarget === "both") && !!event.google_sheet_id && inRegistrationWindow
-    const shouldSyncFeedback = (syncTarget === "feedback" || syncTarget === "both") && inFormsWindow
-    const shouldSyncCheckin = (syncTarget === "checkin" || syncTarget === "both") && event.checkin_form_sync_enabled && inFormsWindow
+    const shouldSyncFeedback = (syncTarget === "feedback" || syncTarget === "both") && inFeedbackWindow
+    const shouldSyncCheckin = (syncTarget === "checkin" || syncTarget === "both") && event.checkin_form_sync_enabled && inCheckinWindow
 
     let registrationImportedCount = 0
     let registrationMatchedCount = 0
@@ -792,16 +806,26 @@ async function resolveEvents(
   const now = Date.now()
   const recentPastDays = Number.isFinite(body?.recentPastDays as number) ? Math.max(0, Math.min(180, Number(body?.recentPastDays))) : 14
   const recentFutureDays = Number.isFinite(body?.recentFutureDays as number) ? Math.max(0, Math.min(365, Number(body?.recentFutureDays))) : 60
-  // 表單類（回饋/打卡）有獨立的往回窗口，讓活動結束後仍可持續同步；未指定時沿用 recentPastDays
-  const formsPastDays = Number.isFinite(body?.formsPastDays as number) ? Math.max(0, Math.min(180, Number(body?.formsPastDays))) : recentPastDays
-  const widestPastDays = Math.max(recentPastDays, formsPastDays)
-  const recentWindowStart = new Date(now - widestPastDays * 24 * 60 * 60 * 1000).toISOString()
-  const recentWindowEnd = new Date(now + recentFutureDays * 24 * 60 * 60 * 1000).toISOString()
+  const checkinGraceMinutes = Number.isFinite(body?.checkinGraceMinutes as number) ? Math.max(0, Math.min(43200, Number(body?.checkinGraceMinutes))) : 120
+  const feedbackDeadlineDayOffset = Number.isFinite(body?.feedbackDeadlineDayOffset as number) ? Math.max(0, Math.min(30, Number(body?.feedbackDeadlineDayOffset))) : 1
+  const feedbackDeadlineHour = Number.isFinite(body?.feedbackDeadlineHour as number) ? Math.max(0, Math.min(23, Number(body?.feedbackDeadlineHour))) : 12
 
   const windows: SyncWindows = {
-    registrationStartMs: now - recentPastDays * 24 * 60 * 60 * 1000,
-    formsStartMs: now - formsPastDays * 24 * 60 * 60 * 1000,
+    nowMs: now,
+    registrationStartMs: now - recentPastDays * DAY_MS,
+    checkinGraceMs: checkinGraceMinutes * 60 * 1000,
+    feedbackDeadlineDayOffset,
+    feedbackDeadlineHour,
   }
+
+  // DB 查詢用能涵蓋所有目標的最寬往回範圍撈活動，再由下方 filter 依各目標截止規則收窄
+  const widestPastMs = Math.max(
+    recentPastDays * DAY_MS,
+    windows.checkinGraceMs,
+    (feedbackDeadlineDayOffset + 1) * DAY_MS,
+  )
+  const recentWindowStart = new Date(now - widestPastMs).toISOString()
+  const recentWindowEnd = new Date(now + recentFutureDays * DAY_MS).toISOString()
 
   const { data, error } = await supabaseAdmin
     .from("events")
@@ -814,8 +838,8 @@ async function resolveEvents(
 
   const events = (data || []).filter((event: EventRow) => {
     const hasRegistrationSource = !!event.google_sheet_id && isEndAtWithinWindow(event, windows.registrationStartMs)
-    const hasFeedbackSource = !!event.feedback_response_sheet_id && isEndAtWithinWindow(event, windows.formsStartMs)
-    const hasCheckinSource = event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id && isEndAtWithinWindow(event, windows.formsStartMs)
+    const hasFeedbackSource = !!event.feedback_response_sheet_id && isFeedbackFormOpen(event, windows)
+    const hasCheckinSource = event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id && isCheckinFormOpen(event, windows)
     if (syncTarget === 'registration') return hasRegistrationSource
     if (syncTarget === 'feedback') return hasFeedbackSource
     if (syncTarget === 'checkin') return hasCheckinSource
@@ -825,10 +849,34 @@ async function resolveEvents(
   return { events, windows }
 }
 
-function isEndAtWithinWindow(event: EventRow, windowStartMs: number): boolean {
-  if (!event.end_at) return true
+function parseEndAtMs(event: EventRow): number | null {
+  if (!event.end_at) return null
   const endAtMs = Date.parse(event.end_at)
-  return !Number.isFinite(endAtMs) || endAtMs >= windowStartMs
+  return Number.isFinite(endAtMs) ? endAtMs : null
+}
+
+function isEndAtWithinWindow(event: EventRow, windowStartMs: number): boolean {
+  const endAtMs = parseEndAtMs(event)
+  return endAtMs === null || endAtMs >= windowStartMs
+}
+
+// 打卡表單：活動結束後 checkinGraceMs 內仍同步
+function isCheckinFormOpen(event: EventRow, windows: SyncWindows): boolean {
+  const endAtMs = parseEndAtMs(event)
+  return endAtMs === null || windows.nowMs <= endAtMs + windows.checkinGraceMs
+}
+
+// 回饋表單：活動結束後第 dayOffset 天（台灣時間）的 deadlineHour 點前仍同步
+function isFeedbackFormOpen(event: EventRow, windows: SyncWindows): boolean {
+  const endAtMs = parseEndAtMs(event)
+  if (endAtMs === null) return true
+  const taipeiMs = endAtMs + TAIPEI_UTC_OFFSET_MS
+  const taipeiDayStartMs = Math.floor(taipeiMs / DAY_MS) * DAY_MS
+  const deadlineMs = taipeiDayStartMs
+    + windows.feedbackDeadlineDayOffset * DAY_MS
+    + windows.feedbackDeadlineHour * HOUR_MS
+    - TAIPEI_UTC_OFFSET_MS
+  return windows.nowMs <= deadlineMs
 }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
