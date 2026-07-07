@@ -10,6 +10,8 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
 
+  const allowedRoles = new Set(["member", "staff", "raffle_staff", "admin"])
+
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
   const supabaseUrl = Deno.env.get("SUPABASE_URL")
   
@@ -45,6 +47,7 @@ Deno.serve(async (req) => {
     const { email, name, role = "member", points = 0 } = await req.json()
 
     if (!email || !name) throw new Error("Email and Name are required")
+    if (!allowedRoles.has(role)) throw new Error("Invalid role")
 
   // 1. 邀請用戶 (這會建立 auth.users 記錄)
   const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(

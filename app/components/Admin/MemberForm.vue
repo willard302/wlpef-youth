@@ -134,6 +134,7 @@ const onReset = async () => {
             >
               <option value="member">一般成員</option>
               <option value="staff">工作人員</option>
+              <option value="raffle_staff">抽獎人員</option>
               <option value="admin">管理員</option>
             </select>
           </FormField>

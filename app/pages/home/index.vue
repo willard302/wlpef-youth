@@ -24,7 +24,8 @@ const qrPopupVisible = ref(false)
 
 const canUseScanner = computed(() => {
   return userProfile.value?.role === 'admin' ||
-    userProfile.value?.role === 'staff'
+    userProfile.value?.role === 'staff' ||
+    userProfile.value?.role === 'raffle_staff'
 })
 
 const profileBadges = computed(() => {

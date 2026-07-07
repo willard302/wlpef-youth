@@ -36,7 +36,7 @@ export const useAdminMembers = () => {
 
     // Sort by points
     result.sort((a, b) => {
-      const pointsDiff = a.points - b.points
+      const pointsDiff = (a.points ?? 0) - (b.points ?? 0)
       return sortOrder.value === 'asc' ? pointsDiff : -pointsDiff
     })
 

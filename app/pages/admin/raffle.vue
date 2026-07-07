@@ -3,7 +3,7 @@ import type { Event } from '~/types'
 
 definePageMeta({
   layout: 'admin',
-  middleware: ['auth', 'admin']
+  middleware: ['auth', 'raffle-admin']
 })
 
 const { selectedEvent, changeEvent } = useAdminEventPicker()

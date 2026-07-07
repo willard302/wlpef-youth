@@ -109,6 +109,8 @@ onMounted(async () => {
                   class="px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter"
                   :class="profile.role === 'admin'
                     ? 'bg-indigo-100 text-indigo-600'
+                    : profile.role === 'raffle_staff'
+                      ? 'bg-rose-100 text-rose-700'
                     : profile.role === 'staff'
                       ? 'bg-amber-100 text-amber-700'
                       : 'bg-slate-100 text-slate-500'"

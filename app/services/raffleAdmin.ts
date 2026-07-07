@@ -54,29 +54,31 @@ export const raffleAdminService = {
   async updateRafflePrizes(eventId: string, prizes: RafflePrizeSetting[]): Promise<RafflePrizeSetting[]> {
     const supabase = getSupabase()
 
-    const { data, error } = await supabase
-      .from('events')
-      .update({ raffle_prizes: prizes })
-      .select('raffle_prizes')
-      .maybeSingle()
-      .eq('id', eventId)
+    const { data, error } = await supabase.rpc('set_raffle_prizes', {
+      p_event_id: eventId,
+      p_prizes: prizes,
+    })
 
     if (error) throw error
 
-    return normalizeRafflePrizeSettings(data?.raffle_prizes ?? [])
+    return normalizeRafflePrizeSettings(data ?? [])
   },
 
   // 開始抽獎：先把其他場關掉，確保同時只有一場 raffle_active=true
   async startRaffle(eventId: string): Promise<void> {
     const supabase = getSupabase()
-    const { error: e1 } = await supabase.from('events').update({ raffle_active: false }).eq('raffle_active', true)
-    if (e1) throw e1
-    const { error: e2 } = await supabase.from('events').update({ raffle_active: true }).eq('id', eventId)
-    if (e2) throw e2
+    const { error } = await supabase.rpc('set_raffle_active', {
+      p_event_id: eventId,
+      p_active: true,
+    })
+    if (error) throw error
   },
 
   async stopRaffle(eventId: string): Promise<void> {
-    const { error } = await getSupabase().from('events').update({ raffle_active: false }).eq('id', eventId)
+    const { error } = await getSupabase().rpc('set_raffle_active', {
+      p_event_id: eventId,
+      p_active: false,
+    })
     if (error) throw error
   },
 

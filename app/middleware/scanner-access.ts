@@ -1,9 +1,9 @@
+import { canUseScannerRole } from '~/utils/auth'
+
 export default defineNuxtRouteMiddleware(() => {
   const { userProfile } = useUser()
 
-  const canUseScanner =
-    userProfile.value?.role === 'admin' ||
-    userProfile.value?.role === 'staff'
+  const canUseScanner = canUseScannerRole(userProfile.value?.role)
 
   if (!canUseScanner) {
     return navigateTo('/home')
