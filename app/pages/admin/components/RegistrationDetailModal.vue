@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { format as fnsFormat } from 'date-fns'
+import UserPointsDetailsModal from './UserPointsDetailsModal.vue'
 import type { EventRegistration } from '~/types'
 
 const props = defineProps<{
@@ -16,7 +17,14 @@ const registrationDetailVisible = computed({
   set: (value) => emit('update:show', value)
 })
 
-const { currentTotalPoints, isPointsLoading } = useAdminRegistrationDetail(
+const {
+  currentTotalPoints,
+  isPointsLoading,
+  pointsDetailsVisible,
+  isTransactionsLoading,
+  pointTransactions,
+  openPointsDetails,
+} = useAdminRegistrationDetail(
   toRef(props, 'show'),
   toRef(props, 'selectedRegistration')
 )
@@ -37,12 +45,21 @@ const { currentTotalPoints, isPointsLoading } = useAdminRegistrationDetail(
       </div>
 
       <!-- Points Info -->
-      <div class="bg-slate-50 rounded-2xl p-4">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">目前總點數</p>
-        <p class="text-sm font-bold text-slate-700">
-          {{ isPointsLoading ? '載入中...' : currentTotalPoints === null ? '無法取得' : `${currentTotalPoints} 點` }}
-        </p>
-      </div>
+      <button
+        type="button"
+        class="w-full text-left bg-slate-50 rounded-2xl p-4"
+        @click="openPointsDetails"
+      >
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">目前總點數</p>
+            <p class="text-sm font-bold text-slate-700">
+              {{ isPointsLoading ? '載入中...' : currentTotalPoints === null ? '無法取得' : `${currentTotalPoints} 點` }}
+            </p>
+          </div>
+          <AppIcon name="chevron_right" :size="18" class="text-slate-400" />
+        </div>
+      </button>
 
       <!-- Payment Info -->
       <div class="bg-slate-50 rounded-2xl p-4 space-y-3">
@@ -67,7 +84,7 @@ const { currentTotalPoints, isPointsLoading } = useAdminRegistrationDetail(
       <div v-if="selectedRegistration.rawData && Object.keys(selectedRegistration.rawData).length > 0" class="space-y-4">
         <div class="flex items-center gap-2 px-1">
           <span class="w-1 h-4 bg-sky-500 rounded-full"></span>
-          <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">表單完整欄位</h4>
+          <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">報名資訊</h4>
         </div>
         
         <div class="bg-slate-50 rounded-3xl p-5 space-y-4">
@@ -89,6 +106,13 @@ const { currentTotalPoints, isPointsLoading } = useAdminRegistrationDetail(
       </div>
     </div>
   </van-action-sheet>
+
+  <UserPointsDetailsModal
+    v-model:show="pointsDetailsVisible"
+    :is-loading="isTransactionsLoading"
+    :user-name="selectedRegistration?.name"
+    :transactions="pointTransactions"
+  />
 </template>
 
 <style scoped></style>
