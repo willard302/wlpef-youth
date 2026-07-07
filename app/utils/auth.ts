@@ -11,5 +11,5 @@ export const isRaffleManagerRole = (role?: string | null): boolean => {
 }
 
 export const canUseScannerRole = (role?: string | null): boolean => {
-  return role === 'admin' || role === 'staff' || role === 'raffle_staff'
+  return role === 'admin' || role === 'staff'
 }

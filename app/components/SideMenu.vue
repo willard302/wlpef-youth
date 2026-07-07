@@ -135,8 +135,7 @@ const menuItems = computed<MenuItem[]>(() => {
 
   const canUseScanner =
     userProfile.value?.role === 'admin' ||
-    userProfile.value?.role === 'staff' ||
-    userProfile.value?.role === 'raffle_staff'
+    userProfile.value?.role === 'staff'
 
   const canManageRaffle =
     userProfile.value?.role === 'admin' ||
