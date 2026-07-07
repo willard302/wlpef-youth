@@ -146,7 +146,7 @@ export const useAdminRegistrations = () => {
   }
 
   const getFirstLoginStatus = (registration: EventRegistration) => {
-    return registration.firstLoginEnabled ? '已啟用' : '未啟用'
+    return registration.firstLoginEnabled ? '帳號已啟用' : '帳號未啟用'
   }
 
   const isCheckedIn = (registration: EventRegistration) => {
