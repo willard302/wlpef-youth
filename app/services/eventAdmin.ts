@@ -153,7 +153,7 @@ export const eventAdminService = {
     const { count: totalProfiles, error: profileError } = await supabase
       .from('profiles')
       .select('*', { count: 'exact', head: true })
-      .eq('role', 'member')
+      .or('role.eq.member,role.eq.staff')
     
     if (profileError) throw profileError
 
