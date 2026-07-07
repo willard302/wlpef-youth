@@ -11,7 +11,7 @@ export interface PointTransaction {
   userEmail?: string
 }
 
-export type PointTransactionKind = 'registration' | 'checkin' | 'bonus' | 'manual'
+export type PointTransactionKind = 'registration' | 'checkin' | 'feedback' | 'checkin_form' | 'bonus' | 'manual'
 
 export interface PointTransactionMeta {
   label: string

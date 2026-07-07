@@ -95,6 +95,8 @@
 - `events`: 活動主檔（時間、狀態、外部整合欄位、點數規則）
 - `event_registrations`: 報名同步紀錄（matched_user_id、google_sheet_row_id、raw_data、**invitation_sent_at**）
 - `point_transactions`: 點數異動紀錄
+  - `type`：`registration`（報名）/ `checkin`（現場簽到）/ `feedback`（回饋表單）/ `checkin_form`（打卡表單）/ `manual`（手動調整）/ `bonus`（其他獎勵）
+  - `UNIQUE(user_id, event_id, type)`：同一來源每人每活動最多發一次，各發點來源必須使用各自的 type
 - `checkin_records`: 簽到紀錄
 - `events`：另含 **`raffle_active`**（抽獎進行中開關）
 - `raffle_winners`: 抽獎中獎名單（event_id、user_id、round、name、points；`UNIQUE(event_id, user_id)`）

@@ -11,6 +11,16 @@ const POINT_TRANSACTION_META_MAP: Record<PointTransactionKind, PointTransactionM
     icon: 'fact_check',
     colorClass: 'text-emerald-500 bg-emerald-50',
   },
+  feedback: {
+    label: '填寫回饋單獎勵',
+    icon: 'rate_review',
+    colorClass: 'text-violet-500 bg-violet-50',
+  },
+  checkin_form: {
+    label: '打卡獎勵',
+    icon: 'assignment_turned_in',
+    colorClass: 'text-teal-500 bg-teal-50',
+  },
   bonus: {
     label: '額外獎勵',
     icon: 'redeem',
