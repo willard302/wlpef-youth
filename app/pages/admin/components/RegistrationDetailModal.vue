@@ -16,9 +16,10 @@ const registrationDetailVisible = computed({
   set: (value) => emit('update:show', value)
 })
 
-const getPointsStatus = (reg: EventRegistration) => {
-  return reg.registrationPointsGrantedAt ? '點數已發放' : '處理中'
-}
+const { currentTotalPoints, isPointsLoading } = useAdminRegistrationDetail(
+  toRef(props, 'show'),
+  toRef(props, 'selectedRegistration')
+)
 </script>
 
 <template>
@@ -37,8 +38,10 @@ const getPointsStatus = (reg: EventRegistration) => {
 
       <!-- Points Info -->
       <div class="bg-slate-50 rounded-2xl p-4">
-        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">點數狀態</p>
-        <p class="text-sm font-bold text-slate-700">{{ getPointsStatus(selectedRegistration) }}</p>
+        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">目前總點數</p>
+        <p class="text-sm font-bold text-slate-700">
+          {{ isPointsLoading ? '載入中...' : currentTotalPoints === null ? '無法取得' : `${currentTotalPoints} 點` }}
+        </p>
       </div>
 
       <!-- Payment Info -->
