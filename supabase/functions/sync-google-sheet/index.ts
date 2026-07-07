@@ -80,7 +80,14 @@ type SyncRequestBody = {
   mode?: "recent"
   recentPastDays?: number
   recentFutureDays?: number
+  formsPastDays?: number
   syncTarget?: "registration" | "feedback" | "checkin" | "both"
+}
+
+// recent 模式下各同步目標的窗口起點（ms epoch）；指定 eventId 的手動同步不設窗口
+type SyncWindows = {
+  registrationStartMs: number
+  formsStartMs: number
 }
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
@@ -590,11 +597,15 @@ async function syncEvent(
   event: EventRow,
   googleToken: string,
   syncTarget: NonNullable<SyncRequestBody['syncTarget']>,
+  windows: SyncWindows | null,
 ): Promise<SyncResult> {
   try {
-    const shouldSyncRegistration = (syncTarget === "registration" || syncTarget === "both") && !!event.google_sheet_id
-    const shouldSyncFeedback = syncTarget === "feedback" || syncTarget === "both"
-    const shouldSyncCheckin = (syncTarget === "checkin" || syncTarget === "both") && event.checkin_form_sync_enabled
+    const inRegistrationWindow = !windows || isEndAtWithinWindow(event, windows.registrationStartMs)
+    const inFormsWindow = !windows || isEndAtWithinWindow(event, windows.formsStartMs)
+
+    const shouldSyncRegistration = (syncTarget === "registration" || syncTarget === "both") && !!event.google_sheet_id && inRegistrationWindow
+    const shouldSyncFeedback = (syncTarget === "feedback" || syncTarget === "both") && inFormsWindow
+    const shouldSyncCheckin = (syncTarget === "checkin" || syncTarget === "both") && event.checkin_form_sync_enabled && inFormsWindow
 
     let registrationImportedCount = 0
     let registrationMatchedCount = 0
@@ -720,12 +731,15 @@ async function syncEvent(
   }
 }
 
-async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise<EventRow[]> {
+async function resolveEvents(
+  supabaseAdmin: any,
+  body: SyncRequestBody,
+): Promise<{ events: EventRow[]; windows: SyncWindows | null }> {
   const syncTarget = body.syncTarget || "both"
 
   if (body?.eventId) {
     if (body?.sheetId) {
-      return [{
+      return { events: [{
         id: body.eventId,
         title: body.title || body.eventId,
         google_sheet_id: body.sheetId,
@@ -734,7 +748,7 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
         checkin_form_sync_enabled: true,
         feedback_bonus_points: 0,
         checkin_form_bonus_points: 0,
-      }]
+      }], windows: null }
     }
 
     const { data, error } = await supabaseAdmin
@@ -772,14 +786,22 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
       throw new Error(`Event ${body.eventId} is not published`)
     }
 
-    return [data as EventRow]
+    return { events: [data as EventRow], windows: null }
   }
 
   const now = Date.now()
   const recentPastDays = Number.isFinite(body?.recentPastDays as number) ? Math.max(0, Math.min(180, Number(body?.recentPastDays))) : 14
   const recentFutureDays = Number.isFinite(body?.recentFutureDays as number) ? Math.max(0, Math.min(365, Number(body?.recentFutureDays))) : 60
-  const recentWindowStart = new Date(now - recentPastDays * 24 * 60 * 60 * 1000).toISOString()
+  // 表單類（回饋/打卡）有獨立的往回窗口，讓活動結束後仍可持續同步；未指定時沿用 recentPastDays
+  const formsPastDays = Number.isFinite(body?.formsPastDays as number) ? Math.max(0, Math.min(180, Number(body?.formsPastDays))) : recentPastDays
+  const widestPastDays = Math.max(recentPastDays, formsPastDays)
+  const recentWindowStart = new Date(now - widestPastDays * 24 * 60 * 60 * 1000).toISOString()
   const recentWindowEnd = new Date(now + recentFutureDays * 24 * 60 * 60 * 1000).toISOString()
+
+  const windows: SyncWindows = {
+    registrationStartMs: now - recentPastDays * 24 * 60 * 60 * 1000,
+    formsStartMs: now - formsPastDays * 24 * 60 * 60 * 1000,
+  }
 
   const { data, error } = await supabaseAdmin
     .from("events")
@@ -790,12 +812,23 @@ async function resolveEvents(supabaseAdmin: any, body: SyncRequestBody): Promise
 
   if (error) throw new Error(`Failed to load events for sync: ${error.message}`)
 
-  return (data || []).filter((event: EventRow) => {
-    if (syncTarget === 'registration') return !!event.google_sheet_id
-    if (syncTarget === 'feedback') return !!event.feedback_response_sheet_id
-    if (syncTarget === 'checkin') return event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id
-    return !!event.google_sheet_id || !!event.feedback_response_sheet_id || (event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id)
+  const events = (data || []).filter((event: EventRow) => {
+    const hasRegistrationSource = !!event.google_sheet_id && isEndAtWithinWindow(event, windows.registrationStartMs)
+    const hasFeedbackSource = !!event.feedback_response_sheet_id && isEndAtWithinWindow(event, windows.formsStartMs)
+    const hasCheckinSource = event.checkin_form_sync_enabled && !!event.checkin_response_sheet_id && isEndAtWithinWindow(event, windows.formsStartMs)
+    if (syncTarget === 'registration') return hasRegistrationSource
+    if (syncTarget === 'feedback') return hasFeedbackSource
+    if (syncTarget === 'checkin') return hasCheckinSource
+    return hasRegistrationSource || hasFeedbackSource || hasCheckinSource
   })
+
+  return { events, windows }
+}
+
+function isEndAtWithinWindow(event: EventRow, windowStartMs: number): boolean {
+  if (!event.end_at) return true
+  const endAtMs = Date.parse(event.end_at)
+  return !Number.isFinite(endAtMs) || endAtMs >= windowStartMs
 }
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -842,7 +875,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({})) as SyncRequestBody
-    const events = await resolveEvents(supabaseAdmin, body)
+    const { events, windows } = await resolveEvents(supabaseAdmin, body)
     const syncTarget = body.syncTarget || "both"
 
     if (events.length === 0) {
@@ -853,7 +886,7 @@ Deno.serve(async (req) => {
 
     const results: SyncResult[] = []
     for (const event of events) {
-      results.push(await syncEvent(supabaseAdmin, event, googleToken, syncTarget))
+      results.push(await syncEvent(supabaseAdmin, event, googleToken, syncTarget, windows))
     }
 
     // 觸發點數結算

@@ -119,11 +119,16 @@
   - `SUPABASE_ANON_KEY`（程式亦支援 `SUPABASE_ANON_KEYS`）
 
 ### 6.3 `sync-google-sheet`
-- 用途：讀取 Google Sheet 報名資料，寫入 `event_registrations`
+- 用途：讀取 Google Sheet 報名／回饋／打卡表單資料，寫入 `event_registrations`、`event_feedback_responses`、`event_checkin_responses`，結尾觸發 `process_pending_points()` 結算點數
 - 支援：
-  - 指定單一活動同步（傳入 `eventId` + `sheetId`）
+  - 指定單一活動同步（傳入 `eventId` + `sheetId`），不受時間窗口限制
   - 預設只同步近期且 `status = published` 的活動，不再全站掃描所有有 `google_sheet_id` 的活動
-- 排程：目前 cron 會每分鐘同步近期且已發布的活動
+- 排程：目前 cron 會每分鐘同步近期且已發布的活動，時間窗口分兩種（由 `trigger_google_sheet_sync()` 的 body 參數控制）：
+  - 報名 sheet：`recentPastDays: 0`，活動結束即停止同步
+  - 回饋／打卡表單 sheet：`formsPastDays: 7`，活動結束後 7 天內仍持續同步（讓晚填表單或晚註冊帳號者能被配對、補發點數）
+- 調整窗口天數：建新 migration 重建 `trigger_google_sheet_sync()`（參考 `20260707000002_extend_form_sync_window.sql`），只改 body 裡的天數後 `supabase db push`，下一分鐘 cron 即生效，Edge Function 不用重新部署
+  - 各參數上限：`recentPastDays` / `formsPastDays` 為 180、`recentFutureDays` 為 365，超過會被 Edge Function 壓回上限；`formsPastDays: 0` 等於回到活動結束即停
+  - 不要直接在 SQL Editor 改線上 function，會造成 repo 與線上 schema drift；緊急改了要回頭補相同內容的 migration
 - 驗證：要求 `Authorization: Bearer <SUPABASE_SERVICE_ROLE_KEY>`
 - 需要環境變數：
   - `SUPABASE_URL`
