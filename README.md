@@ -64,22 +64,22 @@ pnpm dev
 Supabase secrets 需要設定：
 
 ```env
-BREVO_API_KEY=
-BREVO_SENDER_EMAIL=
-BREVO_SENDER_NAME=WLPEF Youth
-BREVO_REPLY_TO_EMAIL=
-BREVO_REPLY_TO_NAME=
-BREVO_EVENT_REMINDER_TEMPLATE_ID=
+BREVO_API_KEY=                     # 必填
+BREVO_EVENT_REMINDER_TEMPLATE_ID=  # 建議設定（使用 Brevo template）
+BREVO_SENDER_EMAIL=                # 僅在未設定 template 時必填
+BREVO_SENDER_NAME=WLPEF Youth      # 選填
+BREVO_REPLY_TO_EMAIL=              # 選填
+BREVO_REPLY_TO_NAME=               # 選填
 ```
 
-`BREVO_EVENT_REMINDER_TEMPLATE_ID` 可選；若未設定，Function 會使用內建的最小 HTML/Text 內容。若使用 Brevo template，template 變數請使用 `{{params.name}}`、`{{params.email}}`、`{{params.eventTitle}}`、`{{params.eventStartAt}}`、`{{params.eventEndAt}}`、`{{params.eventLocation}}`。
+有設定 `BREVO_EVENT_REMINDER_TEMPLATE_ID` 時，寄件人與主旨以 Brevo template 後台的設定為準（呼叫時傳 `subject` 可覆蓋主旨）；template 變數請使用 `{{params.name}}`、`{{params.email}}`、`{{params.eventTitle}}`、`{{params.eventStartAt}}`、`{{params.eventEndAt}}`、`{{params.eventLocation}}`。
+
+未設定 template 時，Function 會使用內建的最小 HTML/Text 內容，此時 `BREVO_SENDER_EMAIL` 必填。
 
 設定 secrets 並部署：
 
 ```bash
 supabase secrets set BREVO_API_KEY=...
-supabase secrets set BREVO_SENDER_EMAIL=...
-supabase secrets set BREVO_SENDER_NAME="WLPEF Youth"
 supabase secrets set BREVO_EVENT_REMINDER_TEMPLATE_ID=...
 supabase db push
 supabase functions deploy send-event-reminder

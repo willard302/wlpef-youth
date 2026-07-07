@@ -54,7 +54,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY")
     const anonKey = requiredEnv("SUPABASE_ANON_KEY")
     const brevoApiKey = requiredEnv("BREVO_API_KEY")
-    const senderEmail = requiredEnv("BREVO_SENDER_EMAIL")
+    const senderEmail = Deno.env.get("BREVO_SENDER_EMAIL") || ""
     const senderName = Deno.env.get("BREVO_SENDER_NAME") || "WLPEF Youth"
     const defaultTemplateId = numberFromEnv("BREVO_EVENT_REMINDER_TEMPLATE_ID")
 
@@ -85,8 +85,13 @@ Deno.serve(async (req) => {
 
     const event = await loadEvent(supabaseAdmin, eventId)
     const recipients = await loadPendingRecipients(supabaseAdmin, eventId, campaignKey, limit)
-    const subject = body.subject?.trim() || defaultSubject(event)
     const templateId = body.templateId ?? defaultTemplateId
+
+    // 有 template 時 sender/subject 交給 Brevo template 設定；fallback HTML 模式才需要 sender
+    if (!templateId && !senderEmail) {
+      throw new Error("BREVO_SENDER_EMAIL is required when no templateId is configured")
+    }
+    const subject = body.subject?.trim() || (templateId ? undefined : defaultSubject(event))
 
     if (dryRun) {
       return Response.json(
@@ -279,7 +284,7 @@ function buildBrevoPayload(options: {
   campaignKey: string
   senderEmail: string
   senderName: string
-  subject: string
+  subject?: string
   templateId?: number
   testTo?: string
   idempotencyKey: string
@@ -297,11 +302,6 @@ function buildBrevoPayload(options: {
   } = options
 
   const payload: Record<string, unknown> = {
-    sender: {
-      email: senderEmail,
-      name: senderName,
-    },
-    subject,
     headers: {
       idempotencyKey,
     },
@@ -316,9 +316,18 @@ function buildBrevoPayload(options: {
     })),
   }
 
+  // subject 未指定且使用 template 時不帶，讓 Brevo template 的主旨生效
+  if (subject) {
+    payload.subject = subject
+  }
+
   if (templateId) {
     payload.templateId = templateId
   } else {
+    payload.sender = {
+      email: senderEmail,
+      name: senderName,
+    }
     payload.htmlContent = defaultHtmlTemplate()
     payload.textContent = defaultTextTemplate()
   }
