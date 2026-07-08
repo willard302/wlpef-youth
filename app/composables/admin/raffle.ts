@@ -104,7 +104,7 @@ export const useAdminRaffle = () => {
       return
     }
 
-    if (!prizeName || !name || !Number.isFinite(count) || count < 1 || !Number.isFinite(drawOrder) || drawOrder < 1) {
+    if (!name || !Number.isFinite(count) || count < 1 || !Number.isFinite(drawOrder) || drawOrder < 1) {
       addToast('請輸入完整且正確的獎項資料', 'error')
       return
     }

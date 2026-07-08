@@ -67,7 +67,7 @@ export const useAdminRaffleDrawStage = (
     if (!props.event) return '尚未選擇活動'
     if (!orderedPrizeRows.value.length) return '尚未設定獎項'
     if (!currentPrize.value) return nextRound.value > orderedPrizeRows.value.length ? '已抽完所有獎項' : '未設定獎項'
-    return `${currentPrize.value.prize}：${formatPrizeLabel(currentPrize.value)}`
+    return `${currentPrize.value.prize} ${formatPrizeLabel(currentPrize.value)}`
   })
 
   const winnersByRound = computed(() => {

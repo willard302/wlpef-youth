@@ -21,7 +21,6 @@ const {
   drawing,
   onSelectEvent,
   removePrizeRow,
-  savePrizes,
   start,
   stop,
   drawOne,
@@ -131,7 +130,7 @@ const openDrawStage = () => {
               />
             </template>
             <van-cell 
-              :title="prize.prize || '未命名獎項'"
+              :title="prize.prize || ''"
               :value="prize.name || '未命名獎品'"
               :label="`序位 ${ prize.drawOrder } / 中獎人數 ${ prize.count } 位`"
             />
@@ -191,5 +190,11 @@ const openDrawStage = () => {
 <style scoped>
   :deep(.van-swipe-cell__right) {
     overflow: hidden;
+  }
+
+
+  .van-swipe-cell__right button,
+  .van-swipe-cell__left button {
+    height: 100%;
   }
 </style>
