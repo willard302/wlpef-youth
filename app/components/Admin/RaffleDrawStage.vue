@@ -77,7 +77,7 @@ const {
               <van-swipe-item
                 v-for="(name, index) in nameList"
                 :key="index"
-                :class="{ 'is-active': index === currentIndex, 'is-winner': winnerNames.has(name) }"
+                
               >
                 <div class="name-text text-center">{{ displayName(name) }}</div>
               </van-swipe-item>
