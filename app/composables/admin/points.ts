@@ -24,12 +24,13 @@ export const useAdminPoints = () => {
 
   const filteredTransactions = computed(() => {
     if (!searchQuery.value) return transactions.value
+    console.log(transactions.value)
     const query = searchQuery.value.toLowerCase()
     return transactions.value.filter(tx => 
       tx.userName?.toLowerCase().includes(query) || 
       tx.userEmail?.toLowerCase().includes(query) ||
       tx.eventTitle?.toLowerCase().includes(query) ||
-      tx.description?.toLowerCase().includes(query)
+      tx.type?.toLowerCase().includes(query)
     )
   })
 
