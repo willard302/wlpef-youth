@@ -9,6 +9,8 @@ export const useEventDetail = (userProfile: Ref<any>) => {
   const selectedEvent = ref<Event | null>(null)
   const isRegistered = ref(false)
   const isCheckedIn = ref(false)
+  const isFeedbackSubmitted = ref(false)
+  const isCheckinFormSubmitted = ref(false)
   const checkingRegistration = ref(false)
 
   const canSeeStaffFeatures = computed(() => {
@@ -36,15 +38,21 @@ export const useEventDetail = (userProfile: Ref<any>) => {
     eventDetailVisible.value = true
     isRegistered.value = false
     isCheckedIn.value = false
+    isFeedbackSubmitted.value = false
+    isCheckinFormSubmitted.value = false
     checkingRegistration.value = true
     
     try {
-      const [regStatus, checkinStatus] = await Promise.all([
+      const [regStatus, checkinStatus, feedbackStatus, checkinFormStatus] = await Promise.all([
         eventService.checkRegistrationStatus(event.id),
-        eventService.checkCheckinStatus(event.id)
+        eventService.checkCheckinStatus(event.id),
+        eventService.checkFeedbackStatus(event.id),
+        eventService.checkCheckinFormStatus(event.id)
       ])
       isRegistered.value = regStatus
       isCheckedIn.value = checkinStatus
+      isFeedbackSubmitted.value = feedbackStatus
+      isCheckinFormSubmitted.value = checkinFormStatus
     } catch (err) {
       console.error('Check status error:', err)
     } finally {
@@ -93,6 +101,8 @@ export const useEventDetail = (userProfile: Ref<any>) => {
     selectedEvent,
     isRegistered,
     isCheckedIn,
+    isFeedbackSubmitted,
+    isCheckinFormSubmitted,
     checkingRegistration,
     canSeeStaffFeatures,
     openEventDetail,

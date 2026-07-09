@@ -104,6 +104,52 @@ export const eventService = {
     return (data && data.length > 0)
   },
 
+  /**
+   * 檢查使用者是否已提交活動回饋表單
+   */
+  async checkFeedbackStatus(eventId: string): Promise<boolean> {
+    const supabase = getSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const { data, error } = await supabase
+      .from('event_feedback_responses')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('matched_user_id', user.id)
+      .limit(1)
+
+    if (error) {
+      console.error('Error checking feedback status:', error)
+      return false
+    }
+
+    return Boolean(data && data.length > 0)
+  },
+
+  /**
+   * 檢查使用者是否已提交活動打卡表單
+   */
+  async checkCheckinFormStatus(eventId: string): Promise<boolean> {
+    const supabase = getSupabase()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return false
+
+    const { data, error } = await supabase
+      .from('event_checkin_responses')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('matched_user_id', user.id)
+      .limit(1)
+
+    if (error) {
+      console.error('Error checking checkin form status:', error)
+      return false
+    }
+
+    return Boolean(data && data.length > 0)
+  },
+
   async fetchEventById(id: string): Promise<Event> {
     const supabase = getSupabase()
     const { data, error } = await supabase

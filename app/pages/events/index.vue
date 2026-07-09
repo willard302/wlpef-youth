@@ -53,6 +53,8 @@ const {
   canSeeStaffFeatures,
   isRegistered,
   isCheckedIn,
+  isFeedbackSubmitted,
+  isCheckinFormSubmitted,
   checkingRegistration,
   openEventDetail,
   handleRegister,
@@ -259,6 +261,8 @@ onMounted(async () => {
       :can-see-staff-features="canSeeStaffFeatures"
       :is-registered="isRegistered"
       :is-checked-in="isCheckedIn"
+      :is-feedback-submitted="isFeedbackSubmitted"
+      :is-checkin-form-submitted="isCheckinFormSubmitted"
       :checking-registration="checkingRegistration"
       @register="handleRegister"
       @feedback="handleOpenFeedback"

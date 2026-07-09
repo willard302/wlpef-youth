@@ -10,6 +10,8 @@ const props = defineProps<{
   canSeeStaffFeatures?: boolean
   isRegistered?: boolean
   isCheckedIn?: boolean
+  isFeedbackSubmitted?: boolean
+  isCheckinFormSubmitted?: boolean
   checkingRegistration?: boolean
 }>()
 
@@ -28,6 +30,8 @@ const eventDetailVisible = computed({
 const canViewAllEventStatus = computed(() => props.canViewAllEventStatus ?? false)
 const isRegistered = computed(() => props.isRegistered ?? false)
 const isCheckedIn = computed(() => props.isCheckedIn ?? false)
+const isFeedbackSubmitted = computed(() => props.isFeedbackSubmitted ?? false)
+const isCheckinFormSubmitted = computed(() => props.isCheckinFormSubmitted ?? false)
 const checkingRegistration = computed(() => props.checkingRegistration ?? false)
 const canSeeStaffFeatures = computed(() => props.canSeeStaffFeatures ?? false)
 const selectedEvent = computed(() => props.selectedEvent)
@@ -67,6 +71,22 @@ const canShowCheckinFormAction = computed(() => {
   if (!selectedEvent.value || !selectedEventHasCheckinForm.value) return false
   if (selectedEventCheckinMode.value === 'live') return true
   return canSeeStaffFeatures.value
+})
+
+const feedbackButtonClass = computed(() => {
+  if (isFeedbackSubmitted.value) {
+    return 'bg-amber-500 text-white cursor-not-allowed shadow-amber-200'
+  }
+
+  return 'bg-amber-50 text-amber-700 hover:bg-amber-100 active:scale-[0.98]'
+})
+
+const checkinFormButtonClass = computed(() => {
+  if (isCheckinFormSubmitted.value) {
+    return 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200'
+  }
+
+  return 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:scale-[0.98]'
 })
 
 const isActionDisabled = computed(() => {
@@ -178,19 +198,23 @@ const actionLabel = computed(() => {
         <button
           v-if="canShowFeedbackAction"
           @click="handleFeedback"
-          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm bg-amber-50 text-amber-700 hover:bg-amber-100 active:scale-[0.98]"
+          :disabled="isFeedbackSubmitted"
+          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+          :class="feedbackButtonClass"
         >
-          <AppIcon name="edit_note" />
-          <span>前往回饋問券</span>
+          <AppIcon :name="isFeedbackSubmitted ? 'task_alt' : 'edit_note'" />
+          <span>{{ isFeedbackSubmitted ? '已完成回饋問卷' : '前往回饋問卷' }}</span>
         </button>
 
         <button
           v-if="canShowCheckinFormAction"
           @click="handleCheckinForm"
-          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm bg-emerald-50 text-emerald-700 hover:bg-emerald-100 active:scale-[0.98]"
+          :disabled="isCheckinFormSubmitted"
+          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+          :class="checkinFormButtonClass"
         >
-          <AppIcon name="playlist_add_check" />
-          <span>前往打卡表單</span>
+          <AppIcon :name="isCheckinFormSubmitted ? 'task_alt' : 'playlist_add_check'" />
+          <span>{{ isCheckinFormSubmitted ? '已完成打卡表單' : '前往打卡表單' }}</span>
         </button>
       </div>
     </div>
