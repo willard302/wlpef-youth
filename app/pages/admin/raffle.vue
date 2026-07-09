@@ -178,14 +178,14 @@ const openDrawStage = () => {
       </template>
     </main>
 
-    <AdminRaffleForm
+    <RaffleForm
       v-model:show="showPrizeModal"
       :mode="formMode"
       :initial-prize="editingPrize"
       @submit="submitAddPrize"
     />
 
-    <AdminRaffleDrawStage
+    <RaffleDrawStage
       v-model:show="showDrawStage"
       :event="selectedEvent"
       :candidate-count="candidateCount"
