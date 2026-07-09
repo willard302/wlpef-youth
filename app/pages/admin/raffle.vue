@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import type { SwipeCellInstance } from 'vant'
 import type { Event } from '~/types'
 
 definePageMeta({
@@ -32,6 +33,7 @@ const showDrawStage = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const editingIndex = ref<number | null>(null)
 const editingPrize = ref<{ prize: string, name: string, count: number, drawOrder: number } | null>(null)
+const swipeCells = ref<SwipeCellInstance[]>([]);
 
 const openAddPrizeModal = () => {
   formMode.value = 'create'
@@ -70,6 +72,18 @@ watch(
   },
   { immediate: true }
 )
+
+const handleMouseEnter = (index: number) => {
+  if (swipeCells.value[index]) {
+    swipeCells.value[index]?.open('right');
+  }
+};
+
+const handleMouseLeave = (index: number) => {
+  if (swipeCells.value[index]) {
+    swipeCells.value[index]?.close('right');
+  }
+};
 
 const handleEventChange = async(event: Event) => {
   await changeEvent(event)
@@ -119,11 +133,15 @@ const openDrawStage = () => {
           <van-swipe-cell
             v-for="(prize, index) in prizeRows"
             :key="index"
+            ref="swipeCells"
+            @mouseenter="handleMouseEnter(index)"
+            @mouseleave="handleMouseLeave(index)"
           >
             <van-cell 
-              :title="prize.prize || ''"
-              :value="prize.name || '未命名獎品'"
-              :label="`序位 ${ prize.drawOrder } / 中獎人數 ${ prize.count } 位`"
+              :value="prize.prize || ''"
+              :title="prize.name || '未命名獎品'"
+              :label="`順序 ${ prize.drawOrder } / 中獎人數 ${ prize.count } 位`"
+              size="large"
             />
             <template #right>
               <van-button
