@@ -14,12 +14,14 @@ type RegistrationRow = {
   email: string
   name: string | null
   form_submitted_at: string | null
+  created_at: string | null
   matched_user_id: string | null
 }
 
 type RequestBody = {
   eventId?: string
   campaignKey?: string
+  resendCampaignKey?: string
   dryRun?: boolean
   subject?: string
   templateId?: number
@@ -37,7 +39,8 @@ const corsHeaders = {
 }
 
 const BREVO_SEND_EMAIL_URL = "https://api.brevo.com/v3/smtp/email"
-const DEFAULT_LIMIT = 1000
+const DEFAULT_LIMIT = 300
+const REGISTRATION_PAGE_SIZE = 1000
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders })
@@ -74,17 +77,23 @@ Deno.serve(async (req) => {
     const body = await req.json() as RequestBody
     const eventId = body.eventId?.trim()
     const campaignKey = body.campaignKey?.trim()
+    const resendCampaignKey = body.resendCampaignKey?.trim()
     const dryRun = body.dryRun !== false
     const limit = body.limit ?? DEFAULT_LIMIT
 
     if (!eventId) throw new Error("eventId is required")
     if (!campaignKey) throw new Error("campaignKey is required")
+    if (resendCampaignKey && resendCampaignKey === campaignKey) {
+      throw new Error("resendCampaignKey must be different from campaignKey so resend logs preserve the original campaign")
+    }
     if (!Number.isInteger(limit) || limit < 1 || limit > DEFAULT_LIMIT) {
       throw new Error(`limit must be an integer between 1 and ${DEFAULT_LIMIT}`)
     }
 
     const event = await loadEvent(supabaseAdmin, eventId)
-    const recipients = await loadPendingRecipients(supabaseAdmin, eventId, campaignKey, limit)
+    const recipients = resendCampaignKey
+      ? await loadResendRecipients(supabaseAdmin, eventId, campaignKey, resendCampaignKey, limit)
+      : await loadPendingRecipients(supabaseAdmin, eventId, campaignKey, limit)
     const templateId = body.templateId ?? defaultTemplateId
 
     // 有 template 時 sender/subject 交給 Brevo template 設定；fallback HTML 模式才需要 sender
@@ -100,6 +109,8 @@ Deno.serve(async (req) => {
           dryRun: true,
           event,
           campaignKey,
+          resendCampaignKey,
+          resendMode: Boolean(resendCampaignKey),
           count: recipients.length,
           recipients,
         },
@@ -109,7 +120,16 @@ Deno.serve(async (req) => {
 
     if (recipients.length === 0) {
       return Response.json(
-        { success: true, dryRun: false, event, campaignKey, sentCount: 0, message: "No pending recipients" },
+        {
+          success: true,
+          dryRun: false,
+          event,
+          campaignKey,
+          resendCampaignKey,
+          resendMode: Boolean(resendCampaignKey),
+          sentCount: 0,
+          message: resendCampaignKey ? "No resend recipients" : "No pending recipients",
+        },
         { headers: corsHeaders },
       )
     }
@@ -168,6 +188,8 @@ Deno.serve(async (req) => {
         testMode: Boolean(testTo),
         event,
         campaignKey,
+        resendCampaignKey,
+        resendMode: Boolean(resendCampaignKey),
         sentCount: recipients.length,
         messageIds,
       },
@@ -246,36 +268,121 @@ async function loadPendingRecipients(
   campaignKey: string,
   limit: number,
 ) {
-  const [{ data: registrations, error: registrationError }, { data: sentLogs, error: logError }] =
-    await Promise.all([
-      supabaseAdmin
-        .from("event_registrations")
-        .select("id,email,name,form_submitted_at,matched_user_id")
-        .eq("event_id", eventId)
-        .not("email", "is", null)
-        .order("form_submitted_at", { ascending: true })
-        .limit(limit),
-      supabaseAdmin
-        .from("email_delivery_logs")
-        .select("normalized_email")
-        .eq("event_id", eventId)
-        .eq("campaign_key", campaignKey)
-        .eq("status", "sent"),
-    ])
-
-  if (registrationError) throw registrationError
-  if (logError) throw logError
-
-  const sentEmails = new Set((sentLogs ?? []).map((log: { normalized_email: string }) => log.normalized_email))
+  const sentEmails = await loadSentEmailsForCampaign(supabaseAdmin, eventId, campaignKey)
   const recipientsByEmail = new Map<string, RegistrationRow>()
+  let from = 0
 
-  for (const registration of registrations ?? []) {
-    const normalizedEmail = normalizeEmail(registration.email)
-    if (!normalizedEmail || sentEmails.has(normalizedEmail) || recipientsByEmail.has(normalizedEmail)) continue
-    recipientsByEmail.set(normalizedEmail, { ...registration, email: normalizedEmail })
+  while (recipientsByEmail.size < limit) {
+    const to = from + REGISTRATION_PAGE_SIZE - 1
+    const { data: registrations, error: registrationError } = await supabaseAdmin
+      .from("event_registrations")
+      .select("id,email,name,form_submitted_at,created_at,matched_user_id")
+      .eq("event_id", eventId)
+      .not("email", "is", null)
+      .order("form_submitted_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false, nullsFirst: false })
+      .range(from, to)
+
+    if (registrationError) throw registrationError
+    if (!registrations?.length) break
+
+    for (const registration of registrations) {
+      const normalizedEmail = normalizeEmail(registration.email)
+      if (!normalizedEmail || sentEmails.has(normalizedEmail) || recipientsByEmail.has(normalizedEmail)) continue
+      recipientsByEmail.set(normalizedEmail, { ...registration, email: normalizedEmail })
+      if (recipientsByEmail.size >= limit) break
+    }
+
+    if (registrations.length < REGISTRATION_PAGE_SIZE) break
+    from += REGISTRATION_PAGE_SIZE
   }
 
   return Array.from(recipientsByEmail.values())
+}
+
+async function loadResendRecipients(
+  supabaseAdmin: any,
+  eventId: string,
+  campaignKey: string,
+  resendCampaignKey: string,
+  limit: number,
+) {
+  const [resendEmails, alreadyResentEmails] = await Promise.all([
+    loadSentEmailsForCampaign(supabaseAdmin, eventId, resendCampaignKey),
+    loadSentEmailsForCampaign(supabaseAdmin, eventId, campaignKey),
+  ])
+  const recipientsByEmail = new Map<string, RegistrationRow>()
+  let from = 0
+
+  if (resendEmails.size === 0) return []
+
+  while (recipientsByEmail.size < limit) {
+    const to = from + REGISTRATION_PAGE_SIZE - 1
+    const { data: registrations, error: registrationError } = await supabaseAdmin
+      .from("event_registrations")
+      .select("id,email,name,form_submitted_at,created_at,matched_user_id")
+      .eq("event_id", eventId)
+      .not("email", "is", null)
+      .order("form_submitted_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false, nullsFirst: false })
+      .range(from, to)
+
+    if (registrationError) throw registrationError
+    if (!registrations?.length) break
+
+    for (const registration of registrations) {
+      const normalizedEmail = normalizeEmail(registration.email)
+      if (
+        !normalizedEmail ||
+        !resendEmails.has(normalizedEmail) ||
+        alreadyResentEmails.has(normalizedEmail) ||
+        recipientsByEmail.has(normalizedEmail)
+      ) {
+        continue
+      }
+
+      recipientsByEmail.set(normalizedEmail, { ...registration, email: normalizedEmail })
+      if (recipientsByEmail.size >= limit) break
+    }
+
+    if (registrations.length < REGISTRATION_PAGE_SIZE) break
+    from += REGISTRATION_PAGE_SIZE
+  }
+
+  return Array.from(recipientsByEmail.values())
+}
+
+async function loadSentEmailsForCampaign(
+  supabaseAdmin: any,
+  eventId: string,
+  campaignKey: string,
+) {
+  const emails = new Set<string>()
+  let from = 0
+
+  while (true) {
+    const to = from + REGISTRATION_PAGE_SIZE - 1
+    const { data, error } = await supabaseAdmin
+      .from("email_delivery_logs")
+      .select("normalized_email")
+      .eq("event_id", eventId)
+      .eq("campaign_key", campaignKey)
+      .eq("status", "sent")
+      .range(from, to)
+
+    if (error) throw error
+    if (!data?.length) break
+
+    for (const log of data) {
+      const normalizedEmail = normalizeEmail(log.normalized_email)
+      if (normalizedEmail) emails.add(normalizedEmail)
+    }
+
+    if (data.length < REGISTRATION_PAGE_SIZE) break
+    from += REGISTRATION_PAGE_SIZE
+  }
+
+  return emails
 }
 
 function buildBrevoPayload(options: {
