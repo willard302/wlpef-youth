@@ -106,3 +106,22 @@ export interface EventCheckin {
   userName?: string
   userAvatar?: string
 }
+
+export interface EventModalProps {
+  show: boolean
+  selectedEvent: Event | null
+  canViewAllEventStatus?: boolean
+  canSeeStaffFeatures?: boolean
+  isRegistered?: boolean
+  isCheckedIn?: boolean
+  isFeedbackSubmitted?: boolean
+  isCheckinFormSubmitted?: boolean
+  checkingRegistration?: boolean
+}
+
+export interface EventModalEmits {
+  (e: 'update:show', val: boolean): void,
+  (e: 'register'): void,
+  (e: 'feedback'): void,
+  (e: 'checkin-form'): void
+}
