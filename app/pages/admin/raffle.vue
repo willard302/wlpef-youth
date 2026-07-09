@@ -120,27 +120,25 @@ const openDrawStage = () => {
             v-for="(prize, index) in prizeRows"
             :key="index"
           >
-            <template #right>
-              <van-button
-                square
-                type="danger"
-                text="刪除"
-                icon="delete"
-                @click="removePrizeRow(index)"
-              />
-            </template>
             <van-cell 
               :title="prize.prize || ''"
               :value="prize.name || '未命名獎品'"
               :label="`序位 ${ prize.drawOrder } / 中獎人數 ${ prize.count } 位`"
             />
-            <template #left>
+            <template #right>
               <van-button
                 square
                 type="warning"
                 text="編輯"
                 icon="edit"
                 @click="openEditPrizeModal(index)"
+              />
+              <van-button
+                square
+                type="danger"
+                text="刪除"
+                icon="delete"
+                @click="removePrizeRow(index)"
               />
             </template>
           </van-swipe-cell>
