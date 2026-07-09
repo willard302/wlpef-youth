@@ -101,12 +101,12 @@ const isActionDisabled = computed(() => {
 })
 
 const actionButtonClass = computed(() => {
-  if (isCheckedIn.value) return 'bg-red-500 text-white cursor-not-allowed shadow-red-200'
-  if (isRegistered.value) return 'bg-emerald-500 text-white cursor-not-allowed shadow-emerald-200'
-  if (!props.selectedEvent) return 'bg-slate-200 text-slate-500 cursor-not-allowed'
+  if (isCheckedIn.value) return 'bg-red-700 text-white cursor-not-allowed shadow-red-200/50'
+  if (isRegistered.value) return 'bg-red-500 text-white cursor-not-allowed shadow-red-200'
+  if (!props.selectedEvent) return 'bg-red-50 text-red-300 border border-red-100 cursor-not-allowed'
   return selectedEventStatus.value === 'closed' || !selectedEventHasForm.value
-    ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
-    : 'bg-sky-500 text-white hover:bg-sky-600 active:scale-[0.98] shadow-sky-200'
+    ? 'bg-transparent text-red-500 border border-red-500 cursor-not-allowed'
+    : 'bg-rose-600 text-white hover:bg-rose-700 active:scale-[0.98] shadow-rose-200'
 })
 
 const actionIconName = computed(() => {
@@ -199,10 +199,10 @@ const actionLabel = computed(() => {
           v-if="canShowFeedbackAction"
           @click="handleFeedback"
           :disabled="isFeedbackSubmitted"
-          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+          class="mt-3 w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
           :class="feedbackButtonClass"
         >
-          <AppIcon :name="isFeedbackSubmitted ? 'task_alt' : 'edit_note'" />
+          <AppIcon :name="isFeedbackSubmitted ? 'check_circle' : 'edit_note'" />
           <span>{{ isFeedbackSubmitted ? '已完成回饋問卷' : '前往回饋問卷' }}</span>
         </button>
 
@@ -210,10 +210,10 @@ const actionLabel = computed(() => {
           v-if="canShowCheckinFormAction"
           @click="handleCheckinForm"
           :disabled="isCheckinFormSubmitted"
-          class="mt-3 w-full h-12 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+          class="mt-3 w-full h-14 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
           :class="checkinFormButtonClass"
         >
-          <AppIcon :name="isCheckinFormSubmitted ? 'task_alt' : 'playlist_add_check'" />
+          <AppIcon :name="isCheckinFormSubmitted ? 'check_circle' : 'playlist_add_check'" />
           <span>{{ isCheckinFormSubmitted ? '已完成打卡表單' : '前往打卡表單' }}</span>
         </button>
       </div>
