@@ -10,24 +10,15 @@ export const useEvents = () => {
 
   const isCalendarLoading = ref(false)
   const allEvents = ref<Event[]>([])
-
   const today = ref(new Date())
   const currentDate = ref(new Date())
   const selectedDate = ref(today.value)
 
-  const currentUserId = computed(() => userProfile.value?.id || null)
   const currentRole = computed(() => (userProfile.value?.role as Role) || null)
 
   const isAdmin = computed(() => currentRole.value === 'admin')
 
   const canViewAllEventStatus = computed(() => currentRole.value === 'admin')
-
-  const canEditEvent = (createdBy: string): boolean => {
-    if (currentRole.value === 'admin') return true
-    return Boolean(currentUserId.value && createdBy === currentUserId.value)
-  }
-
-  const canDeleteEvent = (createdBy: string): boolean => canEditEvent(createdBy)
 
   const monthYear = computed(() => format(currentDate.value, 'yyyy / MM'))
 
@@ -39,36 +30,6 @@ export const useEvents = () => {
 
     return eachDayOfInterval({ start: startDate, end: endDate })
   })
-
-  const isToday = (date: Date) => isSameDay(date, today.value)
-  const isSelected = (date: Date) => isSameDay(date, selectedDate.value)
-  const isCurrentMonth = (date: Date) => isSameMonth(date, currentDate.value)
-
-  const isEventOnDate = (event: Event, targetDate: Date): boolean => {
-    const start = startOfDay(event.startAt)
-    const end = startOfDay(event.endAt)
-    const target = startOfDay(targetDate)
-
-    return target >= start && target <= end
-  }
-
-  const selectDate = (date: Date) => {
-    selectedDate.value = date
-  }
-
-  const previousMonth = () => {
-    currentDate.value = sub(currentDate.value, { months: 1 })
-  }
-
-  const nextMonth = () => {
-    currentDate.value = add(currentDate.value, { months: 1 })
-  }
-
-  const goToToday = () => {
-    const now = new Date()
-    currentDate.value = now
-    selectedDate.value = now
-  }
 
   const eventsForSelectedDate = computed(() => {
     const visibleEvents = canViewAllEventStatus.value
@@ -121,6 +82,38 @@ export const useEvents = () => {
     }
   }
 
+  const isToday = (date: Date) => isSameDay(date, today.value)
+
+  const isSelected = (date: Date) => isSameDay(date, selectedDate.value)
+
+  const isCurrentMonth = (date: Date) => isSameMonth(date, currentDate.value)
+
+  const isEventOnDate = (event: Event, targetDate: Date): boolean => {
+    const start = startOfDay(event.startAt)
+    const end = startOfDay(event.endAt)
+    const target = startOfDay(targetDate)
+
+    return target >= start && target <= end
+  }
+
+  const selectDate = (date: Date) => {
+    selectedDate.value = date
+  }
+
+  const previousMonth = () => {
+    currentDate.value = sub(currentDate.value, { months: 1 })
+  }
+
+  const nextMonth = () => {
+    currentDate.value = add(currentDate.value, { months: 1 })
+  }
+
+  const goToToday = () => {
+    const now = new Date()
+    currentDate.value = now
+    selectedDate.value = now
+  }
+
   watch(currentDate, () => {
     loadEvents()
   })
@@ -144,8 +137,6 @@ export const useEvents = () => {
     loadEvents,
     isCalendarLoading,
     isAdmin,
-    canEditEvent,
-    canDeleteEvent,
     canViewAllEventStatus
   }
 }

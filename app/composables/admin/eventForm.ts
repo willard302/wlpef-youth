@@ -61,7 +61,7 @@ export const useEventForm = () => {
   const router = useRouter()
   const route = useRoute()
   const { addToast } = useToast()
-  const { createEventToDatabase, updateEventToDatabase, deleteEventToDatabase } = useAdminEvents()
+  const { createEventToDatabase, updateEventToDatabase } = useAdminEvents()
 
   const isSaving = ref(false)
   const isDeleting = ref(false)
@@ -319,7 +319,7 @@ export const useEventForm = () => {
     isDeleting.value = true
 
     try {
-      await deleteEventToDatabase(editingEventId.value)
+      await eventService.deleteEvent(editingEventId.value)
       addToast('活動已刪除', 'success')
       
       if (onSuccess) {

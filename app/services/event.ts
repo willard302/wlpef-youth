@@ -58,6 +58,28 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
+  async fetchEventById(id: string): Promise<Event> {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('events')
+      .select('*')
+      .eq('id', id)
+      .single()
+
+    if (error) throw error
+    return mapToEvent(data)
+  },
+
+  async deleteEvent(id: string): Promise<void> {
+    const supabase = getSupabase()
+    const { error } = await supabase
+      .from('events')
+      .delete()
+      .eq('id', id)
+
+    if (error) throw error
+  },
+
   /**
    * 檢查使用者是否已報名特定活動
    */
@@ -148,18 +170,6 @@ export const eventService = {
     }
 
     return Boolean(data && data.length > 0)
-  },
-
-  async fetchEventById(id: string): Promise<Event> {
-    const supabase = getSupabase()
-    const { data, error } = await supabase
-      .from('events')
-      .select('*')
-      .eq('id', id)
-      .single()
-
-    if (error) throw error
-    return mapToEvent(data)
   },
 
 }

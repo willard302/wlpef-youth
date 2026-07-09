@@ -9,9 +9,7 @@ definePageMeta({
   tabbarKey: 'events'
 })
 
-const { addToast } = useToast()
 const { openMenu } = useSideMenu()
-const { deleteEventToDatabase } = useAdminEvents()
 
 const { userProfile, isLoading: isUserLoading } = useUser()
 
@@ -31,8 +29,6 @@ const {
   format,
   loadEvents,
   isCalendarLoading,
-  canEditEvent,
-  canDeleteEvent,
   canViewAllEventStatus
 } = useEvents()
 
@@ -63,28 +59,6 @@ const {
 } = useEventDetail(userProfile)
 
 const isLoading = computed(() => isUserLoading.value || isCalendarLoading.value)
-
-const handleDeleteEvent = async (eventId: string) => {
-  try {
-    await showDialog({
-      title: '刪除活動',
-      message: '確定要刪除這個活動嗎？此操作無法復原。',
-      confirmButtonText: '刪除',
-      cancelButtonText: '取消',
-      confirmButtonColor: '#ef4444',
-    })
-  } catch {
-    return
-  }
-
-  try {
-    await deleteEventToDatabase(eventId)
-    addToast('活動已刪除', 'success')
-    await Promise.all([loadEvents(), loadUpcomingEvent()])
-  } catch (err: any) {
-    addToast(err.message || '刪除活動失敗', 'error')
-  }
-}
 
 onMounted(async () => {
   await Promise.all([loadEvents(), loadUpcomingEvent()])
@@ -236,16 +210,6 @@ onMounted(async () => {
                     {{ event.location || '未指定地點' }}
                   </span>
                 </div>
-              </div>
-
-              <div v-if="canEditEvent(event.createdBy)" class="flex flex-col relative z-30 self-center" @click.stop>
-                <button
-                  v-if="canDeleteEvent(event.createdBy)"
-                  @click="handleDeleteEvent(event.id)"
-                  class="size-12 rounded-full bg-slate-50 text-slate-400 flex items-center justify-center hover:bg-red-50 hover:text-red-500 transition-all"
-                >
-                  <AppIcon name="delete" class="text-md" />
-                </button>
               </div>
             </div>
           </div>

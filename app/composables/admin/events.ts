@@ -44,19 +44,9 @@ export const useAdminEvents = () => {
       return mapToEvent(data)
     }
   
-    const deleteEventToDatabase = async(id: string): Promise<void> => {
-      const supabase = getSupabase()
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', id)
-  
-      if (error) throw error
-    }
   
   return {
     createEventToDatabase,
     updateEventToDatabase,
-    deleteEventToDatabase,
   }
 }
