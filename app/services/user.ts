@@ -112,7 +112,7 @@ export const userService = {
         .from('event_registrations')
         .select('donation_year, registration_fee')
         .eq('matched_user_id', user.id)
-        .order('form_submitted_at', { ascending: false })
+        .order('form_submitted_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false })
         .limit(1)
 

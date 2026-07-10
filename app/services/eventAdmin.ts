@@ -24,7 +24,7 @@ export const eventAdminService = {
       .from('event_registrations')
       .select('*')
       .eq('event_id', eventId)
-      .order('form_submitted_at', { ascending: false })
+      .order('form_submitted_at', { ascending: false, nullsFirst: false })
 
     if (error) throw error
     return (data ?? []).map(mapToRegistration)
