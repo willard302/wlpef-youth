@@ -22,10 +22,12 @@ type RequestBody = {
   eventId?: string
   campaignKey?: string
   resendCampaignKey?: string
+  targetEmails?: string[] | string
   dryRun?: boolean
   subject?: string
   templateId?: number
   limit?: number
+  skipLog?: boolean
   testTo?: string
   idempotencyKey?: string
 }
@@ -78,20 +80,34 @@ Deno.serve(async (req) => {
     const eventId = body.eventId?.trim()
     const campaignKey = body.campaignKey?.trim()
     const resendCampaignKey = body.resendCampaignKey?.trim()
+    const targetEmails = normalizeTargetEmails(body.targetEmails)
     const dryRun = body.dryRun !== false
     const limit = body.limit ?? DEFAULT_LIMIT
+    const skipLog = body.skipLog === true
 
     if (!eventId) throw new Error("eventId is required")
     if (!campaignKey) throw new Error("campaignKey is required")
     if (resendCampaignKey && resendCampaignKey === campaignKey) {
       throw new Error("resendCampaignKey must be different from campaignKey so resend logs preserve the original campaign")
     }
+    if (targetEmails.length > 0 && resendCampaignKey) {
+      throw new Error("targetEmails cannot be combined with resendCampaignKey")
+    }
+    if (skipLog && targetEmails.length === 0) {
+      throw new Error("skipLog can only be used with targetEmails")
+    }
+    if (targetEmails.length > DEFAULT_LIMIT) {
+      throw new Error(`targetEmails can include at most ${DEFAULT_LIMIT} emails`)
+    }
     if (!Number.isInteger(limit) || limit < 1 || limit > DEFAULT_LIMIT) {
       throw new Error(`limit must be an integer between 1 and ${DEFAULT_LIMIT}`)
     }
 
     const event = await loadEvent(supabaseAdmin, eventId)
-    const recipients = resendCampaignKey
+    const recipientLimit = targetEmails.length > 0 ? Math.min(limit, targetEmails.length) : limit
+    const recipients = targetEmails.length > 0
+      ? await loadTargetRecipients(supabaseAdmin, eventId, campaignKey, targetEmails, recipientLimit)
+      : resendCampaignKey
       ? await loadResendRecipients(supabaseAdmin, eventId, campaignKey, resendCampaignKey, limit)
       : await loadPendingRecipients(supabaseAdmin, eventId, campaignKey, limit)
     const templateId = body.templateId ?? defaultTemplateId
@@ -111,6 +127,9 @@ Deno.serve(async (req) => {
           campaignKey,
           resendCampaignKey,
           resendMode: Boolean(resendCampaignKey),
+          targetMode: targetEmails.length > 0,
+          targetEmails,
+          skipLog,
           count: recipients.length,
           recipients,
         },
@@ -127,8 +146,15 @@ Deno.serve(async (req) => {
           campaignKey,
           resendCampaignKey,
           resendMode: Boolean(resendCampaignKey),
+          targetMode: targetEmails.length > 0,
+          targetEmails,
+          skipLog,
           sentCount: 0,
-          message: resendCampaignKey ? "No resend recipients" : "No pending recipients",
+          message: targetEmails.length > 0
+            ? "No target recipients"
+            : resendCampaignKey
+            ? "No resend recipients"
+            : "No pending recipients",
         },
         { headers: corsHeaders },
       )
@@ -160,7 +186,7 @@ Deno.serve(async (req) => {
     const brevoBody = await parseJsonResponse(brevoResponse)
 
     if (!brevoResponse.ok) {
-      if (!testTo) {
+      if (!testTo && !skipLog) {
         await insertFailedLogs(
           supabaseAdmin,
           eventId,
@@ -177,7 +203,7 @@ Deno.serve(async (req) => {
     }
 
     const messageIds = Array.isArray(brevoBody?.messageIds) ? brevoBody.messageIds : []
-    if (!testTo) {
+    if (!testTo && !skipLog) {
       await insertSentLogs(supabaseAdmin, eventId, campaignKey, recipients, messageIds)
     }
 
@@ -190,6 +216,9 @@ Deno.serve(async (req) => {
         campaignKey,
         resendCampaignKey,
         resendMode: Boolean(resendCampaignKey),
+        targetMode: targetEmails.length > 0,
+        targetEmails,
+        skipLog,
         sentCount: recipients.length,
         messageIds,
       },
@@ -336,6 +365,54 @@ async function loadResendRecipients(
         !normalizedEmail ||
         !resendEmails.has(normalizedEmail) ||
         alreadyResentEmails.has(normalizedEmail) ||
+        recipientsByEmail.has(normalizedEmail)
+      ) {
+        continue
+      }
+
+      recipientsByEmail.set(normalizedEmail, { ...registration, email: normalizedEmail })
+      if (recipientsByEmail.size >= limit) break
+    }
+
+    if (registrations.length < REGISTRATION_PAGE_SIZE) break
+    from += REGISTRATION_PAGE_SIZE
+  }
+
+  return Array.from(recipientsByEmail.values())
+}
+
+async function loadTargetRecipients(
+  supabaseAdmin: any,
+  eventId: string,
+  campaignKey: string,
+  targetEmails: string[],
+  limit: number,
+) {
+  const sentEmails = await loadSentEmailsForCampaign(supabaseAdmin, eventId, campaignKey)
+  const targetEmailSet = new Set(targetEmails)
+  const recipientsByEmail = new Map<string, RegistrationRow>()
+  let from = 0
+
+  while (recipientsByEmail.size < limit) {
+    const to = from + REGISTRATION_PAGE_SIZE - 1
+    const { data: registrations, error: registrationError } = await supabaseAdmin
+      .from("event_registrations")
+      .select("id,email,name,form_submitted_at,created_at,matched_user_id")
+      .eq("event_id", eventId)
+      .not("email", "is", null)
+      .order("form_submitted_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false, nullsFirst: false })
+      .range(from, to)
+
+    if (registrationError) throw registrationError
+    if (!registrations?.length) break
+
+    for (const registration of registrations) {
+      const normalizedEmail = normalizeEmail(registration.email)
+      if (
+        !normalizedEmail ||
+        !targetEmailSet.has(normalizedEmail) ||
+        sentEmails.has(normalizedEmail) ||
         recipientsByEmail.has(normalizedEmail)
       ) {
         continue
@@ -556,4 +633,28 @@ async function insertFailedLogs(
 function normalizeEmail(email: string | null | undefined) {
   const normalized = String(email ?? "").trim().toLowerCase()
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) ? normalized : ""
+}
+
+function normalizeTargetEmails(value: RequestBody["targetEmails"]) {
+  if (value === undefined) return []
+
+  const rawEmails = Array.isArray(value)
+    ? value
+    : typeof value === "string"
+    ? value.split(",")
+    : []
+  const trimmedEmails = rawEmails
+    .map((email) => String(email ?? "").trim())
+    .filter(Boolean)
+  const invalidEmails = trimmedEmails.filter((email) => !normalizeEmail(email))
+
+  if (trimmedEmails.length === 0) {
+    throw new Error("targetEmails must include at least one email")
+  }
+
+  if (invalidEmails.length > 0) {
+    throw new Error(`Invalid targetEmails: ${invalidEmails.join(", ")}`)
+  }
+
+  return [...new Set(trimmedEmails.map((email) => normalizeEmail(email)))]
 }
