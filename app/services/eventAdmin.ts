@@ -116,7 +116,10 @@ export const eventAdminService = {
     ])
     
     if (memberRes.error) throw memberRes.error
+    if (existingCheckinRes.error) throw existingCheckinRes.error
+    if (registrationRes.error) throw registrationRes.error
     if (!memberRes.data) throw new Error('找不到該會員資料')
+    if (!registrationRes.data) throw new Error('該會員尚未完成報名')
     if (existingCheckinRes.data) throw new Error('該會員已經完成簽到')
 
     const donationYear = registrationRes.data?.donation_year ?? false
