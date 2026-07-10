@@ -39,7 +39,6 @@ const corsHeaders = {
 }
 
 const BREVO_SEND_EMAIL_URL = "https://api.brevo.com/v3/smtp/email"
-const DEFAULT_LIMIT = 300
 const REGISTRATION_PAGE_SIZE = 1000
 
 Deno.serve(async (req) => {
@@ -79,15 +78,12 @@ Deno.serve(async (req) => {
     const campaignKey = body.campaignKey?.trim()
     const resendCampaignKey = body.resendCampaignKey?.trim()
     const dryRun = body.dryRun !== false
-    const limit = body.limit ?? DEFAULT_LIMIT
+    const limit = parseLimit(body.limit)
 
     if (!eventId) throw new Error("eventId is required")
     if (!campaignKey) throw new Error("campaignKey is required")
     if (resendCampaignKey && resendCampaignKey === campaignKey) {
       throw new Error("resendCampaignKey must be different from campaignKey so resend logs preserve the original campaign")
-    }
-    if (!Number.isInteger(limit) || limit < 1 || limit > DEFAULT_LIMIT) {
-      throw new Error(`limit must be an integer between 1 and ${DEFAULT_LIMIT}`)
     }
 
     const event = await loadEvent(supabaseAdmin, eventId)
@@ -218,6 +214,14 @@ function numberFromEnv(name: string) {
     throw new Error(`${name} must be a positive integer`)
   }
   return parsed
+}
+
+function parseLimit(limit: number | undefined) {
+  if (limit === undefined) return Number.POSITIVE_INFINITY
+  if (!Number.isInteger(limit) || limit < 1) {
+    throw new Error("limit must be a positive integer")
+  }
+  return limit
 }
 
 async function assertAdminRequest(options: {

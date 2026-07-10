@@ -54,7 +54,7 @@ pnpm dev
 - `GCP_SERVICE_ACCOUNT`（`sync-google-sheet` 需要，內容為 service account JSON）
 
 ## 活動提醒 Email
-推薦使用 Supabase Edge Function `send-event-reminder` 串接 Brevo Transactional Email API。這個方案不使用 SMTP port，適合在 Supabase 遠端手動觸發約 300 封活動提醒信。
+推薦使用 Supabase Edge Function `send-event-reminder` 串接 Brevo Transactional Email API。這個方案不使用 SMTP port，適合在 Supabase 遠端手動觸發活動提醒信（可依 `limit` 控制批次，未指定時不設上限）。
 
 主要檔案：
 
