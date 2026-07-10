@@ -24,10 +24,12 @@ export const eventAdminService = {
       .from('event_registrations')
       .select('*')
       .eq('event_id', eventId)
-      .order('form_submitted_at', { ascending: false, nullsFirst: false })
 
     if (error) throw error
-    return (data ?? []).map(mapToRegistration)
+    // 排序交給前端，與顯示邏輯一致（formSubmittedAt 已含 created_at fallback）
+    return (data ?? [])
+      .map(mapToRegistration)
+      .sort((a, b) => b.formSubmittedAt.getTime() - a.formSubmittedAt.getTime())
   },
 
   // 獲取特定活動的出席名單 (已完成報名且已簽到)
