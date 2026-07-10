@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { format } from 'date-fns'
-import type { EventModalProps, EventModalEmits } from '~/types';
+import type { EventModalProps } from '~/types';
 import { EVENT_STATUS_CLASS_MAP, EVENT_STATUS_LABEL_MAP } from '~/utils/eventStatus'
 
 const props = defineProps<EventModalProps>()
