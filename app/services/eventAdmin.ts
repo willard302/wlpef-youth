@@ -24,10 +24,12 @@ export const eventAdminService = {
       .from('event_registrations')
       .select('*')
       .eq('event_id', eventId)
-      .order('form_submitted_at', { ascending: false })
 
     if (error) throw error
-    return (data ?? []).map(mapToRegistration)
+    // 排序交給前端，與顯示邏輯一致（formSubmittedAt 已含 created_at fallback）
+    return (data ?? [])
+      .map(mapToRegistration)
+      .sort((a, b) => b.formSubmittedAt.getTime() - a.formSubmittedAt.getTime())
   },
 
   // 獲取特定活動的出席名單 (已完成報名且已簽到)
@@ -114,7 +116,10 @@ export const eventAdminService = {
     ])
     
     if (memberRes.error) throw memberRes.error
+    if (existingCheckinRes.error) throw existingCheckinRes.error
+    if (registrationRes.error) throw registrationRes.error
     if (!memberRes.data) throw new Error('找不到該會員資料')
+    if (!registrationRes.data) throw new Error('該會員尚未完成報名')
     if (existingCheckinRes.data) throw new Error('該會員已經完成簽到')
 
     const donationYear = registrationRes.data?.donation_year ?? false

@@ -1,5 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2"
+import { parseSubmittedAt } from "./parse-submitted-at.ts"
 
 type EventRow = {
   id: string
@@ -27,7 +28,7 @@ type SheetRegistration = {
   email: string
   name: string | null
   google_sheet_row_id: string
-  form_submitted_at: string
+  form_submitted_at: string | null
   synced_at: string
   raw_data?: Record<string, any>
   donation_year?: boolean
@@ -39,7 +40,7 @@ type SheetFeedbackResponse = {
   matched_user_id: string | null
   email: string
   google_sheet_row_id: string
-  form_submitted_at: string
+  form_submitted_at: string | null
   synced_at: string
   raw_data?: Record<string, any>
 }
@@ -49,7 +50,7 @@ type SheetCheckinResponse = {
   matched_user_id: string | null
   email: string
   google_sheet_row_id: string
-  form_submitted_at: string
+  form_submitted_at: string | null
   synced_at: string
   raw_data?: Record<string, any>
 }
@@ -241,64 +242,6 @@ const findHeaderIndex = (headers: string[], aliases: string[], fallbackIndex = -
   return fuzzyIndex >= 0 ? fuzzyIndex : fallbackIndex
 }
 
-const parseSubmittedAt = (value: string, fallbackIso: string) => {
-  const raw = value.trim()
-  if (!raw) return fallbackIso
-
-  const normalizedMeridiem = raw
-    .replace(/上午/gi, " AM ")
-    .replace(/下午/gi, " PM ")
-    .replace(/年/g, "/")
-    .replace(/月/g, "/")
-    .replace(/日/g, " ")
-    .replace(/\s+/g, " ")
-    .trim()
-
-  const directTimestamp = Date.parse(normalizedMeridiem)
-  if (!Number.isNaN(directTimestamp)) {
-    return new Date(directTimestamp).toISOString()
-  }
-
-  const ymdMatch = normalizedMeridiem.match(
-    /^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})\s*(AM|PM)?\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/i,
-  )
-
-  if (ymdMatch) {
-    const [, year, month, day, meridiemRaw, hourRaw, minuteRaw, secondRaw] = ymdMatch
-    let hour = Number(hourRaw)
-    const minute = Number(minuteRaw)
-    const second = Number(secondRaw || "0")
-    const meridiem = (meridiemRaw || "").toUpperCase()
-
-    if (meridiem === "PM" && hour < 12) hour += 12
-    if (meridiem === "AM" && hour === 12) hour = 0
-
-    const date = new Date(Number(year), Number(month) - 1, Number(day), hour, minute, second)
-    return date.toISOString()
-  }
-
-  const mdyMatch = normalizedMeridiem.match(
-    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\s*(AM|PM)?\s*(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?$/i,
-  )
-
-  if (mdyMatch) {
-    const [, month, day, year, meridiemRaw, hourRaw, minuteRaw, secondRaw] = mdyMatch
-    let hour = Number(hourRaw)
-    const minute = Number(minuteRaw)
-    const second = Number(secondRaw || "0")
-    const meridiem = (meridiemRaw || "").toUpperCase()
-
-    if (meridiem === "PM" && hour < 12) hour += 12
-    if (meridiem === "AM" && hour === 12) hour = 0
-
-    const date = new Date(Number(year), Number(month) - 1, Number(day), hour, minute, second)
-    return date.toISOString()
-  }
-
-  // Keep pipeline stable, but avoid silently using "now" as parse fallback.
-  return fallbackIso
-}
-
 async function fetchSheetRows(sheetId: string, googleToken: string): Promise<string[][]> {
   const response = await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/A:Z`,
@@ -463,7 +406,9 @@ function toRegistrations(
 
     const matchedProfile = profilesByEmail.get(email)
     const timestampValue = timestampIndex >= 0 ? pickString(row[timestampIndex]) : ""
-    const submittedAt = parseSubmittedAt(timestampValue, syncedAt)
+    // 時間戳記缺漏（手動補登列）時存 null，讓前端 fallback 到穩定的 created_at，
+    // 不可用 syncedAt——每次同步都會改寫，造成「報名時間」持續漂移
+    const submittedAt = parseSubmittedAt(timestampValue, null)
     const name = pickString(row[nameIndex]) || matchedProfile?.name || null
     const donationYear = donationIndex >= 0 ? parseBooleanField(row[donationIndex]) : false
     const registrationFee = registrationFeeIndex >= 0 ? parseBooleanField(row[registrationFeeIndex]) : false
@@ -525,7 +470,9 @@ function toFeedbackResponses(
 
     const matchedProfile = profilesByEmail.get(email)
     const timestampValue = timestampIndex >= 0 ? pickString(row[timestampIndex]) : ""
-    const submittedAt = parseSubmittedAt(timestampValue, syncedAt)
+    // 時間戳記缺漏（手動補登列）時存 null，讓前端 fallback 到穩定的 created_at，
+    // 不可用 syncedAt——每次同步都會改寫，造成「報名時間」持續漂移
+    const submittedAt = parseSubmittedAt(timestampValue, null)
 
     const rawData: Record<string, any> = {}
     headers.forEach((header, i) => {
@@ -581,7 +528,9 @@ function toCheckinResponses(
 
     const matchedProfile = profilesByEmail.get(email)
     const timestampValue = timestampIndex >= 0 ? pickString(row[timestampIndex]) : ""
-    const submittedAt = parseSubmittedAt(timestampValue, syncedAt)
+    // 時間戳記缺漏（手動補登列）時存 null，讓前端 fallback 到穩定的 created_at，
+    // 不可用 syncedAt——每次同步都會改寫，造成「報名時間」持續漂移
+    const submittedAt = parseSubmittedAt(timestampValue, null)
 
     const rawData: Record<string, any> = {}
     headers.forEach((header, i) => {

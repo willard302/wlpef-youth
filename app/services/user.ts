@@ -110,15 +110,17 @@ export const userService = {
 
       const { data, error } = await supabase
         .from('event_registrations')
-        .select('donation_year, registration_fee')
+        .select('donation_year, registration_fee, form_submitted_at, created_at')
         .eq('matched_user_id', user.id)
-        .order('form_submitted_at', { ascending: false })
-        .order('created_at', { ascending: false })
-        .limit(1)
 
       if (error) throw error
 
-      const registration = data?.[0]
+      // 取最新一筆：與顯示邏輯一致，form_submitted_at 為 null（手動補登）時以 created_at 比較
+      const registration = (data ?? [])
+        .slice()
+        .sort((a, b) =>
+          Date.parse(b.form_submitted_at || b.created_at || '') - Date.parse(a.form_submitted_at || a.created_at || '')
+        )[0]
       if (!registration) {
         return {
           hasDonationYear: false,
