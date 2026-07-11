@@ -64,8 +64,10 @@ const handleDelete = async () => {
   <van-popup 
     v-model:show="eventFormVisible" 
     position="bottom"
+    class="event-form-popup"
+    :style="{ height: '100dvh', maxHeight: '100dvh' }"
   >
-    <div class="h-full flex flex-col overflow-hidden">
+    <div class="h-full min-h-0 flex flex-col overflow-hidden">
       <!-- Custom Header inside Popup -->
       <div class="flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-md border-b border-sky-500/10 shrink-0">
         <button @click="eventFormVisible = false" class="text-slate-500 text-sm font-medium">取消</button>
@@ -78,7 +80,7 @@ const handleDelete = async () => {
         </button>
       </div>
 
-      <div class="flex-1 overflow-y-auto">
+      <div class="event-form-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
         <main v-if="!isInitializing" class="px-4 pt-4 pb-24 space-y-5 max-w-md mx-auto">
           <section class="glass-card rounded-2xl p-5 space-y-3">
             <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-500">
@@ -433,5 +435,10 @@ const handleDelete = async () => {
 .glass-card {
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid rgba(241, 245, 249, 1);
+}
+
+.event-form-scroll {
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
 }
 </style>
