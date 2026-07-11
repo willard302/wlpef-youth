@@ -64,12 +64,13 @@ const handleDelete = async () => {
   <van-popup 
     v-model:show="eventFormVisible" 
     position="bottom"
+    :lock-scroll="false"
     class="event-form-popup"
-    :style="{ height: '100dvh', maxHeight: '100dvh' }"
+    :style="{ height: '100dvh', maxHeight: '100dvh', overflowY: 'auto' }"
   >
-    <div class="h-full min-h-0 flex flex-col overflow-hidden">
+    <div class="min-h-full flex flex-col">
       <!-- Custom Header inside Popup -->
-      <div class="flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-md border-b border-sky-500/10 shrink-0">
+      <div class="sticky top-0 z-10 flex items-center justify-between px-6 py-4 bg-white/80 backdrop-blur-md border-b border-sky-500/10">
         <button @click="eventFormVisible = false" class="text-slate-500 text-sm font-medium">取消</button>
         <button
           @click="handleSave"
@@ -80,7 +81,7 @@ const handleDelete = async () => {
         </button>
       </div>
 
-      <div class="event-form-scroll flex-1 min-h-0 overflow-y-auto overscroll-contain">
+      <div class="flex-1">
         <main v-if="!isInitializing" class="px-4 pt-4 pb-24 space-y-5 max-w-md mx-auto">
           <section class="glass-card rounded-2xl p-5 space-y-3">
             <label class="block text-[10px] font-bold tracking-widest uppercase text-slate-500">
@@ -437,7 +438,7 @@ const handleDelete = async () => {
   border: 1px solid rgba(241, 245, 249, 1);
 }
 
-.event-form-scroll {
+:deep(.event-form-popup) {
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
 }
