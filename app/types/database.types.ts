@@ -82,6 +82,69 @@ export type Database = {
           },
         ]
       }
+      email_delivery_logs: {
+        Row: {
+          campaign_key: string
+          created_at: string
+          email: string
+          error_message: string | null
+          event_id: string | null
+          id: string
+          normalized_email: string
+          provider: string
+          provider_message_id: string | null
+          recipient_name: string | null
+          registration_id: string | null
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          campaign_key: string
+          created_at?: string
+          email: string
+          error_message?: string | null
+          event_id?: string | null
+          id?: string
+          normalized_email: string
+          provider?: string
+          provider_message_id?: string | null
+          recipient_name?: string | null
+          registration_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          campaign_key?: string
+          created_at?: string
+          email?: string
+          error_message?: string | null
+          event_id?: string | null
+          id?: string
+          normalized_email?: string
+          provider?: string
+          provider_message_id?: string | null
+          recipient_name?: string | null
+          registration_id?: string | null
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_delivery_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "email_delivery_logs_registration_id_fkey"
+            columns: ["registration_id"]
+            isOneToOne: false
+            referencedRelation: "event_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_checkin_responses: {
         Row: {
           checkin_form_points_granted_at: string | null
@@ -198,6 +261,7 @@ export type Database = {
       }
       event_registrations: {
         Row: {
+          checked_in_at: string | null
           created_at: string | null
           donation_year: boolean
           email: string
@@ -215,6 +279,7 @@ export type Database = {
           synced_at: string | null
         }
         Insert: {
+          checked_in_at?: string | null
           created_at?: string | null
           donation_year?: boolean
           email: string
@@ -232,6 +297,7 @@ export type Database = {
           synced_at?: string | null
         }
         Update: {
+          checked_in_at?: string | null
           created_at?: string | null
           donation_year?: boolean
           email?: string
@@ -510,6 +576,7 @@ export type Database = {
         Args: { event_id: string; new_prizes: Json }
         Returns: Json
       }
+      can_manage_raffle: { Args: { user_id: string }; Returns: boolean }
       can_scan_checkin: { Args: { user_id: string }; Returns: boolean }
       draw_raffle: {
         Args: { p_count: number; p_event_id: string }
@@ -544,6 +611,14 @@ export type Database = {
         Returns: undefined
       }
       process_pending_points: { Args: never; Returns: undefined }
+      set_raffle_active: {
+        Args: { p_active: boolean; p_event_id: string }
+        Returns: undefined
+      }
+      set_raffle_prizes: {
+        Args: { p_event_id: string; p_prizes: Json }
+        Returns: Json
+      }
       trigger_google_sheet_sync: { Args: never; Returns: undefined }
     }
     Enums: {
