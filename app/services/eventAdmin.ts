@@ -1,9 +1,32 @@
 
-import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult } from '~/types'
+import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult, EventInsert, CreateEventPayload } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 
 export const eventAdminService = {
+
+  async insertEvent(payload: CreateEventPayload): Promise<Event> {
+    const supabase = getSupabase()
+
+    const { data: authData, error: authError } = await supabase.auth.getUser()
+  
+    if (authError) throw authError
+    if (!authData.user) throw new Error('請先登入後再新增活動')
+
+    const insertPayload: EventInsert = {
+      ...payload,
+      created_by: authData.user.id,
+    }
+
+    const { data, error } = await supabase
+      .from('events')
+      .insert(insertPayload)
+      .select()
+      .single()
+
+    if (error) throw error
+    return mapToEvent(data)
+  },
 
   // 獲取所有活動 (管理員專用，不分狀態)
   async fetchAllEventsForAdmin(): Promise<Event[]> {

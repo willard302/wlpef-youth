@@ -1,7 +1,7 @@
-import type { Event, CreateEventPayload } from "~/types"
+import type { Event, CreateEventPayload, EventInsert } from "~/types"
 import { addHours, format, parseISO, set } from 'date-fns'
-
 import { eventService } from '~/services/event'
+import { eventAdminService } from '~/services/eventAdmin'
 
 type EventFormState = {
   title: string
@@ -61,7 +61,7 @@ export const useEventForm = () => {
   const router = useRouter()
   const route = useRoute()
   const { addToast } = useToast()
-  const { createEventToDatabase, updateEventToDatabase } = useAdminEvents()
+  const { updateEventToDatabase } = useAdminEvents()
 
   const isSaving = ref(false)
   const isDeleting = ref(false)
@@ -284,7 +284,7 @@ export const useEventForm = () => {
         await updateEventToDatabase(editingEventId.value, payload)
         addToast('活動已更新', 'success')
       } else {
-        await createEventToDatabase(payload)
+        await eventAdminService.insertEvent(payload)
         addToast('活動已建立', 'success')
       }
 
