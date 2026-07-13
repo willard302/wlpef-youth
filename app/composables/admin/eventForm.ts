@@ -61,7 +61,6 @@ export const useEventForm = () => {
   const router = useRouter()
   const route = useRoute()
   const { addToast } = useToast()
-  const { updateEventToDatabase } = useAdminEvents()
 
   const isSaving = ref(false)
   const isDeleting = ref(false)
@@ -281,7 +280,7 @@ export const useEventForm = () => {
       }
 
       if (editingEventId.value) {
-        await updateEventToDatabase(editingEventId.value, payload)
+        await eventAdminService.updateEvent(editingEventId.value, payload)
         addToast('活動已更新', 'success')
       } else {
         await eventAdminService.insertEvent(payload)

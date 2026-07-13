@@ -1,10 +1,11 @@
 
-import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult, EventInsert, CreateEventPayload } from '~/types'
+import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult, EventInsert, CreateEventPayload, EventUpdate } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 
 export const eventAdminService = {
 
+  // 新增活動
   async insertEvent(payload: CreateEventPayload): Promise<Event> {
     const supabase = getSupabase()
 
@@ -21,6 +22,23 @@ export const eventAdminService = {
     const { data, error } = await supabase
       .from('events')
       .insert(insertPayload)
+      .select()
+      .single()
+
+    if (error) throw error
+    return mapToEvent(data)
+  },
+
+  async updateEvent(id: string, payload: Partial<CreateEventPayload>): Promise<Event> {
+    if (payload.start_at && payload.end_at) {
+      validateTimeRange(payload.start_at, payload.end_at)
+    }
+
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('events')
+      .update(payload as EventUpdate)
+      .eq('id', id)
       .select()
       .single()
 
