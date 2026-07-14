@@ -14,7 +14,7 @@ export const useAuth = () => {
   const isSignupLoading = ref(false)
   const errorMessage = ref('')
   const showMoreOptions = ref(false)
-  const formData = ref<LoginFormData>({
+  const loginField = ref<LoginFormData>({
     email: '',
     password: ''
   })
@@ -177,7 +177,7 @@ export const useAuth = () => {
   }
 
   return {
-    formData,
+    loginField,
     loading,
     isGoogleLoading,
     isEmailLoading,

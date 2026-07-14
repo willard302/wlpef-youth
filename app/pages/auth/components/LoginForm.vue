@@ -7,7 +7,7 @@ import { LOGIN_FIELDS } from '~/config/auth.js'
 const emit = defineEmits(['switchMode'])
 
 const {
-  formData,
+  loginField,
   isGoogleLoading,
   isEmailLoading,
   errorMessage,
@@ -44,11 +44,11 @@ const {
       <div class="h-px flex-1 bg-white/10"></div>
     </div>
 
-    <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(formData)" class="flex flex-col gap-3 animate-fade-in">
+    <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(loginField)" class="flex flex-col gap-3 animate-fade-in">
       <AuthInputField
         v-for="field in LOGIN_FIELDS"
         :key="field.id"
-        v-model="formData[field.id as keyof LoginFormData]"
+        v-model="loginField[field.id as keyof LoginFormData]"
         :type="field.type"
         :icon="field.icon"
         :placeholder="field.placeholder"
