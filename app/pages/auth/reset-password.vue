@@ -1,98 +1,15 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
 import AuthInputField from './components/AuthInputField.vue'
 import AuthButton from './components/AuthButton.vue'
-import { getRoleDestination } from '~/utils/auth'
+import { RESET_PASSWORD_FIELDS } from '~/config/auth'
 
 definePageMeta({
   layout: 'auth'
 })
 
-const router = useRouter()
-const supabase = useSupabaseClient<Database>()
+const { resetPassowrdFields, loading, errorMessage, successMessage, resetPasswordLock } = useAuth()
+const { handleResetPassword } = useAuth()
 
-const formData = ref({
-  password: '',
-  confirmPassword: ''
-})
-
-const fields = [
-  { 
-    id: 'password', 
-    icon: 'lock',
-    type: 'password', 
-    placeholder: '請輸入至少 6 位數密碼',
-    autocomplete: 'new-password'
-  },
-  { 
-    id: 'confirmPassword', 
-    icon: 'lock',
-    type: 'password', 
-    placeholder: '請再次輸入新密碼',
-    autocomplete: 'new-password'
-  }
-]
-
-const loading = ref(false)
-const errorMessage = ref('')
-const successMessage = ref('')
-
-const resetPasswordLock = useAsyncLock(async () => {
-  // 基礎驗證
-  if (!formData.value.password) {
-    errorMessage.value = '請輸入新密碼'
-    return
-  }
-  if (formData.value.password.length < 6) {
-    errorMessage.value = '密碼長度至少需要 6 個字元'
-    return
-  }
-  if (formData.value.password !== formData.value.confirmPassword) {
-    errorMessage.value = '兩次輸入的密碼不相同'
-    return
-  }
-
-  loading.value = true
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  try {
-    const { data: { user }, error: userError } = await supabase.auth.getUser() 
-
-    if (userError || !user ) {
-      throw new Error('重設連結已失效或過期')
-    }
-
-    let destination = '/home'
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    destination = getRoleDestination(profile?.role)
-
-    // 調用 Supabase API 更新當前登入用戶的密碼
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: formData.value.password
-    })
-
-    if (updateError) throw updateError
-
-    successMessage.value = '密碼重設成功！即將為您登入...'
-    
-    setTimeout(() => {
-      router.push(destination)
-    }, 2000)
-  } catch (err: any) {
-    console.error('Reset password error:', err)
-    errorMessage.value = err.message || '重設密碼失敗，請稍後再試或重新申請連結'
-  } finally {
-    loading.value = false
-  }
-})
-
-const handleResetPassword = () => resetPasswordLock.run()
 </script>
 
 <template>
@@ -110,9 +27,9 @@ const handleResetPassword = () => resetPasswordLock.run()
 
       <form @submit.prevent="handleResetPassword" class="space-y-4">
         <AuthInputField
-          v-for="field in fields"
+          v-for="field in RESET_PASSWORD_FIELDS"
           :key="field.id"
-          v-model="formData[field.id as keyof typeof formData]"
+          v-model="resetPassowrdFields[field.id as keyof typeof resetPassowrdFields]"
           :icon="field.icon"
           :type="field.type"
           :placeholder="field.placeholder"

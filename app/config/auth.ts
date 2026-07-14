@@ -52,3 +52,19 @@ export const SIGNUP_FIELDS = [
   }
 ]
 
+export const RESET_PASSWORD_FIELDS = [
+  { 
+    id: 'password', 
+    icon: 'lock',
+    type: 'password', 
+    placeholder: '請輸入至少 6 位數密碼',
+    autocomplete: 'new-password'
+  },
+  { 
+    id: 'confirmPassword', 
+    icon: 'lock',
+    type: 'password', 
+    placeholder: '請再次輸入新密碼',
+    autocomplete: 'new-password'
+  }
+]

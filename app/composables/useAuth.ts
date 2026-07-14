@@ -14,6 +14,7 @@ export const useAuth = () => {
   const isEmailLoading = ref(false)
   const isSignupLoading = ref(false)
   const errorMessage = ref('')
+  const successMessage = ref('')
   const confirmLoading = ref(true)
   const confirmErrorMessage = ref('')
   const confirmSuccessMessage = ref('')
@@ -27,6 +28,10 @@ export const useAuth = () => {
   const registerFields = ref<RegisterFormData>({
     email: '',
     fullName: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const resetPassowrdFields = ref({
     password: '',
     confirmPassword: ''
   })
@@ -191,17 +196,17 @@ export const useAuth = () => {
   const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
   const clearConfirmRedirectState = () => {
-    if (confirmRedirectTimer) {
-      clearTimeout(confirmRedirectTimer)
-      confirmRedirectTimer = null
-    }
-    if (confirmSignOutTimer) {
-      clearTimeout(confirmSignOutTimer)
-      confirmSignOutTimer = null
-    }
-    confirmErrorMessage.value = ''
-    confirmSuccessMessage.value = ''
-    confirmLoading.value = true
+      if (confirmRedirectTimer) {
+        clearTimeout(confirmRedirectTimer)
+        confirmRedirectTimer = null
+      }
+      if (confirmSignOutTimer) {
+        clearTimeout(confirmSignOutTimer)
+        confirmSignOutTimer = null
+      }
+      confirmErrorMessage.value = ''
+      confirmSuccessMessage.value = ''
+      confirmLoading.value = true
   }
 
   const redirectWithConfirmDelay = (path: '/auth' | '/auth/reset-password' | '/admin' | '/home', delay = 1500) => {
@@ -209,6 +214,8 @@ export const useAuth = () => {
       router.push(path)
     }, delay)
   }
+
+  const handleResetPassword = () => resetPasswordLock.run()
 
   const resolveDestination = async (userId: string): Promise<'/admin' | '/home'> => {
     const profile = await userService.fetchUserRole(userId)
@@ -308,6 +315,61 @@ export const useAuth = () => {
     }
   }
 
+  const resetPasswordLock = useAsyncLock(async () => {
+    // 基礎驗證
+    if (!resetPassowrdFields.value.password) {
+      errorMessage.value = '請輸入新密碼'
+      return
+    }
+    if (resetPassowrdFields.value.password.length < 6) {
+      errorMessage.value = '密碼長度至少需要 6 個字元'
+      return
+    }
+    if (resetPassowrdFields.value.password !== resetPassowrdFields.value.confirmPassword) {
+      errorMessage.value = '兩次輸入的密碼不相同'
+      return
+    }
+
+    loading.value = true
+    errorMessage.value = ''
+    successMessage.value = ''
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser() 
+
+      if (userError || !user ) {
+        throw new Error('重設連結已失效或過期')
+      }
+
+      let destination = '/home'
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      destination = getRoleDestination(profile?.role)
+
+      // 調用 Supabase API 更新當前登入用戶的密碼
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: resetPassowrdFields.value.password
+      })
+
+      if (updateError) throw updateError
+
+      successMessage.value = '密碼重設成功！即將為您登入...'
+      
+      setTimeout(() => {
+        router.push(destination)
+      }, 2000)
+    } catch (err: any) {
+      console.error('Reset password error:', err)
+      errorMessage.value = err.message || '重設密碼失敗，請稍後再試或重新申請連結'
+    } finally {
+      loading.value = false
+    }
+  })
+
   onUnmounted(() => {
     clearConfirmRedirectState()
   })
@@ -315,19 +377,25 @@ export const useAuth = () => {
   return {
     loginField,
     registerFields,
+    resetPassowrdFields,
     loading,
     isGoogleLoading,
     isEmailLoading,
     isSignupLoading,
     errorMessage,
+    successMessage,
     showMoreOptions,
+    confirmLoading,
+    confirmErrorMessage,
+    confirmSuccessMessage,
+    resetPasswordLock,
     loginWithGoogle,
     loginWithEmail,
     signupWithEmail,
     handleAuthError,
-    confirmLoading,
-    confirmErrorMessage,
-    confirmSuccessMessage,
-    handleConfirmAuth
+    handleConfirmAuth,
+    handleResetPassword,
+    redirectWithConfirmDelay,
+    clearConfirmRedirectState
   }
 }
