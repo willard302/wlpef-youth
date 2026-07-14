@@ -2,58 +2,17 @@
 import type { RegisterFormData } from '~/types'
 import AuthInputField from './AuthInputField.vue'
 import AuthButton from './AuthButton.vue'
+import { SIGNUP_FIELDS } from '~/config/auth.js'
 
 const emit = defineEmits(['switchMode'])
 const {
+  registerFields,
   isGoogleLoading,
   isSignupLoading,
   errorMessage,
   loginWithGoogle,
   signupWithEmail
 } = useAuth()
-
-
-const registerData = ref<RegisterFormData>({
-  email: '',
-  fullName: '',
-  password: '',
-  confirmPassword: ''
-})
-
-const fields = [
-  {
-    id: 'fullName',
-    label: '姓名',
-    icon: 'person',
-    type: 'text',
-    placeholder: '真實姓名 (必填)',
-    autocomplete: 'name'
-  },
-  {
-    id: 'email',
-    label: 'Email',
-    icon: 'mail',
-    type: 'email',
-    placeholder: 'Email (必填)',
-    autocomplete: 'username'
-  },
-  {
-    id: 'password',
-    label: '密碼',
-    icon: 'lock',
-    type: 'password',
-    placeholder: '設定密碼',
-    autocomplete: 'new-password'
-  },
-  {
-    id: 'confirmPassword',
-    label: '確認密碼',
-    icon: 'lock_reset',
-    type: 'password',
-    placeholder: '確認密碼',
-    autocomplete: 'new-password'
-  }
-]
 
 </script>
 
@@ -73,11 +32,11 @@ const fields = [
       <div class="h-px flex-1 bg-white/10"></div>
     </div>
 
-    <form @submit.prevent="signupWithEmail(registerData)" class="flex flex-col gap-3">
+    <form @submit.prevent="signupWithEmail(registerFields)" class="flex flex-col gap-3">
       <AuthInputField
-        v-for="field in fields"
+        v-for="field in SIGNUP_FIELDS"
         :key="field.id"
-        v-model="registerData[field.id as keyof RegisterFormData]"
+        v-model="registerFields[field.id as keyof RegisterFormData]"
         :type="field.type"
         :icon="field.icon"
         :placeholder="field.placeholder"

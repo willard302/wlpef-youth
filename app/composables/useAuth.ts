@@ -18,6 +18,12 @@ export const useAuth = () => {
     email: '',
     password: ''
   })
+  const registerFields = ref<RegisterFormData>({
+    email: '',
+    fullName: '',
+    password: '',
+    confirmPassword: ''
+  })
 
   const redirectUserByRole = async() => {
     try {
@@ -178,6 +184,7 @@ export const useAuth = () => {
 
   return {
     loginField,
+    registerFields,
     loading,
     isGoogleLoading,
     isEmailLoading,
