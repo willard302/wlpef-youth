@@ -7,7 +7,14 @@ definePageMeta({
   layout: 'auth'
 })
 
-const { handleCompleteRegistration, fetchUserData, initializing, socialSignupFields, loading, errorMessage } = useAuth()
+const { 
+  handleCompleteRegistration, 
+  fetchUserData, 
+  initializing, 
+  socialSignupFields, 
+  loading, 
+  errorMessage 
+} = useAuth()
 
 onMounted(() => {
   fetchUserData()

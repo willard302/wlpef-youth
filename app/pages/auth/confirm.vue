@@ -3,7 +3,12 @@ definePageMeta({
   layout: 'auth'
 })
 
-const { handleConfirmAuth, loading, errorMessage, successMessage } = useAuth()
+const { 
+  loading, 
+  errorMessage, 
+  successMessage,
+  handleConfirmAuth, 
+} = useAuth()
 
 onMounted(async () => {
   await handleConfirmAuth()

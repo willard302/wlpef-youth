@@ -7,8 +7,13 @@ definePageMeta({
   layout: 'auth'
 })
 
-const { resetPassowrdFields, loading, errorMessage, successMessage, resetPasswordLock } = useAuth()
-const { handleResetPassword } = useAuth()
+const { 
+  resetPassowrdFields, 
+  loading, 
+  errorMessage, 
+  successMessage,
+  handleResetPassword
+} = useAuth()
 
 </script>
 
