@@ -3,7 +3,7 @@ definePageMeta({
   layout: 'auth'
 })
 
-const { handleConfirmAuth, confirmLoading, confirmErrorMessage, confirmSuccessMessage } = useAuth()
+const { handleConfirmAuth, loading, errorMessage, successMessage } = useAuth()
 
 onMounted(async () => {
   await handleConfirmAuth()
@@ -14,9 +14,9 @@ onMounted(async () => {
   <div class="flex flex-col items-center justify-center flex-1 px-8 text-center">
     <div class="glass-card w-full max-w-sm p-10 space-y-8">
       <div class="size-24 rounded-3xl flex items-center justify-center mx-auto text-primary">
-        <van-loading v-if="confirmLoading" type="spinner" />
+        <van-loading v-if="loading" type="spinner" />
         <svg
-          v-else-if="confirmErrorMessage"
+          v-else-if="errorMessage"
           class="size-14 text-red-500"
           viewBox="0 0 24 24"
           fill="none"
@@ -43,19 +43,19 @@ onMounted(async () => {
           電子郵件確認
         </h1>
         
-        <div v-if="confirmLoading" class="space-y-4">
+        <div v-if="loading" class="space-y-4">
           <p class="text-white/70">正在驗證您的電子郵件...</p>
           <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
             <div class="bg-white h-full animate-progress-bar"></div>
           </div>
         </div>
 
-        <p v-else-if="confirmErrorMessage" class="text-red-200 font-medium">
-          {{ confirmErrorMessage }}
+        <p v-else-if="errorMessage" class="text-red-200 font-medium">
+          {{ errorMessage }}
         </p>
 
-        <p v-else-if="confirmSuccessMessage" class="text-green-200 font-medium">
-          {{ confirmSuccessMessage }}
+        <p v-else-if="successMessage" class="text-green-200 font-medium">
+          {{ successMessage }}
         </p>
       </div>
 

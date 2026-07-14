@@ -15,12 +15,11 @@ export const useAuth = () => {
   const isSignupLoading = ref(false)
   const errorMessage = ref('')
   const successMessage = ref('')
-  const confirmLoading = ref(true)
-  const confirmErrorMessage = ref('')
-  const confirmSuccessMessage = ref('')
   const showMoreOptions = ref(false)
+  
   let confirmRedirectTimer: ReturnType<typeof setTimeout> | null = null
   let confirmSignOutTimer: ReturnType<typeof setTimeout> | null = null
+
   const loginField = ref<LoginFormData>({
     email: '',
     password: ''
@@ -204,9 +203,9 @@ export const useAuth = () => {
         clearTimeout(confirmSignOutTimer)
         confirmSignOutTimer = null
       }
-      confirmErrorMessage.value = ''
-      confirmSuccessMessage.value = ''
-      confirmLoading.value = true
+      errorMessage.value = ''
+      successMessage.value = ''
+      loading.value = true
   }
 
   const redirectWithConfirmDelay = (path: '/auth' | '/auth/reset-password' | '/admin' | '/home', delay = 1500) => {
@@ -248,23 +247,23 @@ export const useAuth = () => {
         })
       }
 
-      confirmSuccessMessage.value = '驗證成功，正在建立安全連線...'
-      confirmLoading.value = false
+      successMessage.value = '驗證成功，正在建立安全連線...'
+      loading.value = false
       redirectWithConfirmDelay('/auth/reset-password')
       return
     }
 
     if (error) {
-      confirmErrorMessage.value = errorDescription || '驗證過程中發生錯誤'
-      confirmLoading.value = false
+      errorMessage.value = errorDescription || '驗證過程中發生錯誤'
+      loading.value = false
       redirectWithConfirmDelay('/auth', 3000)
       return
     }
 
     const oauthError = hashParams.get('error_description')
     if (oauthError) {
-      confirmErrorMessage.value = decodeURIComponent(oauthError)
-      confirmLoading.value = false
+      errorMessage.value = decodeURIComponent(oauthError)
+      loading.value = false
       redirectWithConfirmDelay('/auth', 3000)
       return
     }
@@ -274,8 +273,8 @@ export const useAuth = () => {
       if (userError) throw userError
 
       if (!user?.id) {
-        confirmErrorMessage.value = '登入狀態已失效，請重新登入。'
-        confirmLoading.value = false
+        errorMessage.value = '登入狀態已失效，請重新登入。'
+        loading.value = false
         redirectWithConfirmDelay('/auth', 1200)
         return
       }
@@ -289,8 +288,8 @@ export const useAuth = () => {
 
       const destination = await resolveDestination(user.id)
 
-      confirmSuccessMessage.value = mergeData?.merged ? '帳號已整合完成！即將跳轉中...' : '驗證成功！即將跳轉中...'
-      confirmLoading.value = false
+      successMessage.value = mergeData?.merged ? '帳號已整合完成！即將跳轉中...' : '驗證成功！即將跳轉中...'
+      loading.value = false
       redirectWithConfirmDelay(destination)
     } catch (err: any) {
       console.error('Confirmation error:', err)
@@ -306,8 +305,8 @@ export const useAuth = () => {
         return
       }
 
-      confirmErrorMessage.value = err.message || '電子郵件確認時發生錯誤'
-      confirmLoading.value = false
+      errorMessage.value = err.message || '電子郵件確認時發生錯誤'
+      loading.value = false
       confirmSignOutTimer = setTimeout(async () => {
         await supabase.auth.signOut()
         router.push('/auth')
@@ -385,9 +384,6 @@ export const useAuth = () => {
     errorMessage,
     successMessage,
     showMoreOptions,
-    confirmLoading,
-    confirmErrorMessage,
-    confirmSuccessMessage,
     resetPasswordLock,
     loginWithGoogle,
     loginWithEmail,
