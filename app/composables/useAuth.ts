@@ -3,6 +3,8 @@ import type { Database, LoginFormData, RegisterFormData } from "~/types"
 import { getRoleDestination } from "~/utils/auth"
 
 export const useAuth = () => {
+
+  const { completeSocialSignup, userProfile } = useUser()
   
   const supabase = useSupabaseClient<Database>()
   const router = useRouter()
@@ -16,7 +18,8 @@ export const useAuth = () => {
   const errorMessage = ref('')
   const successMessage = ref('')
   const showMoreOptions = ref(false)
-  
+  const initializing = ref(true)
+
   let confirmRedirectTimer: ReturnType<typeof setTimeout> | null = null
   let confirmSignOutTimer: ReturnType<typeof setTimeout> | null = null
 
@@ -24,15 +27,22 @@ export const useAuth = () => {
     email: '',
     password: ''
   })
+
   const registerFields = ref<RegisterFormData>({
     email: '',
     fullName: '',
     password: '',
     confirmPassword: ''
   })
+
   const resetPassowrdFields = ref({
     password: '',
     confirmPassword: ''
+  })
+
+  const socialSignupFields = ref({
+    email: '',
+    fullName: ''
   })
 
   const redirectUserByRole = async() => {
@@ -369,6 +379,78 @@ export const useAuth = () => {
     }
   })
 
+  const fetchUserData = async () => {
+    try {
+      initializing.value = true
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.id) {
+        errorMessage.value = '使用者未登入，請重新登入。'
+        setTimeout(() => {
+          router.push('/auth')
+        }, 2000)
+        return
+      }
+
+      socialSignupFields.value.email = user.email || ''
+
+      // 檢查 metadata 是否已標記完成
+      const metadata = user.user_metadata || {}
+      if (metadata.social_signup_completed || metadata.google_signup_completed) {
+        router.push('/home')
+        return
+      }
+
+      // Try to get existing profile
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id, name')
+        .eq('id', user.id)
+        .maybeSingle()
+
+      if (profile) {
+        router.push('/home')
+      } else {
+        socialSignupFields.value.fullName = metadata.full_name || metadata.name || ''
+      }
+    } catch (err: any) {
+      console.error('Error fetching user data:', err)
+      errorMessage.value = '載入使用者資訊失敗'
+    } finally {
+      initializing.value = false
+    }
+  }
+
+  const handleCompleteRegistration = async () => {
+    if (!socialSignupFields.value.email.trim()) {
+      errorMessage.value = '缺少 Email，請重新以 Google 或 Apple 登入'
+      return
+    }
+
+    if (!socialSignupFields.value.fullName.trim()) {
+      errorMessage.value = '請填寫您的真實姓名'
+      return
+    }
+
+    try {
+      loading.value = true
+      errorMessage.value = ''
+      
+      await completeSocialSignup({
+        fullName: socialSignupFields.value.fullName.trim()
+      })
+
+      await loadUserData(true)
+
+      // 根據角色導向
+      const dest = getRoleDestination(userProfile.value?.role)
+      await router.replace(dest)
+    } catch (err: any) {
+      handleAuthError(err, '完成註冊失敗，請稍後再試')
+    } finally {
+      loading.value = false
+    }
+  }
+
   onUnmounted(() => {
     clearConfirmRedirectState()
   })
@@ -377,6 +459,8 @@ export const useAuth = () => {
     loginField,
     registerFields,
     resetPassowrdFields,
+    socialSignupFields,
+    initializing,
     loading,
     isGoogleLoading,
     isEmailLoading,
@@ -392,6 +476,8 @@ export const useAuth = () => {
     handleConfirmAuth,
     handleResetPassword,
     redirectWithConfirmDelay,
-    clearConfirmRedirectState
+    clearConfirmRedirectState,
+    fetchUserData,
+    handleCompleteRegistration
   }
 }

@@ -1,3 +1,5 @@
+import type { SocialSignupField } from "~/types"
+
 export const LOGIN_FIELDS = [
   {
     id: 'email',
@@ -66,5 +68,23 @@ export const RESET_PASSWORD_FIELDS = [
     type: 'password', 
     placeholder: '請再次輸入新密碼',
     autocomplete: 'new-password'
+  }
+]
+
+export const SOCIAL_SIGNUP_FIELDS: SocialSignupField[] = [
+  {
+    key: 'fullName',
+    label: '姓名',
+    icon: 'person',
+    type: 'text',
+    placeholder: '輸入您的真實姓名'
+  },
+  {
+    key: 'email',
+    label: 'Email',
+    icon: 'mail',
+    type: 'email',
+    placeholder: '請輸入 Email',
+    helperText: '請確認您的 Email 為報名活動時所使用的。'
   }
 ]

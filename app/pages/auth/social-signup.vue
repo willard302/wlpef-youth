@@ -1,122 +1,13 @@
 <script setup lang="ts">
 import AuthInputField from './components/AuthInputField.vue'
 import AuthButton from './components/AuthButton.vue'
-import { getRoleDestination } from '~/utils/auth'
+import { SOCIAL_SIGNUP_FIELDS } from '~/config/auth.js'
 
 definePageMeta({
   layout: 'auth'
 })
 
-const router = useRouter()
-const supabase = useSupabaseClient()
-const { userProfile, completeSocialSignup, loadUserData } = useUser()
-
-const { loading, errorMessage, handleAuthError } = useAuth()
-const initializing = ref(true)
-
-const formData = ref({
-  email: '',
-  fullName: ''
-})
-
-type SocialSignupField = {
-  key: 'email' | 'fullName'
-  label: string
-  icon: string
-  type: string
-  placeholder: string
-  helperText?: string
-}
-
-const formFields: SocialSignupField[] = [
-  {
-    key: 'fullName',
-    label: '姓名',
-    icon: 'person',
-    type: 'text',
-    placeholder: '輸入您的真實姓名'
-  },
-  {
-    key: 'email',
-    label: 'Email',
-    icon: 'mail',
-    type: 'email',
-    placeholder: '請輸入 Email',
-    helperText: '請確認您的 Email 為報名活動時所使用的。'
-  }
-]
-
-const fetchUserData = async () => {
-  try {
-    initializing.value = true
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user?.id) {
-      errorMessage.value = '使用者未登入，請重新登入。'
-      setTimeout(() => {
-        router.push('/auth')
-      }, 2000)
-      return
-    }
-
-    formData.value.email = user.email || ''
-
-    // 檢查 metadata 是否已標記完成
-    const metadata = user.user_metadata || {}
-    if (metadata.social_signup_completed || metadata.google_signup_completed) {
-      router.push('/home')
-      return
-    }
-
-    // Try to get existing profile
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id, name')
-      .eq('id', user.id)
-      .maybeSingle()
-
-    if (profile) {
-      router.push('/home')
-    } else {
-      formData.value.fullName = metadata.full_name || metadata.name || ''
-    }
-  } catch (err: any) {
-    console.error('Error fetching user data:', err)
-    errorMessage.value = '載入使用者資訊失敗'
-  } finally {
-    initializing.value = false
-  }
-}
-
-const handleCompleteRegistration = async () => {
-  if (!formData.value.email.trim()) {
-    errorMessage.value = '缺少 Email，請重新以 Google 或 Apple 登入'
-    return
-  }
-
-  if (!formData.value.fullName.trim()) {
-    errorMessage.value = '請填寫您的真實姓名'
-    return
-  }
-
-  try {
-    loading.value = true
-    errorMessage.value = ''
-    
-    await completeSocialSignup({
-      fullName: formData.value.fullName.trim()
-    })
-
-    await loadUserData(true)
-
-    // 根據角色導向
-    const dest = getRoleDestination(userProfile.value?.role)
-    await router.replace(dest)
-  } catch (err: any) {
-    handleAuthError(err, '完成註冊失敗，請稍後再試')
-  } finally {
-    loading.value = false
-  }
-}
+const { handleCompleteRegistration, fetchUserData, initializing, socialSignupFields, loading, errorMessage } = useAuth()
 
 onMounted(() => {
   fetchUserData()
@@ -146,17 +37,17 @@ onMounted(() => {
       <div v-else class="flex flex-col gap-6">
         <div class="space-y-4">
           <div
-            v-for="field in formFields"
+            v-for="field in SOCIAL_SIGNUP_FIELDS"
             :key="field.key"
             class="space-y-2"
           >
             <AuthInputField
-              v-model="formData[field.key]"
+              v-model="socialSignupFields[field.key]"
               :label="field.label"
               :icon="field.icon"
               :type="field.type"
               :placeholder="field.placeholder"
-              :disabled="field.key === 'email' && !!formData.email"
+              :disabled="field.key === 'email' && !!socialSignupFields.email"
             />
             <p v-if="field.helperText" class="text-white/40 text-[11px] leading-relaxed pl-1">{{ field.helperText }}</p>
           </div>
