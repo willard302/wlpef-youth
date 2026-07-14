@@ -2,42 +2,19 @@
 import type { LoginFormData } from '~/types'
 import AuthInputField from './AuthInputField.vue'
 import AuthButton from './AuthButton.vue'
+import { LOGIN_FIELDS } from '~/config/auth.js'
 
 const emit = defineEmits(['switchMode'])
 
 const {
+  formData,
   isGoogleLoading,
   isEmailLoading,
   errorMessage,
+  showMoreOptions,
   loginWithGoogle,
   loginWithEmail
 } = useAuth()
-
-const showMoreOptions = ref(false)
-
-const formData = ref<LoginFormData>({
-  email: '',
-  password: ''
-})
-
-const fields = [
-  {
-    id: 'email',
-    label: '帳號',
-    icon: 'mail',
-    type: 'text',
-    placeholder: '請輸入帳號(Email)',
-    autocomplete: 'username'
-  },
-  {
-    id: 'password',
-    label: '密碼',
-    icon: 'lock',
-    type: 'password',
-    placeholder: '請輸入密碼',
-    autocomplete: 'current-password'
-  }
-]
 
 </script>
 
@@ -69,7 +46,7 @@ const fields = [
 
     <form v-if="showMoreOptions" @submit.prevent="loginWithEmail(formData)" class="flex flex-col gap-3 animate-fade-in">
       <AuthInputField
-        v-for="field in fields"
+        v-for="field in LOGIN_FIELDS"
         :key="field.id"
         v-model="formData[field.id as keyof LoginFormData]"
         :type="field.type"
