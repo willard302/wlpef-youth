@@ -6,14 +6,20 @@ export const useAuth = () => {
   
   const supabase = useSupabaseClient<Database>()
   const router = useRouter()
-  const { loadUserData } = useUser()
+  const route = useRoute()
+  const { loadUserData, clearUserData } = useUser()
 
   const loading = ref(false)
   const isGoogleLoading = ref(false)
   const isEmailLoading = ref(false)
   const isSignupLoading = ref(false)
   const errorMessage = ref('')
+  const confirmLoading = ref(true)
+  const confirmErrorMessage = ref('')
+  const confirmSuccessMessage = ref('')
   const showMoreOptions = ref(false)
+  let confirmRedirectTimer: ReturnType<typeof setTimeout> | null = null
+  let confirmSignOutTimer: ReturnType<typeof setTimeout> | null = null
   const loginField = ref<LoginFormData>({
     email: '',
     password: ''
@@ -182,6 +188,130 @@ export const useAuth = () => {
     }
   }
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+  const clearConfirmRedirectState = () => {
+    if (confirmRedirectTimer) {
+      clearTimeout(confirmRedirectTimer)
+      confirmRedirectTimer = null
+    }
+    if (confirmSignOutTimer) {
+      clearTimeout(confirmSignOutTimer)
+      confirmSignOutTimer = null
+    }
+    confirmErrorMessage.value = ''
+    confirmSuccessMessage.value = ''
+    confirmLoading.value = true
+  }
+
+  const redirectWithConfirmDelay = (path: '/auth' | '/auth/reset-password' | '/admin' | '/home', delay = 1500) => {
+    confirmRedirectTimer = setTimeout(() => {
+      router.push(path)
+    }, delay)
+  }
+
+  const resolveDestination = async (userId: string): Promise<'/admin' | '/home'> => {
+    const profile = await userService.fetchUserRole(userId)
+    return getRoleDestination(profile?.role)
+  }
+
+  const handleConfirmAuth = async () => {
+    clearUserData()
+    clearConfirmRedirectState()
+
+    // 給 Supabase 足夠時間解析 hash 中的 access token / refresh token
+    await sleep(800)
+
+    const hash = route.hash
+    const error = typeof route.query.error === 'string' ? route.query.error : ''
+    const errorDescription = typeof route.query.error_description === 'string' ? route.query.error_description : ''
+    const hashParams = new URLSearchParams(hash.substring(1))
+    const queryType = typeof route.query.type === 'string' ? route.query.type : undefined
+    const hashType = hashParams.get('type') || undefined
+
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (queryType === 'recovery' || hashType === 'recovery' || queryType === 'invite' || hashType === 'invite') {
+      if (!session && hashParams.get('access_token')) {
+        const accessToken = hashParams.get('access_token')!
+        const refreshToken = hashParams.get('refresh_token')!
+        await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken
+        })
+      }
+
+      confirmSuccessMessage.value = '驗證成功，正在建立安全連線...'
+      confirmLoading.value = false
+      redirectWithConfirmDelay('/auth/reset-password')
+      return
+    }
+
+    if (error) {
+      confirmErrorMessage.value = errorDescription || '驗證過程中發生錯誤'
+      confirmLoading.value = false
+      redirectWithConfirmDelay('/auth', 3000)
+      return
+    }
+
+    const oauthError = hashParams.get('error_description')
+    if (oauthError) {
+      confirmErrorMessage.value = decodeURIComponent(oauthError)
+      confirmLoading.value = false
+      redirectWithConfirmDelay('/auth', 3000)
+      return
+    }
+
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
+      if (userError) throw userError
+
+      if (!user?.id) {
+        confirmErrorMessage.value = '登入狀態已失效，請重新登入。'
+        confirmLoading.value = false
+        redirectWithConfirmDelay('/auth', 1200)
+        return
+      }
+
+      const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
+        body: {}
+      })
+      if (mergeError) {
+        console.warn('Auto merge skipped:', mergeError.message)
+      }
+
+      const destination = await resolveDestination(user.id)
+
+      confirmSuccessMessage.value = mergeData?.merged ? '帳號已整合完成！即將跳轉中...' : '驗證成功！即將跳轉中...'
+      confirmLoading.value = false
+      redirectWithConfirmDelay(destination)
+    } catch (err: any) {
+      console.error('Confirmation error:', err)
+
+      if (session) {
+        const { data: { user: sessionUser } } = await supabase.auth.getUser()
+        if (sessionUser?.id) {
+          const destination = await resolveDestination(sessionUser.id)
+          router.push(destination)
+        } else {
+          router.push('/home')
+        }
+        return
+      }
+
+      confirmErrorMessage.value = err.message || '電子郵件確認時發生錯誤'
+      confirmLoading.value = false
+      confirmSignOutTimer = setTimeout(async () => {
+        await supabase.auth.signOut()
+        router.push('/auth')
+      }, 3000)
+    }
+  }
+
+  onUnmounted(() => {
+    clearConfirmRedirectState()
+  })
+
   return {
     loginField,
     registerFields,
@@ -194,6 +324,10 @@ export const useAuth = () => {
     loginWithGoogle,
     loginWithEmail,
     signupWithEmail,
-    handleAuthError
+    handleAuthError,
+    confirmLoading,
+    confirmErrorMessage,
+    confirmSuccessMessage,
+    handleConfirmAuth
   }
 }

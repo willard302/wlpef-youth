@@ -1,144 +1,12 @@
 <script setup lang="ts">
-import type { Database } from '~/types'
-import { getRoleDestination } from '~/utils/auth'
-
 definePageMeta({
   layout: 'auth'
 })
 
-const router = useRouter()
-const route = useRoute()
-const supabase = useSupabaseClient<Database>()
-
-const loading = ref(true)
-const errorMessage = ref('')
-const successMessage = ref('')
-
-const resolveDestination = async (userId: string): Promise<'/admin' | '/home'> => {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .maybeSingle()
-
-  return getRoleDestination(profile?.role)
-}
-
-const redirectWithSuccess = (message: string, path: '/admin' | '/home') => {
-  successMessage.value = message
-  loading.value = false
-  setTimeout(() => {
-    router.push(path)
-  }, 1500)
-}
+const { handleConfirmAuth, confirmLoading, confirmErrorMessage, confirmSuccessMessage } = useAuth()
 
 onMounted(async () => {
-  // 1. 稍微等待，給予 Supabase SDK 足夠時間去解析網址並自動寫入 Session
-  await new Promise((resolve) => setTimeout(resolve, 800))
-  
-  const { clearUserData } = useUser()
-  clearUserData()
-  
-  const hash = route.hash
-  const error = route.query.error as string
-  const errorDescription = route.query.error_description as string
-
-  const hashParams = new URLSearchParams(hash.substring(1))
-  const queryType = route.query.type as string | undefined
-  const hashType = hashParams.get('type') || undefined
-
-  // 2. ⚠️ 關鍵修正：檢查當前是否真的成功拿到了 Session
-  const { data: { session } } = await supabase.auth.getSession()
-
-  // 如果網址標明是 invite 或 recovery
-  if (queryType === 'recovery' || hashType === 'recovery' || queryType === 'invite' || hashType === 'invite') {
-    
-    // 防呆：如果網址有 Token 但 SDK 來不及存入，我們手動幫它塞進去
-    if (!session && hashParams.get('access_token')) {
-      const accessToken = hashParams.get('access_token')!
-      const refreshToken = hashParams.get('refresh_token')!
-      await supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken
-      })
-    }
-
-    successMessage.value = '驗證成功，正在建立安全連線...'
-    loading.value = false
-    
-    setTimeout(() => {
-      router.push('/auth/reset-password')
-    }, 1500)
-    return
-  }
-
-  // Handle OAuth or PKCE errors from the URL
-  if (error) {
-    errorMessage.value = errorDescription || '驗證過程中發生錯誤'
-    loading.value = false
-    setTimeout(() => {
-      router.push('/auth')
-    }, 3000)
-    return
-  }
-
-  const oauthError = hashParams.get('error_description')
-  if (oauthError) {
-    errorMessage.value = decodeURIComponent(oauthError)
-    loading.value = false
-    setTimeout(() => {
-      router.push('/auth')
-    }, 3000)
-    return
-  }
-
-  try {
-    // 常規登入驗證（非邀請/重設密碼流程）
-    const { data: { user }, error: userError } = await supabase.auth.getUser()
-    if (userError) throw userError
-
-    if (!user?.id) {
-      errorMessage.value = '登入狀態已失效，請重新登入。'
-      loading.value = false
-      setTimeout(() => {
-        router.push('/auth')
-      }, 1200)
-      return
-    }
-
-    const { data: mergeData, error: mergeError } = await supabase.functions.invoke('merge-duplicate-account', {
-      body: {}
-    })
-    if (mergeError) {
-      console.warn('Auto merge skipped:', mergeError.message)
-    }
-
-    const destination = await resolveDestination(user.id)
-
-    redirectWithSuccess(
-      mergeData?.merged ? '帳號已整合完成！即將跳轉中...' : '驗證成功！即將跳轉中...',
-      destination
-    )
-  } catch (err: any) {
-    console.error('Confirmation error:', err)
-    
-    if (session) {
-      const { data: { user: sessionUser } } = await supabase.auth.getUser()
-      if (sessionUser?.id) {
-        const destination = await resolveDestination(sessionUser.id)
-        router.push(destination)
-      } else {
-        router.push('/home')
-      }
-    } else {
-      errorMessage.value = err.message || '電子郵件確認時發生錯誤'
-      loading.value = false
-      setTimeout(async () => {
-        await supabase.auth.signOut()
-        router.push('/auth')
-      }, 3000)
-    }
-  }
+  await handleConfirmAuth()
 })
 </script>
 
@@ -146,9 +14,9 @@ onMounted(async () => {
   <div class="flex flex-col items-center justify-center flex-1 px-8 text-center">
     <div class="glass-card w-full max-w-sm p-10 space-y-8">
       <div class="size-24 rounded-3xl flex items-center justify-center mx-auto text-primary">
-        <van-loading v-if="loading" type="spinner" />
+        <van-loading v-if="confirmLoading" type="spinner" />
         <svg
-          v-else-if="errorMessage"
+          v-else-if="confirmErrorMessage"
           class="size-14 text-red-500"
           viewBox="0 0 24 24"
           fill="none"
@@ -175,19 +43,19 @@ onMounted(async () => {
           電子郵件確認
         </h1>
         
-        <div v-if="loading" class="space-y-4">
+        <div v-if="confirmLoading" class="space-y-4">
           <p class="text-white/70">正在驗證您的電子郵件...</p>
           <div class="w-full bg-white/10 h-1 rounded-full overflow-hidden">
             <div class="bg-white h-full animate-progress-bar"></div>
           </div>
         </div>
 
-        <p v-else-if="errorMessage" class="text-red-200 font-medium">
-          {{ errorMessage }}
+        <p v-else-if="confirmErrorMessage" class="text-red-200 font-medium">
+          {{ confirmErrorMessage }}
         </p>
 
-        <p v-else-if="successMessage" class="text-green-200 font-medium">
-          {{ successMessage }}
+        <p v-else-if="confirmSuccessMessage" class="text-green-200 font-medium">
+          {{ confirmSuccessMessage }}
         </p>
       </div>
 

@@ -32,6 +32,19 @@ export const userService = {
     }
   },
 
+  async fetchUserRole( userId: string ) {
+    const supabase = getSupabase()
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle()
+    
+    if(error) throw error
+
+    return data
+  },
+
   /**
    * 上傳大頭照
    */
