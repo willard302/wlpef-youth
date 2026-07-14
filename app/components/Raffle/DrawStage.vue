@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import type { AdminRaffleDrawStageEmit, AdminRaffleDrawStageProps } from '~/composables/admin/raffleDrawStage'
+import type { AdminRaffleDrawStageEmit } from '~/composables/admin/raffleDrawStage'
+import type { AdminRaffleDrawStageProps } from '~/types';
 
 const props = defineProps<AdminRaffleDrawStageProps>()
 const emit = defineEmits<AdminRaffleDrawStageEmit>()
