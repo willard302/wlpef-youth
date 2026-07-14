@@ -32,6 +32,8 @@ const {
   onStartTimeConfirm,
   onEndDateConfirm,
   onEndTimeConfirm,
+  getBonusFieldValue,
+  setBonusFieldValue,
 } = useEventForm()
 
 const eventFormVisible = computed({
@@ -116,7 +118,7 @@ const handleDelete = async () => {
                 <span class="text-sm font-medium text-slate-700">全天活動</span>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
-                <input v-model="formData.allDay" type="checkbox" class="sr-only peer" />
+                <input v-model="formData.all_day" type="checkbox" class="sr-only peer" />
                 <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2b9dee]"></div>
               </label>
             </div>
@@ -133,14 +135,14 @@ const handleDelete = async () => {
                   @click="showStartDatePicker = true"
                   class="bg-white/40 px-2 py-1 rounded-lg text-[#2b9dee] hover:bg-white/60 transition-colors"
                 >
-                  {{ formatDisplayDate(formData.startDate) }}
+                  {{ formatDisplayDate(formData.start_date) }}
                 </button>
                 <button
-                  v-if="!formData.allDay"
+                  v-if="!formData.all_day"
                   @click="showStartTimePicker = true"
                   class="bg-white/40 px-2 py-1 rounded-lg text-[#2b9dee] hover:bg-white/60 transition-colors"
                 >
-                  {{ formatDisplayTime(formData.startTime) }}
+                  {{ formatDisplayTime(formData.start_time) }}
                 </button>
               </div>
             </div>
@@ -157,14 +159,14 @@ const handleDelete = async () => {
                   @click="showEndDatePicker = true"
                   class="bg-white/40 px-2 py-1 rounded-lg text-slate-500 hover:bg-white/60 transition-colors"
                 >
-                  {{ formatDisplayDate(formData.endDate) }}
+                  {{ formatDisplayDate(formData.end_date) }}
                 </button>
                 <button
-                  v-if="!formData.allDay"
+                  v-if="!formData.all_day"
                   @click="showEndTimePicker = true"
                   class="bg-white/40 px-2 py-1 rounded-lg text-slate-500 hover:bg-white/60 transition-colors"
                 >
-                  {{ formatDisplayTime(formData.endTime) }}
+                  {{ formatDisplayTime(formData.end_time) }}
                 </button>
               </div>
             </div>
@@ -197,7 +199,7 @@ const handleDelete = async () => {
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="assignment" class="text-slate-400 mt-0.5" />
               <input
-                v-model="formData.googleFormUrl"
+                v-model="formData.google_form_url"
                 type="url"
                 required
                 placeholder="Google 表單連結（必填）"
@@ -208,7 +210,7 @@ const handleDelete = async () => {
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="table" class="text-slate-400 mt-0.5" />
               <input
-                v-model="formData.googleSheetId"
+                v-model="formData.google_sheet_id"
                 type="text"
                 placeholder="Google 試算表 ID"
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
@@ -225,7 +227,7 @@ const handleDelete = async () => {
                 </div>
               </div>
               <label class="relative inline-flex items-center cursor-pointer">
-                <input v-model="formData.checkinFormSyncEnabled" type="checkbox" class="sr-only peer" />
+                <input v-model="formData.checkin_form_sync_enabled" type="checkbox" class="sr-only peer" />
                 <div class="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2b9dee]"></div>
               </label>
             </div>
@@ -236,17 +238,17 @@ const handleDelete = async () => {
               <div class="inline-flex rounded-full bg-slate-100 p-1">
                 <button
                   type="button"
-                  @click="formData.feedbackVisibilityMode = 'test'"
+                  @click="formData.feedback_visibility_mode = 'test'"
                   class="px-3 py-1 text-xs font-bold rounded-full transition-colors"
-                  :class="formData.feedbackVisibilityMode === 'test' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500'"
+                  :class="formData.feedback_visibility_mode === 'test' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500'"
                 >
                   測試
                 </button>
                 <button
                   type="button"
-                  @click="formData.feedbackVisibilityMode = 'live'"
+                  @click="formData.feedback_visibility_mode = 'live'"
                   class="px-3 py-1 text-xs font-bold rounded-full transition-colors"
-                  :class="formData.feedbackVisibilityMode === 'live' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500'"
+                  :class="formData.feedback_visibility_mode === 'live' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500'"
                 >
                   正式
                 </button>
@@ -259,7 +261,7 @@ const handleDelete = async () => {
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="assignment_turned_in" class="text-slate-400 mt-0.5" />
               <input
-                v-model="formData.feedbackFormUrl"
+                v-model="formData.feedback_form_url"
                 type="url"
                 placeholder="回饋 Google 表單連結（選填）"
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
@@ -269,7 +271,7 @@ const handleDelete = async () => {
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="table_view" class="text-slate-400 mt-0.5" />
               <input
-                v-model="formData.feedbackResponseSheetId"
+                v-model="formData.feedback_response_sheet_id"
                 type="text"
                 placeholder="回饋回應試算表 ID"
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
@@ -280,7 +282,7 @@ const handleDelete = async () => {
               <AppIcon name="redeem" class="text-slate-400" />
               <label class="text-sm font-medium text-slate-700 flex-1">回饋獎勵點數</label>
               <input
-                v-model.number="formData.feedbackBonusPoints"
+                v-model.number="formData.feedback_bonus_points"
                 type="number"
                 min="0"
                 class="w-20 bg-white/40 px-2 py-1 rounded-lg text-right text-sm text-[#2b9dee] outline-none"
@@ -294,17 +296,17 @@ const handleDelete = async () => {
               <div class="inline-flex rounded-full bg-slate-100 p-1">
                 <button
                   type="button"
-                  @click="formData.checkinVisibilityMode = 'test'"
+                  @click="formData.checkin_visibility_mode = 'test'"
                   class="px-3 py-1 text-xs font-bold rounded-full transition-colors"
-                  :class="formData.checkinVisibilityMode === 'test' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500'"
+                  :class="formData.checkin_visibility_mode === 'test' ? 'bg-white text-slate-700 shadow-sm' : 'text-slate-500'"
                 >
                   測試
                 </button>
                 <button
                   type="button"
-                  @click="formData.checkinVisibilityMode = 'live'"
+                  @click="formData.checkin_visibility_mode = 'live'"
                   class="px-3 py-1 text-xs font-bold rounded-full transition-colors"
-                  :class="formData.checkinVisibilityMode === 'live' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500'"
+                  :class="formData.checkin_visibility_mode === 'live' ? 'bg-sky-500 text-white shadow-sm' : 'text-slate-500'"
                 >
                   正式
                 </button>
@@ -317,7 +319,7 @@ const handleDelete = async () => {
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="playlist_add_check" class="text-slate-400 mt-0.5" />
               <input
-                v-model="formData.checkinFormUrl"
+                v-model="formData.checkin_form_url"
                 type="url"
                 placeholder="打卡 Google 表單連結（選填）"
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
@@ -327,14 +329,14 @@ const handleDelete = async () => {
             <div class="flex items-start gap-3 px-3 py-4">
               <AppIcon name="table_view" class="text-slate-400 mt-0.5" />
               <input
-                v-model="formData.checkinResponseSheetId"
+                v-model="formData.checkin_response_sheet_id"
                 type="text"
                 placeholder="打卡回應試算表 ID"
                 class="flex-1 bg-transparent border-0 p-0 text-sm focus:ring-0 placeholder:text-slate-300 outline-none"
               />
             </div>
             <p
-              v-if="formData.checkinResponseSheetId && !formData.checkinFormSyncEnabled"
+              v-if="formData.checkin_response_sheet_id && !formData.checkin_form_sync_enabled"
               class="px-3 pb-1 text-[11px] leading-relaxed text-amber-600"
             >
               已設定打卡回應試算表，但同步尚未啟用。
@@ -344,7 +346,7 @@ const handleDelete = async () => {
               <AppIcon name="workspace_premium" class="text-slate-400" />
               <label class="text-sm font-medium text-slate-700 flex-1">打卡表單獎勵點數</label>
               <input
-                v-model.number="formData.checkinFormBonusPoints"
+                v-model.number="formData.checkin_form_bonus_points"
                 type="number"
                 min="0"
                 class="w-20 bg-white/40 px-2 py-1 rounded-lg text-right text-sm text-[#2b9dee] outline-none"
@@ -357,7 +359,8 @@ const handleDelete = async () => {
               <AppIcon :name="bonus.icon" class="text-slate-400" />
               <label class="text-sm font-medium text-slate-700 flex-1">{{ bonus.label }}</label>
               <input
-                v-model.number="formData[bonus.field]"
+                :value="getBonusFieldValue(bonus.field)"
+                @input="setBonusFieldValue(bonus.field, ($event.target as HTMLInputElement).value)"
                 type="number"
                 min="0"
                 class="w-20 bg-white/40 px-2 py-1 rounded-lg text-right text-sm text-[#2b9dee] outline-none"
@@ -393,7 +396,7 @@ const handleDelete = async () => {
     <van-popup v-model:show="showStartDatePicker" position="bottom" round>
       <van-date-picker
         title="選擇開始日期"
-        :model-value="getDateColumns(formData.startDate)"
+        :model-value="getDateColumns(formData.start_date)"
         @confirm="onStartDateConfirm"
         @cancel="showStartDatePicker = false"
       />
@@ -402,7 +405,7 @@ const handleDelete = async () => {
     <van-popup v-model:show="showStartTimePicker" position="bottom" round>
       <van-time-picker
         title="選擇開始時間"
-        :model-value="getTimeColumns(formData.startTime)"
+        :model-value="getTimeColumns(formData.start_time)"
         @confirm="onStartTimeConfirm"
         @cancel="showStartTimePicker = false"
       />
@@ -411,7 +414,7 @@ const handleDelete = async () => {
     <van-popup v-model:show="showEndDatePicker" position="bottom" round>
       <van-date-picker
         title="選擇結束日期"
-        :model-value="getDateColumns(formData.endDate)"
+        :model-value="getDateColumns(formData.end_date)"
         @confirm="onEndDateConfirm"
         @cancel="showEndDatePicker = false"
       />
@@ -420,7 +423,7 @@ const handleDelete = async () => {
     <van-popup v-model:show="showEndTimePicker" position="bottom" round>
       <van-time-picker
         title="選擇結束時間"
-        :model-value="getTimeColumns(formData.endTime)"
+        :model-value="getTimeColumns(formData.end_time)"
         @confirm="onEndTimeConfirm"
         @cancel="showEndTimePicker = false"
       />

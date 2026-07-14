@@ -1,5 +1,12 @@
 import type { RaffleWinnerRow } from "./database"
 
+export interface RafflePrize {
+  prize: string
+  name: string
+  count: number
+  drawOrder: number
+}
+
 export interface RaffleWinner {
   userId: string
   name: string | null

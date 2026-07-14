@@ -1,4 +1,5 @@
 import type { EventInsert, EventRow } from './database'
+import type { RafflePrize } from './raffle'
 
 export interface Activity {
   type: 'event'
@@ -6,13 +7,6 @@ export interface Activity {
   title: string
   duration: string
   icon: string
-}
-
-export interface RafflePrize {
-  prize: string
-  name: string
-  count: number
-  drawOrder: number
 }
 
 type EventBase = {
@@ -23,18 +17,18 @@ type EventBase = {
   startAt: Date
   endAt: Date
   allDay: EventRowValue<'all_day'>
-  status: EventStatus
+  status: string
   createdBy: EventRowValue<'created_by'>
   googleFormUrl?: EventRowValue<'google_form_url'>
   googleSheetId?: EventRowValue<'google_sheet_id'>
   feedbackFormUrl?: EventRowValue<'feedback_form_url'>
   feedbackResponseSheetId?: EventRowValue<'feedback_response_sheet_id'>
   feedbackBonusPoints: EventRowValue<'feedback_bonus_points'>
-  feedbackVisibilityMode: FeedbackVisibilityMode
+  feedbackVisibilityMode: EventRowValue<'feedback_visibility_mode'>
   checkinFormUrl?: EventRowValue<'checkin_form_url'>
   checkinResponseSheetId?: EventRowValue<'checkin_response_sheet_id'>
   checkinFormBonusPoints: EventRowValue<'checkin_form_bonus_points'>
-  checkinVisibilityMode: FeedbackVisibilityMode
+  checkin_visibility_mode: EventRowValue<'checkin_visibility_mode'>
   checkinFormSyncEnabled: EventRowValue<'checkin_form_sync_enabled'>
   registrationBonus: EventRowValue<'registration_bonus'>
   checkinBonus: EventRowValue<'checkin_bonus'>
@@ -43,37 +37,14 @@ type EventBase = {
 }
 
 export type EventRowValue<K extends keyof EventRow> = NonNullable<EventRow[K]>
-type EventInsertValue<K extends keyof EventInsert> = NonNullable<EventInsert[K]>
-
-export type EventStatus = EventInsertValue<'status'>
-export type FeedbackVisibilityMode = EventInsertValue<'feedback_visibility_mode'>
 
 export type CreateEventPayload = Omit<EventInsert, 'created_by' | 'created_at' | 'id'>
 
-export interface EventFormData {
-  title: EventInsertValue<'title'>
-  description: EventInsertValue<'description'>
-  location: EventInsertValue<'location'>
-  startDate: string
-  startTime: string
-  endDate: string
-  endTime: string
-  allDay: EventInsertValue<'all_day'>
-  status: EventStatus
-  googleFormUrl: EventInsertValue<'google_form_url'>
-  googleSheetId: EventInsertValue<'google_sheet_id'>
-  feedbackFormUrl: EventInsertValue<'feedback_form_url'>
-  feedbackResponseSheetId: EventInsertValue<'feedback_response_sheet_id'>
-  feedbackBonusPoints: EventInsertValue<'feedback_bonus_points'>
-  feedbackVisibilityMode: FeedbackVisibilityMode
-  checkinFormUrl: EventInsertValue<'checkin_form_url'>
-  checkinResponseSheetId: EventInsertValue<'checkin_response_sheet_id'>
-  checkinFormBonusPoints: EventInsertValue<'checkin_form_bonus_points'>
-  checkinVisibilityMode: FeedbackVisibilityMode
-  checkinFormSyncEnabled: EventInsertValue<'checkin_form_sync_enabled'>
-  registrationBonus: EventInsertValue<'registration_bonus'>
-  checkinBonus: EventInsertValue<'checkin_bonus'>
-  raffleThreshold: EventInsertValue<'raffle_threshold'>
+export interface EventFormData extends EventInsert {
+  start_date: string
+  start_time: string
+  end_date: string
+  end_time: string
 }
 
 export type Event = EventBase & {

@@ -4,12 +4,11 @@ import { eventAdminService } from '~/services/eventAdmin'
 import {
   createDefaultEventFormData,
   createDefaultEventFormDataForDate,
-  eventFormDataToCreatePayload,
   eventRowToFormData,
 } from '~/utils/eventFormMapper'
-import type { EventFormData, EventRow } from '~/types'
+import type { CreateEventPayload, EventFormData, EventRow } from '~/types'
 
-type BonusField = 'registrationBonus' | 'checkinBonus' | 'raffleThreshold'
+type BonusField = 'registration_bonus' | 'checkin_bonus' | 'raffle_threshold'
 
 export const useEventForm = () => {
   const router = useRouter()
@@ -32,23 +31,23 @@ export const useEventForm = () => {
   const formData = ref<EventFormData>(createDefaultEventFormData())
 
   const bonusItems: Array<{ label: string; icon: string; field: BonusField }> = [
-    { label: '報名獎勵點數', icon: 'how_to_reg', field: 'registrationBonus' },
-    { label: '簽到獎勵點數', icon: 'fact_check', field: 'checkinBonus' },
-    { label: '抽獎門檻（點數）', icon: 'trophy', field: 'raffleThreshold' },
+    { label: '報名獎勵點數', icon: 'how_to_reg', field: 'registration_bonus' },
+    { label: '簽到獎勵點數', icon: 'fact_check', field: 'checkin_bonus' },
+    { label: '抽獎門檻（點數）', icon: 'trophy', field: 'raffle_threshold' },
   ]
 
   const initForm = (dateStr?: string) => {
     formData.value = createDefaultEventFormDataForDate(dateStr)
 
-    savedStartTime = formData.value.startTime
-    savedEndTime = formData.value.endTime
+    savedStartTime = formData.value.start_time
+    savedEndTime = formData.value.end_time
   }
 
   const fillFormFromEvent = (event: EventRow) => {
     formData.value = eventRowToFormData(event)
 
-    savedStartTime = formData.value.startTime
-    savedEndTime = formData.value.endTime
+    savedStartTime = formData.value.start_time
+    savedEndTime = formData.value.end_time
   }
 
   const initEditor = async (id?: string | null, initialDate?: string) => {
@@ -72,15 +71,15 @@ export const useEventForm = () => {
     }
   }
 
-  watch(() => formData.value.allDay, (isAllDay) => {
+  watch(() => formData.value.all_day, (isAllDay) => {
     if (isAllDay) {
-      savedStartTime = formData.value.startTime
-      savedEndTime = formData.value.endTime
-      formData.value.startTime = '00:00'
-      formData.value.endTime = '23:59'
+      savedStartTime = formData.value.start_time
+      savedEndTime = formData.value.end_time
+      formData.value.start_time = '00:00'
+      formData.value.end_time = '23:59'
     } else {
-      formData.value.startTime = savedStartTime
-      formData.value.endTime = savedEndTime
+      formData.value.start_time = savedStartTime
+      formData.value.end_time = savedEndTime
     }
   })
 
@@ -89,8 +88,8 @@ export const useEventForm = () => {
       return { valid: false, error: '請輸入活動名稱' }
     }
 
-    const start = parseISO(`${formData.value.startDate}T${formData.value.startTime}`)
-    const end = parseISO(`${formData.value.endDate}T${formData.value.endTime}`)
+    const start = parseISO(`${formData.value.start_date}T${formData.value.start_time}`)
+    const end = parseISO(`${formData.value.end_date}T${formData.value.end_time}`)
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
       return { valid: false, error: '請選擇完整的日期與時間' }
@@ -105,12 +104,12 @@ export const useEventForm = () => {
       return { valid: false, error: '活動期間不能超過 7 天' }
     }
 
-    if (!formData.value.googleFormUrl.trim()) {
+    if (!formData.value.google_form_url?.trim()) {
       return { valid: false, error: '請輸入 Google 表單連結' }
     }
 
     try {
-      const url = new URL(formData.value.googleFormUrl.trim())
+      const url = new URL(formData.value.google_form_url.trim())
       if (!['http:', 'https:'].includes(url.protocol)) {
         return { valid: false, error: 'Google 表單連結格式不正確' }
       }
@@ -118,29 +117,29 @@ export const useEventForm = () => {
       return { valid: false, error: 'Google 表單連結格式不正確' }
     }
 
-    if (formData.value.registrationBonus < 0 || formData.value.checkinBonus < 0 || formData.value.raffleThreshold < 0) {
+    if (formData.value.registration_bonus! < 0 || formData.value.checkin_bonus! < 0 || formData.value.raffle_threshold! < 0) {
       return { valid: false, error: 'Point settings cannot be negative' }
     }
 
-    if (formData.value.feedbackBonusPoints < 0) {
+    if (formData.value.feedback_bonus_points! < 0) {
       return { valid: false, error: '回饋同步設定不可為負數' }
     }
 
-    if (formData.value.checkinFormBonusPoints < 0) {
+    if (formData.value.checkin_form_bonus_points! < 0) {
       return { valid: false, error: '打卡表單設定不可為負數' }
     }
 
-    if (!['test', 'live'].includes(formData.value.feedbackVisibilityMode)) {
+    if (!['test', 'live'].includes(formData.value.feedback_visibility_mode!)) {
       return { valid: false, error: '回饋顯示模式設定不正確' }
     }
 
-    if (!['test', 'live'].includes(formData.value.checkinVisibilityMode)) {
+    if (!['test', 'live'].includes(formData.value.checkin_visibility_mode!)) {
       return { valid: false, error: '打卡表單顯示模式設定不正確' }
     }
 
-    if (formData.value.feedbackFormUrl.trim()) {
+    if (formData.value.feedback_form_url?.trim()) {
       try {
-        const url = new URL(formData.value.feedbackFormUrl.trim())
+        const url = new URL(formData.value.feedback_form_url.trim())
         if (!['http:', 'https:'].includes(url.protocol)) {
           return { valid: false, error: '回饋表單連結格式不正確' }
         }
@@ -149,9 +148,9 @@ export const useEventForm = () => {
       }
     }
 
-    if (formData.value.checkinFormUrl.trim()) {
+    if (formData.value.checkin_form_url?.trim()) {
       try {
-        const url = new URL(formData.value.checkinFormUrl.trim())
+        const url = new URL(formData.value.checkin_form_url.trim())
         if (!['http:', 'https:'].includes(url.protocol)) {
           return { valid: false, error: '打卡表單連結格式不正確' }
         }
@@ -160,11 +159,66 @@ export const useEventForm = () => {
       }
     }
 
-    if (formData.value.checkinFormSyncEnabled && !formData.value.checkinResponseSheetId.trim()) {
+    if (formData.value.checkin_form_sync_enabled && !formData.value.checkin_response_sheet_id?.trim()) {
       return { valid: false, error: '啟用打卡表單同步時，請設定打卡回應試算表 ID' }
     }
 
     return { valid: true }
+  }
+
+  const buildSavePayload = (): CreateEventPayload => {
+    const data = formData.value
+
+    return {
+      title: data.title.trim(),
+      description: data.description?.trim() || undefined,
+      location: data.location?.trim() || undefined,
+      start_at: new Date(`${data.start_date}T${data.start_time}`).toISOString(),
+      end_at: new Date(`${data.end_date}T${data.end_time}`).toISOString(),
+      all_day: data.all_day,
+      status: data.status,
+      google_sheet_id: data.google_sheet_id?.trim() || undefined,
+      google_form_url: data.google_form_url?.trim(),
+      feedback_form_url: data.feedback_form_url?.trim() || undefined,
+      feedback_response_sheet_id: data.feedback_response_sheet_id?.trim() || undefined,
+      feedback_bonus_points: Number(data.feedback_bonus_points) || 0,
+      feedback_visibility_mode: data.feedback_visibility_mode,
+      checkin_form_url: data.checkin_form_url?.trim() || undefined,
+      checkin_response_sheet_id: data.checkin_response_sheet_id?.trim() || undefined,
+      checkin_form_bonus_points: Number(data.checkin_form_bonus_points) || 0,
+      checkin_visibility_mode: data.checkin_visibility_mode,
+      checkin_form_sync_enabled: data.checkin_form_sync_enabled,
+      registration_bonus: Number(data.registration_bonus) || 0,
+      checkin_bonus: Number(data.checkin_bonus) || 0,
+      raffle_threshold: Number(data.raffle_threshold) || 0,
+    }
+  }
+
+  const getBonusFieldValue = (field: BonusField) => {
+    switch (field) {
+      case 'registration_bonus':
+        return formData.value.registration_bonus ?? 0
+      case 'checkin_bonus':
+        return formData.value.checkin_bonus ?? 0
+      case 'raffle_threshold':
+        return formData.value.raffle_threshold ?? 0
+    }
+  }
+
+  const setBonusFieldValue = (field: BonusField, value: string | number) => {
+    const nextValue = Number(value) || 0
+
+    switch (field) {
+      case 'registration_bonus':
+        formData.value.registration_bonus = nextValue
+        break
+      case 'checkin_bonus':
+        formData.value.checkin_bonus = nextValue
+        break
+      case 'raffle_threshold':
+        formData.value.raffle_threshold = nextValue
+        break
+    }
   }
 
   const saveEvent = async (onSuccess?: () => void) => {
@@ -177,7 +231,7 @@ export const useEventForm = () => {
     isSaving.value = true
 
     try {
-      const payload = eventFormDataToCreatePayload(formData.value)
+      const payload = buildSavePayload()
 
       if (editingEventId.value) {
         await eventAdminService.updateEvent(editingEventId.value, payload)
@@ -252,29 +306,29 @@ export const useEventForm = () => {
   }
 
   const setPickerValue = (
-    field: 'startDate' | 'startTime' | 'endDate' | 'endTime',
+    field: 'start_date' | 'start_time' | 'end_date' | 'end_time',
     values: string[],
   ) => {
-    formData.value[field] = values.join(field.endsWith('Date') ? '-' : ':')
+    formData.value[field] = values.join(field.endsWith('_date') ? '-' : ':')
   }
 
   const onStartDateConfirm = (result: { selectedValues: string[] }) => {
-    setPickerValue('startDate', result.selectedValues)
+    setPickerValue('start_date', result.selectedValues)
     showStartDatePicker.value = false
   }
 
   const onStartTimeConfirm = (result: { selectedValues: string[] }) => {
-    setPickerValue('startTime', result.selectedValues)
+    setPickerValue('start_time', result.selectedValues)
     showStartTimePicker.value = false
   }
 
   const onEndDateConfirm = (result: { selectedValues: string[] }) => {
-    setPickerValue('endDate', result.selectedValues)
+    setPickerValue('end_date', result.selectedValues)
     showEndDatePicker.value = false
   }
 
   const onEndTimeConfirm = (result: { selectedValues: string[] }) => {
-    setPickerValue('endTime', result.selectedValues)
+    setPickerValue('end_time', result.selectedValues)
     showEndTimePicker.value = false
   }
 
@@ -294,6 +348,8 @@ export const useEventForm = () => {
     validateForm,
     saveEvent,
     deleteEvent,
+    getBonusFieldValue,
+    setBonusFieldValue,
     formatDisplayDate,
     formatDisplayTime,
     getDateColumns,

@@ -1,5 +1,5 @@
 
-import type { Database, Event, EventRow, EventStatus } from '~/types'
+import type { Database, Event, EventRow } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 
@@ -18,7 +18,7 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
-  async fetchOngoingEvents(status?: EventStatus): Promise<Event[]> {
+  async fetchOngoingEvents(status?: string): Promise<Event[]> {
     const supabase = getSupabase()
     const now = new Date().toISOString()
 
@@ -38,7 +38,7 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
-  async fetchUpcomingEvents(limit = 1, status?: EventStatus): Promise<Event[]> {
+  async fetchUpcomingEvents(limit = 1, status?: string): Promise<Event[]> {
     const supabase = getSupabase()
 
     let query = supabase
