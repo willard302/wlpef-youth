@@ -1,3 +1,5 @@
+import type { RaffleWinnerRow } from "./database"
+
 export interface RaffleWinner {
   userId: string
   name: string | null
@@ -67,4 +69,21 @@ export interface PrizeFormPayload {
 export interface PrizeFormMode {
   mode?: 'create' | 'edit'
   initialPrize?: Partial<PrizeFormPayload> | null
+}
+
+export interface AdminRaffleDrawStageProps {
+  show: boolean
+  event: DrawStageEvent | null
+  candidateCount: number | null
+  candidateNames: string[]
+  winners: RaffleWinnerRow[]
+  prizeRows: RafflePrizeSetting[]
+  prizeDirty: boolean
+  withinWindow: boolean
+  isActive: boolean
+  loading: boolean
+  drawing: boolean
+  onStart: () => Promise<void>
+  onStop: () => Promise<void>
+  onDrawOne: () => Promise<boolean>
 }

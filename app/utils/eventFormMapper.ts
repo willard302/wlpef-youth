@@ -1,6 +1,5 @@
 import { addHours, format, parseISO, set } from 'date-fns'
-import type { CreateEventPayload, EventFormData, EventStatus, FeedbackVisibilityMode } from '~/types'
-import type { EventRow } from '~/types/database'
+import type { CreateEventPayload, EventFormData, EventStatus, EventRow, FeedbackVisibilityMode } from '~/types'
 
 export const createDefaultEventFormData = (): EventFormData => ({
   title: '',

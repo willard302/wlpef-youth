@@ -1,5 +1,4 @@
 import { format, parseISO } from 'date-fns'
-import type { EventRow } from '~/types/database'
 import { eventService } from '~/services/event'
 import { eventAdminService } from '~/services/eventAdmin'
 import {
@@ -8,7 +7,7 @@ import {
   eventFormDataToCreatePayload,
   eventRowToFormData,
 } from '~/utils/eventFormMapper'
-import type { EventFormData } from '~/types'
+import type { EventFormData, EventRow } from '~/types'
 
 type BonusField = 'registrationBonus' | 'checkinBonus' | 'raffleThreshold'
 

@@ -1,23 +1,6 @@
-import type { DrawStageEvent, RafflePrizeSetting, RaffleWinnerRow } from '~/types'
+import type { RafflePrizeSetting, RaffleWinnerRow, AdminRaffleDrawStageProps } from '~/types'
 import { normalizeRafflePrizeSettings } from '~/utils/raffle'
 import { raffleAdminService } from '~/services/raffleAdmin'
-
-export interface AdminRaffleDrawStageProps {
-  show: boolean
-  event: DrawStageEvent | null
-  candidateCount: number | null
-  candidateNames: string[]
-  winners: RaffleWinnerRow[]
-  prizeRows: RafflePrizeSetting[]
-  prizeDirty: boolean
-  withinWindow: boolean
-  isActive: boolean
-  loading: boolean
-  drawing: boolean
-  onStart: () => Promise<void>
-  onStop: () => Promise<void>
-  onDrawOne: () => Promise<boolean>
-}
 
 export type AdminRaffleDrawStageEmit = {
   (e: 'update:show', value: boolean): void
