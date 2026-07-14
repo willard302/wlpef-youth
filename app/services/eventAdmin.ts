@@ -1,5 +1,5 @@
-
-import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult, EventInsert, CreateEventPayload, EventUpdate } from '~/types'
+import type { Database, Event, EventCheckin, EventRegistration, PointTransaction, CheckinScanResult, CreateEventPayload } from '~/types'
+import type { EventInsert, EventUpdate } from '~/types/database'
 
 const getSupabase = () => useSupabaseClient<Database>()
 

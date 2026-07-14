@@ -1,5 +1,4 @@
-export type EventStatus = 'draft' | 'published' | 'closed'
-export type FeedbackVisibilityMode = 'test' | 'live'
+import type { EventInsert, EventRow } from './database'
 
 export interface Activity {
   type: 'event'
@@ -16,63 +15,73 @@ export interface RafflePrize {
   drawOrder: number
 }
 
-export interface Event {
-  id: string
-  title: string
-  description: string
-  location: string
+type EventBase = {
+  id: EventRowValue<'id'>
+  title: EventRowValue<'title'>
+  description: EventRowValue<'description'>
+  location: EventRowValue<'location'>
   startAt: Date
   endAt: Date
-  allDay: boolean
+  allDay: EventRowValue<'all_day'>
   status: EventStatus
-  createdBy: string
-  googleFormUrl?: string
-  googleSheetId?: string
-  feedbackFormUrl?: string
-  feedbackResponseSheetId?: string
-  feedbackBonusPoints: number
+  createdBy: EventRowValue<'created_by'>
+  googleFormUrl?: EventRowValue<'google_form_url'>
+  googleSheetId?: EventRowValue<'google_sheet_id'>
+  feedbackFormUrl?: EventRowValue<'feedback_form_url'>
+  feedbackResponseSheetId?: EventRowValue<'feedback_response_sheet_id'>
+  feedbackBonusPoints: EventRowValue<'feedback_bonus_points'>
   feedbackVisibilityMode: FeedbackVisibilityMode
-  checkinFormUrl?: string
-  checkinResponseSheetId?: string
-  checkinFormBonusPoints: number
+  checkinFormUrl?: EventRowValue<'checkin_form_url'>
+  checkinResponseSheetId?: EventRowValue<'checkin_response_sheet_id'>
+  checkinFormBonusPoints: EventRowValue<'checkin_form_bonus_points'>
   checkinVisibilityMode: FeedbackVisibilityMode
-  checkinFormSyncEnabled: boolean
-  registrationBonus: number
-  checkinBonus: number
-  raffleThreshold: number
+  checkinFormSyncEnabled: EventRowValue<'checkin_form_sync_enabled'>
+  registrationBonus: EventRowValue<'registration_bonus'>
+  checkinBonus: EventRowValue<'checkin_bonus'>
+  raffleThreshold: EventRowValue<'raffle_threshold'>
   rafflePrizes?: RafflePrize[]
-  
-  // Derived display fields
+}
+
+export type EventRowValue<K extends keyof EventRow> = NonNullable<EventRow[K]>
+type EventInsertValue<K extends keyof EventInsert> = NonNullable<EventInsert[K]>
+
+export type EventStatus = EventInsertValue<'status'>
+export type FeedbackVisibilityMode = EventInsertValue<'feedback_visibility_mode'>
+
+export type CreateEventPayload = Omit<EventInsert, 'created_by' | 'created_at' | 'id'>
+
+export interface EventFormData {
+  title: EventInsertValue<'title'>
+  description: EventInsertValue<'description'>
+  location: EventInsertValue<'location'>
+  startDate: string
+  startTime: string
+  endDate: string
+  endTime: string
+  allDay: EventInsertValue<'all_day'>
+  status: EventStatus
+  googleFormUrl: EventInsertValue<'google_form_url'>
+  googleSheetId: EventInsertValue<'google_sheet_id'>
+  feedbackFormUrl: EventInsertValue<'feedback_form_url'>
+  feedbackResponseSheetId: EventInsertValue<'feedback_response_sheet_id'>
+  feedbackBonusPoints: EventInsertValue<'feedback_bonus_points'>
+  feedbackVisibilityMode: FeedbackVisibilityMode
+  checkinFormUrl: EventInsertValue<'checkin_form_url'>
+  checkinResponseSheetId: EventInsertValue<'checkin_response_sheet_id'>
+  checkinFormBonusPoints: EventInsertValue<'checkin_form_bonus_points'>
+  checkinVisibilityMode: FeedbackVisibilityMode
+  checkinFormSyncEnabled: EventInsertValue<'checkin_form_sync_enabled'>
+  registrationBonus: EventInsertValue<'registration_bonus'>
+  checkinBonus: EventInsertValue<'checkin_bonus'>
+  raffleThreshold: EventInsertValue<'raffle_threshold'>
+}
+
+export type Event = EventBase & {
   date: Date
   time: string
   period: 'AM' | 'PM'
   isRegistered?: boolean
   isCheckedIn?: boolean
-}
-
-export interface CreateEventPayload {
-  title: string
-  description?: string
-  location?: string
-  start_at: string  // ISO8601
-  end_at: string    // ISO8601
-  all_day?: boolean
-  status?: EventStatus
-  google_sheet_id?: string
-  google_form_url: string
-  feedback_form_url?: string
-  feedback_response_sheet_id?: string
-  feedback_bonus_points?: number
-  feedback_visibility_mode?: FeedbackVisibilityMode
-  checkin_form_url?: string
-  checkin_response_sheet_id?: string
-  checkin_form_bonus_points?: number
-  checkin_visibility_mode?: FeedbackVisibilityMode
-  checkin_form_sync_enabled?: boolean
-  registration_bonus?: number
-  checkin_bonus?: number
-  raffle_threshold?: number
-  raffle_prizes?: Array<{ prize: string; name: string; count: number; drawOrder: number }>
 }
 
 export interface EventRegistration {

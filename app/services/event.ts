@@ -1,5 +1,5 @@
 
-import type { Database, Event, EventStatus } from '~/types'
+import type { Database, Event, EventRow, EventStatus } from '~/types'
 
 const getSupabase = () => useSupabaseClient<Database>()
 
@@ -58,7 +58,7 @@ export const eventService = {
     return (data ?? []).map(mapToEvent)
   },
 
-  async fetchEventById(id: string): Promise<Event> {
+  async fetchEventById(id: string): Promise<EventRow> {
     const supabase = getSupabase()
     const { data, error } = await supabase
       .from('events')
@@ -67,7 +67,7 @@ export const eventService = {
       .single()
 
     if (error) throw error
-    return mapToEvent(data)
+    return data
   },
 
   async deleteEvent(id: string): Promise<void> {

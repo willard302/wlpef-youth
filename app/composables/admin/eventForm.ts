@@ -1,61 +1,16 @@
-import type { Event, CreateEventPayload, EventInsert } from "~/types"
-import { addHours, format, parseISO, set } from 'date-fns'
+import { format, parseISO } from 'date-fns'
+import type { EventRow } from '~/types/database'
 import { eventService } from '~/services/event'
 import { eventAdminService } from '~/services/eventAdmin'
-
-type EventFormState = {
-  title: string
-  description: string
-  location: string
-  startDate: string
-  startTime: string
-  endDate: string
-  endTime: string
-  allDay: boolean
-  status: CreateEventPayload['status']
-  googleSheetId: string
-  googleFormUrl: string
-  feedbackFormUrl: string
-  feedbackResponseSheetId: string
-  feedbackBonusPoints: number
-  feedbackVisibilityMode: NonNullable<CreateEventPayload['feedback_visibility_mode']>
-  checkinFormUrl: string
-  checkinResponseSheetId: string
-  checkinFormBonusPoints: number
-  checkinVisibilityMode: NonNullable<CreateEventPayload['checkin_visibility_mode']>
-  checkinFormSyncEnabled: boolean
-  registrationBonus: number
-  checkinBonus: number
-  raffleThreshold: number
-}
+import {
+  createDefaultEventFormData,
+  createDefaultEventFormDataForDate,
+  eventFormDataToCreatePayload,
+  eventRowToFormData,
+} from '~/utils/eventFormMapper'
+import type { EventFormData } from '~/types'
 
 type BonusField = 'registrationBonus' | 'checkinBonus' | 'raffleThreshold'
-
-const createDefaultFormData = (): EventFormState => ({
-  title: '',
-  description: '',
-  location: '',
-  startDate: '',
-  startTime: '',
-  endDate: '',
-  endTime: '',
-  allDay: false,
-  status: 'draft',
-  googleSheetId: '',
-  googleFormUrl: '',
-  feedbackFormUrl: '',
-  feedbackResponseSheetId: '',
-  feedbackBonusPoints: 0,
-  feedbackVisibilityMode: 'test',
-  checkinFormUrl: '',
-  checkinResponseSheetId: '',
-  checkinFormBonusPoints: 0,
-  checkinVisibilityMode: 'test',
-  checkinFormSyncEnabled: false,
-  registrationBonus: 0,
-  checkinBonus: 0,
-  raffleThreshold: 0,
-})
 
 export const useEventForm = () => {
   const router = useRouter()
@@ -72,8 +27,10 @@ export const useEventForm = () => {
 
   const editingEventId = ref<string | null>(null)
   const isEditMode = computed(() => editingEventId.value !== null)
+  let savedStartTime = '14:00'
+  let savedEndTime = '15:30'
 
-  const formData = ref<EventFormState>(createDefaultFormData())
+  const formData = ref<EventFormData>(createDefaultEventFormData())
 
   const bonusItems: Array<{ label: string; icon: string; field: BonusField }> = [
     { label: '報名獎勵點數', icon: 'how_to_reg', field: 'registrationBonus' },
@@ -81,50 +38,16 @@ export const useEventForm = () => {
     { label: '抽獎門檻（點數）', icon: 'trophy', field: 'raffleThreshold' },
   ]
 
-  let savedStartTime = '14:00'
-  let savedEndTime = '15:30'
-
   const initForm = (dateStr?: string) => {
-    formData.value = createDefaultFormData()
+    formData.value = createDefaultEventFormDataForDate(dateStr)
 
-    const base = dateStr ? parseISO(dateStr) : new Date()
-    const start = set(base, { hours: 14, minutes: 0, seconds: 0, milliseconds: 0 })
-    const end = addHours(start, 1.5)
-
-    formData.value.startDate = format(start, 'yyyy-MM-dd')
-    formData.value.startTime = format(start, 'HH:mm')
-    formData.value.endDate = format(end, 'yyyy-MM-dd')
-    formData.value.endTime = format(end, 'HH:mm')
     savedStartTime = formData.value.startTime
     savedEndTime = formData.value.endTime
   }
 
-  const fillFormFromEvent = (event: Event) => {
-    formData.value = {
-      title: event.title,
-      description: event.description,
-      location: event.location,
-      startDate: format(event.startAt, 'yyyy-MM-dd'),
-      startTime: format(event.startAt, 'HH:mm'),
-      endDate: format(event.endAt, 'yyyy-MM-dd'),
-      endTime: format(event.endAt, 'HH:mm'),
-      allDay: event.allDay,
-      status: event.status,
-      googleSheetId: event.googleSheetId || '',
-      googleFormUrl: event.googleFormUrl || '',
-      feedbackFormUrl: event.feedbackFormUrl || '',
-      feedbackResponseSheetId: event.feedbackResponseSheetId || '',
-      feedbackBonusPoints: event.feedbackBonusPoints,
-      feedbackVisibilityMode: event.feedbackVisibilityMode,
-      checkinFormUrl: event.checkinFormUrl || '',
-      checkinResponseSheetId: event.checkinResponseSheetId || '',
-      checkinFormBonusPoints: event.checkinFormBonusPoints,
-      checkinVisibilityMode: event.checkinVisibilityMode,
-      checkinFormSyncEnabled: event.checkinFormSyncEnabled,
-      registrationBonus: event.registrationBonus,
-      checkinBonus: event.checkinBonus,
-      raffleThreshold: event.raffleThreshold,
-    }
+  const fillFormFromEvent = (event: EventRow) => {
+    formData.value = eventRowToFormData(event)
+
     savedStartTime = formData.value.startTime
     savedEndTime = formData.value.endTime
   }
@@ -255,29 +178,7 @@ export const useEventForm = () => {
     isSaving.value = true
 
     try {
-      const payload: CreateEventPayload = {
-        title: formData.value.title.trim(),
-        description: formData.value.description.trim() || undefined,
-        location: formData.value.location.trim() || undefined,
-        start_at: new Date(`${formData.value.startDate}T${formData.value.startTime}`).toISOString(),
-        end_at: new Date(`${formData.value.endDate}T${formData.value.endTime}`).toISOString(),
-        all_day: formData.value.allDay,
-        status: formData.value.status,
-        google_sheet_id: formData.value.googleSheetId.trim() || undefined,
-        google_form_url: formData.value.googleFormUrl.trim(),
-        feedback_form_url: formData.value.feedbackFormUrl.trim() || undefined,
-        feedback_response_sheet_id: formData.value.feedbackResponseSheetId.trim() || undefined,
-        feedback_bonus_points: Number(formData.value.feedbackBonusPoints) || 0,
-        feedback_visibility_mode: formData.value.feedbackVisibilityMode,
-        checkin_form_url: formData.value.checkinFormUrl.trim() || undefined,
-        checkin_response_sheet_id: formData.value.checkinResponseSheetId.trim() || undefined,
-        checkin_form_bonus_points: Number(formData.value.checkinFormBonusPoints) || 0,
-        checkin_visibility_mode: formData.value.checkinVisibilityMode,
-        checkin_form_sync_enabled: formData.value.checkinFormSyncEnabled,
-        registration_bonus: Number(formData.value.registrationBonus) || 0,
-        checkin_bonus: Number(formData.value.checkinBonus) || 0,
-        raffle_threshold: Number(formData.value.raffleThreshold) || 0,
-      }
+      const payload = eventFormDataToCreatePayload(formData.value)
 
       if (editingEventId.value) {
         await eventAdminService.updateEvent(editingEventId.value, payload)
